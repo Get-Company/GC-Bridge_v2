@@ -102,7 +102,7 @@ class ERPAbstractEntity(ERPCoreController):
                 'String': 'AsString',
                 'Double': 'AsString'
             }
-
+            # Field types and how to write them
             self.field_types_to_write = {
                 'WideString': 'AsString',
                 'Float': 'AsFloat',
@@ -116,6 +116,10 @@ class ERPAbstractEntity(ERPCoreController):
                 'String': 'AsString',
                 'Double': 'AsString'
             }
+
+            # Holds the current state of the dataset:
+            self._dataset_state = None
+            self.set_dataset_state()
 
             self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, dataset_name)
 
@@ -369,6 +373,50 @@ class ERPAbstractEntity(ERPCoreController):
 
         return self._range_count
 
+    def set_dataset_state(self, state: Union[int, None] = None) -> None:
+        """
+        Set the state for the dataset.
+
+        Parameters:
+            state: The state value to be set for the dataset. If not provided,
+                   the state will be set to the current state of the created dataset.
+        """
+        try:
+            if state is not None:
+                self._dataset_state = state
+            else:
+                self._dataset_state = self._created_dataset.State
+            self.logger.info(f"Dataset state is set to: {self._dataset_state}")
+        except Exception as e:
+            self.logger.error(f"Error setting dataset state: {str(e)}. ERP Dataset state: {self._created_dataset.State}")
+            raise
+
+    def get_dataset_state(self) -> int:
+        """
+        Retrieve the state of the dataset.
+
+        The available states of the datasets are:
+            dsInactive = 0,
+            dsBrowse = 1,
+            dsEdit = 2,
+            dsInsert = 3,
+            dsSetKey = 4,
+            dsCalcFields = 5,
+            dsFilter = 6,
+            dsNewValue = 7,
+            dsOldValue = 8,
+            dsCurValue = 9,
+            dsBlockRead = 10,
+            dsInternalCalc = 11
+
+        Returns:
+            The state of the dataset.
+        """
+        if self._dataset_state is None:
+            self.logger.warning("Dataset state is not set. Initializing it now.")
+            self.set_dataset_state()
+        return self._dataset_state
+
     """ Read/Write Methods """
     def get_(self, return_field: str) -> Union[str, int, float, bool, datetime]:
         """
@@ -403,7 +451,7 @@ class ERPAbstractEntity(ERPCoreController):
         Returns:
             bool: True if the value was set successfully, False otherwise.
         """
-        self.start_transaction()
+        # self.start_transaction()
         self.edit_()
 
         try:
@@ -416,7 +464,7 @@ class ERPAbstractEntity(ERPCoreController):
         except Exception as e:
             self.logger.error(f"Error while setting value '{value}' to field '{field_name}' of DataSet '{self.get_dataset_name()}': {e}")
         finally:
-            self.commit()
+            pass  #self.commit()
 
         return False
 
@@ -430,9 +478,10 @@ class ERPAbstractEntity(ERPCoreController):
         """
 
         try:
-            dataset_state = self._created_dataset.State
-            if dataset_state in ['dsEdit', 'dsInsert']:
+            dataset_state = self.get_dataset_state()
+            if dataset_state in [2, 3]:  # 2 is Edit, 3 is Insert
                 self._created_dataset.Post()
+                self.set_dataset_state()
                 self.logger.info(f"Changes to DataSet '{self.get_dataset_name()}' have been successfully committed from '{dataset_state}' state.")
                 return True
             else:
@@ -442,6 +491,24 @@ class ERPAbstractEntity(ERPCoreController):
             self.rollback()  # If there's an error, rollback any changes
 
         return False
+
+    def can_start_transaction(self) -> bool:
+        """
+        Checks if a transaction can be started or if one already exists.
+
+        Returns:
+            True if a transaction can be started; False if a transaction already exists.
+        """
+        try:
+            can_start = self._created_dataset.TryStartTransaction()
+            if can_start:
+                self.logger.info(f"A transaction can be started for dataset '{self._dataset_name}'.")
+            else:
+                self.logger.info(f"A transaction already exists for dataset '{self._dataset_name}'.")
+            return can_start
+        except Exception as e:
+            self.logger.error(f"An error occurred while checking the transaction status for dataset '{self._dataset_name}': {str(e)}")
+            raise
 
     def start_transaction(self):
         """
@@ -455,14 +522,20 @@ class ERPAbstractEntity(ERPCoreController):
             None
 
         Raises:
-            Exception: If there's an issue starting a transaction on the dataset.
+            Exception: If there's an issue starting a transaction on the dataset or if a transaction already exists.
         """
-        try:
-            self._created_dataset.StartTransaction()
-            self.logger.info(f"Transaction started for dataset '{self._dataset_name}'. Dataset is now locked for exclusive use.")
-        except Exception as e:
-            self.logger.error(f"An error occurred while starting a transaction for the dataset '{self._dataset_name}': {str(e)}")
-            raise
+        if self.can_start_transaction():
+            try:
+                self._created_dataset.StartTransaction()
+                self.set_dataset_state()
+                self.logger.info(f"Transaction started for dataset '{self._dataset_name}'. Dataset is now locked for exclusive use.")
+            except Exception as e:
+                self.logger.error(f"An error occurred while starting a transaction for the dataset '{self._dataset_name}': {str(e)}")
+                raise
+        else:
+            message = f"Cannot start transaction for dataset '{self._dataset_name}' as a transaction already exists."
+            self.logger.warning(message)
+            raise Exception(message)
 
     def edit_(self):
         """
@@ -479,7 +552,8 @@ class ERPAbstractEntity(ERPCoreController):
         """
         try:
             self._created_dataset.Edit()
-            self.logger.info(f"Dataset '{self._dataset_name}' has been set to edit mode.")
+            self.set_dataset_state()
+            self.logger.info(f"Dataset '{self._dataset_name}' has been set to edit mode. Mode: {self._created_dataset.State}")
         except Exception as e:
             self.logger.error(f"An error occurred while setting the dataset '{self._dataset_name}' to edit mode: {str(e)}")
             raise
@@ -499,6 +573,7 @@ class ERPAbstractEntity(ERPCoreController):
         """
         try:
             self._created_dataset.Append()
+            self.set_dataset_state()
             self.logger.info(f"Prepared to add a new record to the dataset '{self._dataset_name}'.")
         except Exception as e:
             self.logger.error(f"An error occurred while preparing to add a new record to the dataset '{self._dataset_name}': {str(e)}")
@@ -509,7 +584,8 @@ class ERPAbstractEntity(ERPCoreController):
         Commit changes made to the current dataset during a transaction.
 
         This function saves all changes made to the dataset since the start of the transaction
-        and releases the lock, allowing other operations to access the dataset.
+        and releases the lock, allowing other operations to access the dataset. Does a rollback
+        if the commit raised an error
 
         Returns:
             None
@@ -519,6 +595,7 @@ class ERPAbstractEntity(ERPCoreController):
         """
         try:
             self._created_dataset.Commit()
+            self.set_dataset_state()
             self.logger.info(f"Transaction committed and changes saved for dataset '{self._dataset_name}'. Lock released.")
         except Exception as e:
             self.logger.error(f"An error occurred while committing changes to the dataset '{self._dataset_name}': {str(e)}. Initiating rollback...")
@@ -539,6 +616,7 @@ class ERPAbstractEntity(ERPCoreController):
         """
         try:
             self._created_dataset.Rollback()
+            self.set_dataset_state()
             self.logger.info(f"Changes rolled back for dataset '{self._dataset_name}'. Lock released.")
         except Exception as e:
             self.logger.error(f"An error occurred while rolling back changes to the dataset '{self._dataset_name}': {str(e)}")
