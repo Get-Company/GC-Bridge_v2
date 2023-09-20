@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block html_title %}
+    {{ super() }} - ERP
+{% endblock %}
+
+{% block body %}
+    <div id="erp_app">
+        <h1>[[ app_name ]]</h1>
+    </div>
+{% endblock %}
+
+{% block body_close %}
+    {{ super() }}
+
+    <!-- Import App -->
+    <script src="../../static/js/erp/erp_main.js"></script>
+    <!-- Mount App -->
+    <script> const mountedApp = app.mount('#erp_app') </script>
+
+{% endblock %}

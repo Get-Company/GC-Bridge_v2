@@ -1,12 +1,21 @@
-from flask import Flask
+from src import create_app
+from pprint import pprint
+from datetime import datetime, timedelta
 
-app = Flask(__name__)
+from src.modules.ERP.controller.ERPAdressenController import ERPAdressenController
+
+before = datetime.now()
+
+buchner_ctrl = ERPAdressenController(10026)
 
 
-@app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
+# print(hans_ctrl.shipping_address().get_("Na2"))
 
+after = datetime.now()
+time = after - before
+print(f"The script took {time}")
+# app = create_app()
 
-if __name__ == '__main__':
-    app.run()
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
+

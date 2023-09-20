@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>
+        {% block html_title %} GC-Bridge 2 {% endblock %}
+    </title>
+
+    {% block css %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% endblock %}
+
+    {% block js %}
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    {% endblock %}
+
+</head>
+<body>
+
+{% block body_open %}{% endblock %}
+
+{% block body %}
+    <h1>
+        {% block h1 %} Dashboard {% endblock %}
+    </h1>
+{% endblock %}
+
+{% block body_close %}{% endblock %}
+
+</body>
+</html>
