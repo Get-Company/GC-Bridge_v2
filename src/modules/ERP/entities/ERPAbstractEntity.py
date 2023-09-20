@@ -9,6 +9,11 @@ Examples:
     erp_art = ERPArtikelEntity(search_value="900000")
     print(erp_art.get_nested_ums(2023,
 
+    Set Rembremerting in Na2 of first address [0] in customer [10026] for Anschriften Entity
+    erp_ans = ERPAnschriftenEntity(search_value=[10026,0])
+    erp_ans.start_transaction()
+    erp_ans.set_("Na2", "Rembremerting")
+    erp_ans.commit()
 
 """
 from datetime import datetime
