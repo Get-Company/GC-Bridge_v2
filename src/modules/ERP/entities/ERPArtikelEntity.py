@@ -2,12 +2,13 @@ from ..entities.ERPAbstractEntity import ERPAbstractEntity
 
 
 class ERPArtikelEntity(ERPAbstractEntity):
-    def __init__(self, search_value=None, index=None):
+    def __init__(self, search_value=None, index=None, range_end=None):
 
         super().__init__(
             dataset_name="Artikel",
             dataset_index=index or "Nr",
-            search_value=search_value
+            search_value=search_value,
+            range_end=range_end
         )
 
     def get_nested_ums(self, jahr, return_field):

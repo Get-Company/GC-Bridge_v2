@@ -28,6 +28,8 @@ In today's digital world, it's critical that your systems interact seamlessly. M
 
 (Include instructions on installation and setup here.)
 
+## Instructions
+
 ## Contributing 🤝
 
 (Information on how other developers can contribute to the project.)

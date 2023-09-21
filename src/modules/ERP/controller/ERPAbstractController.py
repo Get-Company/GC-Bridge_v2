@@ -1,5 +1,6 @@
 from ..ERPCoreController import ERPCoreController
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
+from abc import abstractmethod
 
 
 class ERPAbstractController(ERPCoreController):
@@ -30,9 +31,21 @@ class ERPAbstractController(ERPCoreController):
             self.logger.error(f"Error setting dataset entity: {str(e)}")
             raise
 
+    @abstractmethod
     def get_entity(self):
         """
         Retrieve the dataset entity of the controller.
+
+        Abstract Method! Is abstract because:
+        - By marking this method as abstract, we ensure that any subclass
+          of this class MUST implement this method. This is a way to enforce
+          a certain structure on all subclasses.
+        - This is useful in large projects or when working with teams to ensure
+          that certain methods are always present in subclasses.
+        - Additionally, modern IDEs like PyCharm can recognize these abstract methods
+          and provide code suggestions/completions based on both parent and child entities.
+          This assists developers in correctly implementing necessary methods when creating
+          subclasses.
 
         Returns:
             Dataset entity.
@@ -66,6 +79,3 @@ class ERPAbstractController(ERPCoreController):
     def get_all_dataset_indicies(self):
         indices = self._dataset_entity.get_all_indicies()
         return indices
-
-    def get_entity(self):
-        return self._dataset_entity

@@ -27,13 +27,24 @@ class ERPAdressenController(ERPAbstractController):
 
         **Get Billing Address and the billing contact**
             buchner = ERPAdressenController(10026)
-            buchner.billing_address().get_("Na2")
-            buchner.billing_contact().get_("NNa")
+            buchner_billing = buchner.billing_address()
+            buchner_billing.get_("Na2")
+            buchner_billing_contact = buchner_billing.billing_contact()
+            buchner_billing_contact.get_("NNa")
+
+        **Set Billing Address Na2 to Rembremerting**
+            buchner = ERPAdressenController(10026)
+            buchner_billing = buchner_ctrl.billing_address()
+            buchner_billing.start_transaction()
+            buchner_billing.set_("Na2", new_name)
+            buchner_billing.commit()
 
         **Get Shipping Address and shipping contact**
             buchner = ERPAdressenController(10026)
             buchner.shipping_address().get_("Na2")
             buchner.shipping_contact().get_("NNa")
+
+
     """
 
     def __init__(self, search_value=None, index=None, range_end=None):
@@ -42,6 +53,27 @@ class ERPAdressenController(ERPAbstractController):
         super().__init__(
             dataset_entity=self._dataset_entity
         )
+
+    def get_entity(self):
+        """
+        Retrieve the dataset entity of the controller.
+
+        Note: This method is an implementation of the abstract method defined in
+        the parent class ERPAbstractController. For a detailed explanation of its purpose
+        and behavior, please refer to the documentation in ERPAbstractController.
+
+        Returns:
+            Dataset entity.
+
+        Raises:
+            ValueError: If dataset entity is not set.
+        """
+        if self._dataset_entity:
+            return self._dataset_entity
+        else:
+            message = "Dataset entity is not set"
+            self.logger.warning(message)
+            raise ValueError(message)
 
     def get_adrnr(self):
         self._adrnr = self.get_entity().get_adrnr()
