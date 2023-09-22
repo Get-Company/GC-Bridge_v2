@@ -18,6 +18,8 @@ Examples:
 """
 from datetime import datetime
 from typing import List, Union, Tuple, Any, Dict
+# Is used to get the basename of the image
+import os
 
 from ..ERPCoreController import ERPCoreController
 from ..controller.ERPConnectionController import ERPConnectionController
@@ -49,7 +51,10 @@ class ERPAbstractEntity(ERPCoreController):
 
         try:
             #1 Get the singleton instance of ERPConnectionController
-            self._erp = ERPConnectionController().get_erp()
+            erp_co_ctrl = ERPConnectionController()
+            self._erp = erp_co_ctrl.get_erp()
+            self._erp_special_objects = erp_co_ctrl.special_objects_dict
+            self._erp_app_var = erp_co_ctrl.app_variablen_dict
 
             #2 Fetch information about all datasets
             self._dataset_infos = None
@@ -80,15 +85,13 @@ class ERPAbstractEntity(ERPCoreController):
             # Set range if range_end
             self._range_end = None
             self._is_ranged = False
+            self._range_count = None
             if range_end:
                 self.set_range_end(range_end=range_end)
                 # Set the range on the dataset
                 self.range_set()
                 self.set_is_ranged()
                 self.set_range_count()
-
-            # Initialize range_count as empty
-            self._range_count = None
 
             # Initialize nested dataset as none until it is set
             self._nested_dataset = None
@@ -125,6 +128,10 @@ class ERPAbstractEntity(ERPCoreController):
             # Holds the current state of the dataset:
             self._dataset_state = None
             self.set_dataset_state()
+
+            # Holds the fields of the dataset. Is called in different functions
+            # by the self.get_dataset_fields
+            self._dataset_fields = None
 
             self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, dataset_name)
 
@@ -331,8 +338,13 @@ class ERPAbstractEntity(ERPCoreController):
             None
         """
         ranged = self._created_dataset.IsRanged()
-        self.logger.info(f"Is Dataset ranged: {ranged}")
-        self._is_ranged = ranged
+        count = self._created_dataset.RecordCount
+        if ranged and count > 0:
+            self.logger.info(f"Is Dataset ranged: {ranged}")
+            self._is_ranged = ranged
+        else:
+            self.logger.warning(f"Ranged: {ranged} and Count: {count}. Dataset is not really ranged!")
+            self._is_ranged = False
 
     def get_is_ranged(self) -> bool:
         """
@@ -351,9 +363,6 @@ class ERPAbstractEntity(ERPCoreController):
         """
         Set the range count for the dataset.
 
-        Parameters:
-            range_count: Integer representing the count of the range.
-
         Returns:
             None
         """
@@ -361,7 +370,6 @@ class ERPAbstractEntity(ERPCoreController):
             range_count = self._created_dataset.RecordCount
             self.logger.info(f"Dataset range count. {range_count}")
             self._range_count = range_count
-
         else:
             self.logger.warning("Dataset range count called, but dataset is not ranged!")
 
@@ -372,7 +380,7 @@ class ERPAbstractEntity(ERPCoreController):
         Returns:
             Integer value representing the range count if set, False otherwise.
         """
-        if self._range_count is None:
+        if not self._range_count:
             self.logger.warning("Range Count is not set")
             self.set_range_count()
 
@@ -421,6 +429,59 @@ class ERPAbstractEntity(ERPCoreController):
             self.logger.warning("Dataset state is not set. Initializing it now.")
             self.set_dataset_state()
         return self._dataset_state
+
+    def set_dataset_fields(self) -> bool:
+        """
+        Set the dataset fields to self._dataset_fields by fetching them from the dataset.
+
+        Returns:
+            bool: True if the operation was successful, otherwise False.
+
+        Example:
+            success = obj.set_dataset_fields()
+            # Possible output: True or False
+        """
+        try:
+            dataset = self.get_created_dataset()
+            if dataset:
+                self._dataset_fields = [{'Name': field.Name, 'Info': field.Info} for field in dataset.Fields]
+                self.logger.info("Successfully set dataset fields.")
+                return True
+            else:
+                self.logger.warning("Failed to fetch the dataset or dataset contains no fields.")
+                return False
+        except Exception as e:
+            self.logger.error(f"An error occurred while setting dataset fields: {str(e)}")
+            return False
+
+    def get_dataset_fields(self) -> List[Dict[str, str]]:
+        """
+        Retrieve the dataset fields stored in self._dataset_fields.
+
+        Returns:
+            list: A list of dictionaries representing the dataset fields.
+                  Each dictionary has two keys: 'Name' and 'Info'.
+                  If self._dataset_fields is not set or there are no fields,
+                  an empty list is returned.
+
+        Example:
+            result = obj.get_dataset_fields()
+            # Possible output:
+            # [{'Name': 'FieldName1', 'Info': 'FieldInfo1'}, {'Name': 'FieldName2', 'Info': 'FieldInfo2'}, ...]
+        """
+        try:
+            if self._dataset_fields is None:
+                self.set_dataset_fields()
+
+            if self._dataset_fields:
+                self.logger.info("Successfully retrieved dataset fields.")
+                return self._dataset_fields
+            else:
+                self.logger.warning("self._dataset_fields is not set or contains no fields.")
+                return []
+        except Exception as e:
+            self.logger.error(f"An error occurred while retrieving dataset fields: {str(e)}")
+            return []
 
     """ Read/Write Methods """
     def get_(self, return_field: str) -> Union[str, int, float, bool, datetime]:
@@ -748,31 +809,6 @@ class ERPAbstractEntity(ERPCoreController):
             index_info[index_name] = fields
         return index_info
 
-    def get_all_fields(self) -> List[Dict[str, str]]:
-        """
-        Retrieve all fields from the dataset.
-
-        This method fetches all the fields present in the dataset and returns
-        them as a list of dictionaries. Each dictionary contains the 'Name'
-        and 'Info' attributes of a field.
-
-        Returns:
-            list: A list of dictionaries where each dictionary represents a field in the dataset.
-                  Each dictionary has two keys: 'Name' and 'Info'.
-                  If the dataset is not available or there are no fields,
-                  an empty list is returned.
-
-        Example:
-            result = obj.get_all_fields()
-            # Possible output:
-            # [{'Name': 'FieldName1', 'Info': 'FieldInfo1'}, {'Name': 'FieldName2', 'Info': 'FieldInfo2'}, ...]
-
-        """
-        dataset = self.get_created_dataset()
-        if dataset:
-            return [{'Name': field.Name, 'Info': field.Info} for field in dataset.Fields]
-        return []
-
     def get_all_indicies(self):
         """
         Get all indices from the dataset and return them as a dictionary.
@@ -854,6 +890,161 @@ class ERPAbstractEntity(ERPCoreController):
         except Exception as e:
             self.logger.error(f"Error while setting value to field: {e}")
             return False
+
+    def field_exists(self, field_name: str) -> bool:
+        """
+        Check if a specific field exists in the dataset.
+
+        This method checks if a given field (provided by the field_name parameter) exists in the dataset.
+
+        Args:
+            field_name (str): The name of the field to check.
+
+        Returns:
+            bool: True if the field exists in the dataset, otherwise False.
+
+        Example:
+            exists = obj.field_exists("FieldName1")
+            # Possible output: True or False
+        """
+        try:
+            all_fields = self.get_dataset_fields()
+            if all_fields:
+                # Check if any field in all_fields has a name that matches field_name
+                for field in all_fields:
+                    if field['Name'] == field_name:
+                        self.logger.info(f"The field '{field_name}' exists in {self._dataset_name}.")
+                        return True
+                self.logger.warning(f"The field '{field_name}' does not exist in {self._dataset_name}.")
+                return False
+            else:
+                self.logger.warning(f"Fields of {self._dataset_name} could not be fetched. No check for Field 'Bild' possible.")
+                return False
+        except Exception as e:
+            self.logger.error(f"An error occurred while checking for the existence of the field '{field_name}': {str(e)} in {self._dataset_name}")
+            return False
+
+    def get_erp_app_object(self):
+        """
+        Retrieve the 'soAppObject' special object from the ERP.
+
+        Returns:
+            object or bool: The 'soAppObject' if successful, otherwise False.
+        """
+        try:
+            # Fetch the special ERP object named 'soAppObject'
+            erp_app = self._erp.getSpecialObject(self._erp_special_objects["soAppObject"])
+
+            # If the erp_app object is not available, log a warning and return False
+            if not erp_app:
+                self.logger.warning("Unable to fetch the 'soAppObject' from the ERP.")
+                return False
+
+            # Log the successful retrieval of 'soAppObject'
+            self.logger.info(f"Successfully retrieved 'soAppObject' from the ERP.")
+
+            return erp_app
+
+        except Exception as e:
+            self.logger.error(f"An error occurred while fetching the 'soAppObject': {str(e)}")
+            return False
+
+    def get_max_img_nr(self):
+        """
+        Retrieve the maximum available number of article images from the ERP's special object.
+
+        This method interacts with the 'soAppObject' special object in the ERP to determine
+        the total available article images.
+
+        Returns:
+            int or bool: The number of available article images if successful, otherwise False.
+        """
+        try:
+            # Get the 'soAppObject' using the method from the parent class
+            erp_app = self.get_erp_app_object()
+
+            # If the erp_app object is not available, return False
+            if not erp_app:
+                return False
+
+            # Retrieve the maximum available article images from the 'soAppObject'
+            available_images = erp_app.GetAppVar(self._erp_app_var["ArtikelBilder"])
+
+            # If the available images are not fetched successfully, log a warning and return False
+            if not available_images:
+                self.logger.warning("Unable to determine the available article images.")
+                return False
+
+            # Log the successful retrieval of available images
+            self.logger.info(f"Successfully retrieved {available_images} available article images from the ERP.")
+
+            return int(available_images)
+
+        except Exception as e:
+            self.logger.error(f"An error occurred while fetching the available article images: {str(e)}")
+            return False
+
+    def get_images_file_list(self):
+        """
+        Retrieve the file names for all available article images from the ERP's special object.
+
+        This method interacts with the ERP to determine the file names for each available
+        article image by iterating through all possible image slots.
+
+        Returns:
+            list[str] or bool: A list of file names for all available article images if successful, otherwise False.
+        """
+        if not self.field_exists("Bild"):
+            self.logger.error(f"Field 'Bild' does not exist in {self._dataset_name}. Returning False")
+            return False
+
+        image_paths = []
+
+        try:
+            # Get the maximum number of available images
+            max_images = self.get_max_img_nr()
+
+            # If max_images is False or not an integer, return False
+            if not isinstance(max_images, int):
+                self.logger.warning("Unable to determine the total available images.")
+                return False
+
+            # Iterate through each available image slot and retrieve its file path
+            for i in range(1, max_images + 1):
+                # WTF Microtech?!?!?!?! Why is the first without an index? WHY?
+                if i == 1:
+                    image_index = "Bild"
+                else:
+                    if self.field_exists(f"Bild{i}"):
+                        image_index = f"Bild{i}"
+                    else:
+                        continue
+
+                filepath = self._created_dataset.Fields.Item(f"{image_index}").GetEditObject(4).LinkFileName
+                self.logger.info(f"Bild String: {filepath}")
+                # Check if filepath is valid
+                if filepath:
+                    # Check if the filepath contains path separators, if not, it's already a filename
+                    if os.path.sep in filepath:
+                        filename = os.path.basename(filepath)
+                    else:
+                        filename = filepath
+
+                    # Check if filename is valid before appending
+                    if filename:
+                        image_paths.append(filename)
+                else:
+                    self.logger.warning(f"No image given in Field: 'Bild{i}'.")
+
+            # Log the successful retrieval of image paths
+            self.logger.info(f"Successfully retrieved {len(image_paths)} image filenames from the ERP.")
+
+            return image_paths
+
+        except Exception as e:
+            self.logger.error(f"An error occurred while fetching the image filenames: {str(e)}")
+            return False
+
 
 
 

@@ -20,8 +20,10 @@ class ERPArtikelEntity(ERPAbstractEntity):
         return stg_ums
 
     def get_nested_sliums(self, jahr, return_field):
+        """Stücklistenumsatz"""
         stg_ums = self.get_nested_("SLiUms", "Jahr", jahr, return_field)
         return stg_ums
+
 
 
 

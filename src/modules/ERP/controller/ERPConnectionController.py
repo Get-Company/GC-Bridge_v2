@@ -11,6 +11,46 @@ from config import ERPConfig
 class ERPConnectionController(ERPCoreController):
     def __init__(self):
         super().__init__()
+        # Example
+        # self._erp.getSpecialObject(self._erp_special_objects["soAppObject"])
+        self.special_objects_dict = {
+            "soLager": 0,
+            "soVorgang": 1,
+            "soDokumente": 2,
+            "soKontenAnalyse": 3,
+            "soAppObject": 4,
+            "soWandeln": 5,
+            "soDoublette": 6,
+            "soEvents": 7,
+            "soNachricht": 8,
+            "soVariablen": 9,
+            "soDrucken": 10,
+            "soBanking": 11,
+            "soBuchungen": 12,
+            "soEBilanz": 13,
+            "soOffenePosten": 14,
+            "soZahlungsverkehr": 15,
+            "soAusgabeVerzeichnis": 16,
+            "soTableDefinition": 17,
+            "soAdrSpezPr": 18,
+            "soModificationMonitor": 19,
+            "soProjekte": 20
+        }
+
+        # Example
+        # available_categories = str(erp_app.GetAppVar(self._erp_app_var["ArtikelKategorien"]))
+
+        self.app_variablen_dict = {
+            "ArtikelVerkaufspreise": 0,
+            "ArtikelVarianten": 1,
+            "ArtikelRabattsaetze": 2,
+            "ArtikelBilder": 3,
+            "ArtikelBezeichnungen": 4,
+            "ArtikelKategorien": 5,
+            "FreieArtikelKategorien": 6,
+            "ArtikelGewicht": 7
+        }
+
 
     _instance = None
 

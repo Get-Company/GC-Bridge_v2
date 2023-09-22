@@ -10,61 +10,37 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
             range_end=range_end
         )
 
-    def get_parent_nr(self):
+    def get_available_categories(self):
         """
-        Retrieve the parent number of the current dataset.
+        Retrieve the maximum available number of article categories from the ERP's special object.
+
+        This method interacts with the 'soAppObject' special object in the ERP to determine
+        the total available article categories.
 
         Returns:
-            int: The parent number if found, otherwise False.
-
-        Raises:
-            Exception: If there's an issue retrieving the parent number.
+            int or bool: The number of available article categories if successful, otherwise False.
         """
         try:
-            parent_nr = self.get_("ParentNr")
-            self.logger.info(f"Successfully retrieved ParentNr: {parent_nr} for dataset '{self._dataset_name}'.")
-            return parent_nr
-        except Exception as e:
-            self.logger.error(f"Error on finding Parent of Nr {self.get_('Nr')} for dataset '{self._dataset_name}': {str(e)}")
-            raise
+            # Get the 'soAppObject' using the method from the parent class
+            erp_app = self.get_erp_app_object()
 
-    def has_parent(self):
-        """
-        Check if the current dataset has a parent.
-
-        Returns:
-            bool: True if the dataset has a parent, otherwise False.
-
-        Raises:
-            Exception: If there's an issue determining if the dataset has a parent.
-        """
-        try:
-            parent_nr = self.get_parent_nr()
-            if not parent_nr or parent_nr == 0:
-                self.logger.info(f"Dataset '{self._dataset_name}' does not have a parent.")
+            # If the erp_app object is not available, return False
+            if not erp_app:
                 return False
-            else:
-                self.logger.info(f"Dataset '{self._dataset_name}' does have a parent. Parent ID: {parent_nr}")
-                return True
+
+            # Retrieve the maximum available article categories from the 'soAppObject'
+            available_categories = erp_app.GetAppVar(self._erp_app_var["ArtikelKategorien"])
+
+            # If the available categories are not fetched successfully, log a warning and return False
+            if not available_categories:
+                self.logger.warning("Unable to determine the available article categories.")
+                return False
+
+            # Log the successful retrieval of available categories
+            self.logger.info(f"Successfully retrieved {available_categories} available article categories from the ERP.")
+
+            return int(available_categories)
+
         except Exception as e:
-            self.logger.error(f"Error on determining if dataset '{self._dataset_name}' has a parent: {str(e)}")
-            raise
-
-    def get_category_path(self):
-        """
-        Retrieve the category path from the topmost to the lowest level.
-
-        Returns:
-            list[int]: A list of category numbers from topmost to lowest level.
-
-        Raises:
-            Exception: If there's an issue retrieving the category path.
-        """
-        try:
-            nr_path_str = self.get_("NrPath")
-            nr_path_list = [int(nr) for nr in nr_path_str.split('/') if nr]
-            self.logger.info(f"Successfully retrieved category path for dataset '{self._dataset_name}': {nr_path_list}.")
-            return nr_path_list
-        except Exception as e:
-            self.logger.error(f"Error on retrieving category path for dataset '{self._dataset_name}': {str(e)}")
-            raise
+            self.logger.error(f"An error occurred while fetching the available article categories: {str(e)}")
+            return False

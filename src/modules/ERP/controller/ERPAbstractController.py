@@ -79,3 +79,10 @@ class ERPAbstractController(ERPCoreController):
     def get_all_dataset_indicies(self):
         indices = self._dataset_entity.get_all_indicies()
         return indices
+
+    def get_img_files(self):
+        img_list = self.get_entity().get_images_file_list()
+        if img_list:
+            return img_list
+        else:
+            return False
