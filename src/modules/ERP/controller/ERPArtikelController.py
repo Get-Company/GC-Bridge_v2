@@ -102,6 +102,17 @@ class ERPArtikelController(ERPAbstractController):
             catnr = categories[0]
         return ERPArtikelKategorienEntity(catnr)
 
+    def price_infos(self):
+        infos = {
+            "Steuerschlüssel": self._dataset_entity.get_("StSchl"),
+            "Steuerschlüsselart": self._dataset_entity.get_("StSchlArt"),
+            "Steuerverteilung": self._dataset_entity.get_("StVert"),
+            "Steuerverteilung Netto": self._dataset_entity.get_("StVertNt"),
+            "Steuerverteilung Steuer": self._dataset_entity.get_("StVertSt"),
+            "Steuerverteilung Brutto": self._dataset_entity.get_("StVertBt"),
+        }
+        return infos
+
 
 
 
