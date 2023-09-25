@@ -17,16 +17,31 @@
 
 </head>
 <body>
+<div class="container-fluid">
+    <div class="row flex-nowrap">
+        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 ">
+            <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 min-vh-100">
+                {% include '_includes/sidemenu.html' %}
+            </div>
+        </div>
+        <div class="col py-3">
+        {% block body_open %}{% endblock %}
 
-{% block body_open %}{% endblock %}
+        {% block body %}
+            <h1>
+                {% block h1 %} Base {% endblock %}
+            </h1>
+        {% endblock %}
 
-{% block body %}
-    <h1>
-        {% block h1 %} Dashboard {% endblock %}
-    </h1>
-{% endblock %}
+        <!-- Bootstrap JavaScript -->
+        <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+        {% block body_close %}
 
-{% block body_close %}{% endblock %}
+        {% endblock %}
+        </div>
+    </div>
+</div>
+
 
 </body>
 </html>

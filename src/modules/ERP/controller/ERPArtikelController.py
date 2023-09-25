@@ -19,6 +19,13 @@ class ERPArtikelController(ERPAbstractController):
         if image_paths:
             for img in image_paths:
                 print(img)
+
+        Get Tax informations
+        art_ctrl = ERPArtikelController(204116)
+        fields = art_ctrl.price_infos().items()
+        for key,value in fields:
+            print(f"{key}: {value}")
+
     """
 
     def __init__(self, search_value=None):
@@ -112,7 +119,3 @@ class ERPArtikelController(ERPAbstractController):
             "Steuerverteilung Brutto": self._dataset_entity.get_("StVertBt"),
         }
         return infos
-
-
-
-
