@@ -30,3 +30,4 @@ class ERPArtikelKategorienController(ERPAbstractController):
             message = "Dataset entity is not set"
             self.logger.warning(message)
             raise ValueError(message)
+

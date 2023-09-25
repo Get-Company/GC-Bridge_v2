@@ -44,3 +44,40 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
         except Exception as e:
             self.logger.error(f"An error occurred while fetching the available article categories: {str(e)}")
             return False
+
+    def get_category_nr_path(self):
+        """
+        Retrieve the category number path, convert it into a list of integers,
+        and return the list. The first number in the path should also be the
+        first number in the returned list.
+
+        :return: A list of integers representing the category number path,
+                 or an empty list if the path is None or cannot be processed.
+        """
+        try:
+            # Retrieve the raw number path
+            path_raw = self.get_("NrPath")  # e.g., "11/1/110"
+
+            if path_raw:
+                # Split the raw path string into a list of strings,
+                # then convert each string to an integer
+                path_list = [int(nr) for nr in path_raw.split('/')]
+
+                # Log the successfully processed number path
+                self.logger.info(f"Successfully processed number path: {path_list}")
+
+                return path_list
+
+            else:
+                # Log a warning if path_raw is None or an empty string
+                self.logger.warning("The number path is None or empty.")
+
+        except ValueError as e:
+            # Log an error if a part of the path is not convertible to an integer
+            self.logger.error(f"Error converting number path to integers: {e}")
+
+        except Exception as e:
+            # Catch any other exceptions that may occur
+            self.logger.error(f"An unexpected error occurred: {e}")
+        # Return an empty list in case of an error or if path_raw is None or empty
+        return []
