@@ -19,28 +19,24 @@ def create_app():
     migrate.init_app(app, db)
 
     """ All the imports go here """
-# Entities
-    # ERP Entities are not necessary
 
     # Bridge
-    from .modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity, BridgeCategoryTranslation, bridge_category_marketplace_association
-    from .modules.Bridge.entities.BridgeMarketplaceEntity import BridgeMarketplaceEntity
+    from .modules.Bridge.view.BridgeViews import BridgeViews
+    app.register_blueprint(BridgeViews)
 
-# Controller
-    # ERP Controller
+    # ERP
     from .modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController
     from .modules.ERP.controller.ERPArtikelController import ERPArtikelController
     from .modules.ERP.controller.ERPAdressenController import ERPAdressenController
 
-    # Bridge Controller
-# Views
-    # ERP Views
-    from .view.dashboard_view import dashboard_view
-    app.register_blueprint(dashboard_view, url_prefix="/")
 
+# Views
+
+
+# Attention! This is commented, since we handle the db by migrations
 # DB create_all to ensure all db tables are there
-    with app.app_context():
-        db.create_all()
+#    with app.app_context():
+#         db.create_all()
 
 # Return the App Object
     return app

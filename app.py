@@ -2,20 +2,27 @@ from src import create_app
 from pprint import pprint
 from datetime import datetime, timedelta
 
-from src.modules.ERP.controller.ERPAdressenController import ERPAdressenController
+from config import SW6Config
 
+
+""" Timer Start """
 before = datetime.now()
+# from lib_shopware6_api_base import Shopware6AdminAPIClientBase, Criteria, EqualsFilter
+# sw6_client = Shopware6AdminAPIClientBase(SW6Config)
+# id = 'e2f18bf14dd54320952d73a0af868dde'
+# category = sw6_client.request_get(f"/category/{id}")
+# pprint(category)
+# payload = Criteria()
+# payload.filter.append(EqualsFilter('name', "Plantafeln"))
+# category = sw6_client.request_post("/category", payload=payload)
+# pprint(category)
 
-buchner_ctrl = ERPAdressenController(10026)
+app = create_app()
 
-
-# print(hans_ctrl.shipping_address().get_("Na2"))
-
+""" Timer End """
 after = datetime.now()
 time = after - before
 print(f"The script took {time}")
-# app = create_app()
-
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
 
