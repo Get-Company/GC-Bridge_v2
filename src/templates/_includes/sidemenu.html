@@ -1,6 +1,6 @@
 <div class="border-right" id="sidebar-wrapper">
     <div class="sidebar-heading">
-        <a href="/">GC-Bridge</a>
+        <a href="{{ url_for('bridge_views.dashboard') }}">GC-Bridge</a>
     </div>
     <div class="list-group list-group-flush">
 
@@ -19,7 +19,7 @@
 
         <!-- Einzelner Menüpunkt für Regeln -->
         <div class="list-group-item list-group-item-action">
-            <a href="#">Regeln</a>
+            <a href="{{ url_for('bridge_views.rules') }}">Regeln</a>
         </div>
 
         <!-- Slide-Down für Marktplätze -->
