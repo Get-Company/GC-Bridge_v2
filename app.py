@@ -4,9 +4,7 @@ from datetime import datetime, timedelta
 
 from config import SW6Config
 
-
-""" Timer Start """
-before = datetime.now()
+app, db = create_app()
 # from lib_shopware6_api_base import Shopware6AdminAPIClientBase, Criteria, EqualsFilter
 # sw6_client = Shopware6AdminAPIClientBase(SW6Config)
 # id = 'e2f18bf14dd54320952d73a0af868dde'
@@ -17,12 +15,12 @@ before = datetime.now()
 # category = sw6_client.request_post("/category", payload=payload)
 # pprint(category)
 
-app = create_app()
 
 """ Timer End """
-after = datetime.now()
-time = after - before
-print(f"The script took {time}")
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
+# after = datetime.now()
+# time = after - before
+# print(f"The script took {time}")
+
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
 
