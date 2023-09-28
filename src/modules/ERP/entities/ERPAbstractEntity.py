@@ -20,6 +20,7 @@ from datetime import datetime
 from typing import List, Union, Tuple, Any, Dict
 # Is used to get the basename of the image
 import os
+from abc import abstractmethod
 
 from ..ERPCoreController import ERPCoreController
 from ..controller.ERPConnectionController import ERPConnectionController
@@ -284,6 +285,7 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             self._search_value = search_value
             self.logger.info(f"Search Value is set to: {search_value}")
+            self.set_cursor()
         except Exception as e:
             self.logger.error(f"Error setting search value: {str(e)}")
             raise
@@ -1039,11 +1041,20 @@ class ERPAbstractEntity(ERPCoreController):
             # Log the successful retrieval of image paths
             self.logger.info(f"Successfully retrieved {len(image_paths)} image filenames from the ERP.")
 
+            # Now check if we got any image(s), otherwise return None
+            if not image_paths:
+                self.logger.warning("But unfortunately, no images were found at all. So we return None")
+                return None
+
             return image_paths
 
         except Exception as e:
             self.logger.error(f"An error occurred while fetching the image filenames: {str(e)}")
             return False
+
+    @abstractmethod
+    def map_erp_to_bridge(self):
+        pass
 
 
 

@@ -1,4 +1,7 @@
+import json
+
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
+from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity, BridgeCategoryTranslation
 
 
 class ERPArtikelKategorienEntity(ERPAbstractEntity):
@@ -9,6 +12,29 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
             search_value=search_value,
             range_end=range_end
         )
+
+    def map_erp_to_bridge(self):
+        # Erstellen einer neuen Instanz von BridgeCategoryEntity
+        category_entity = BridgeCategoryEntity(
+            erp_nr=self.get_("Nr"),
+            erp_nr_parent=self.get_("ParentNr"),
+            tree_path=json.dumps(self.get_category_nr_path()),
+            created_at=self.get_("ErstDat"),
+            edited_at=self.get_("AendDat")
+        )
+
+        # Erstellen einer neuen Instanz von BridgeCategoryTranslationEntity
+        category_translation = BridgeCategoryTranslation(
+            language='DE_de',  # Angenommen, dass die Sprache Deutsch ist, da das Feld im Dataset nicht spezifiziert ist
+            name=self.get_("Bez"),
+            description=self.get_("Info"),
+            description_short=self.get_("Memo")  # Angenommen, dass Memo als kurze Beschreibung dient
+        )
+
+        # Verknüpfen der Translation mit der Kategorie
+        category_entity.translations.append(category_translation)
+
+        return category_entity
 
     def get_available_categories(self):
         """
@@ -81,3 +107,5 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
             self.logger.error(f"An unexpected error occurred: {e}")
         # Return an empty list in case of an error or if path_raw is None or empty
         return []
+
+

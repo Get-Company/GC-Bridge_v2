@@ -1,6 +1,7 @@
 from ..ERPCoreController import ERPCoreController
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from abc import abstractmethod
+from src import db
 
 
 class ERPAbstractController(ERPCoreController):
@@ -16,6 +17,8 @@ class ERPAbstractController(ERPCoreController):
         """Initialize the ERPAbstractController."""
         self._dataset_entity = dataset_entity
         self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, self._dataset_entity.get_dataset_name())
+        self.db = db
+        self.token_counter = 0
 
     def set_entity(self, dataset_entity) -> None:
         """
@@ -86,3 +89,79 @@ class ERPAbstractController(ERPCoreController):
             return img_list
         else:
             return False
+
+    """     
+    Abstract Methods, defined in ModulesCoreController
+    These Methods must bes overwritten. If there is no use of it simply do a pass!
+    """
+
+    def sync_all_to_bridge(self):
+        # 1. Get all datasets
+        dataset = self.get_entity()
+        dataset.range_first()
+
+        # 2. For Loop through all the datasets
+        while not dataset.range_eof():
+            self.upsert()
+            dataset.range_next()
+
+        return True
+
+    def sync_all_from_bridge(self):
+        pass
+
+    def sync_one_to_bridge(self, dataset=None, id=None):
+        self.upsert()
+
+    def sync_one_from_bridge(self):
+        pass
+
+    def sync_changed_to_bridge(self):
+        pass
+
+    def sync_changed_from_bridge(self):
+        pass
+
+    def upsert(self):
+        # Map the ERPDataset to the BridgeObject
+        bridge_entity_new = self._dataset_entity.map_erp_to_bridge()
+        # Query for an existing entry
+        bridge_entity_in_db = self.is_in_db(bridge_entity_new)
+
+        if bridge_entity_in_db:
+            # Forward the existing id to the new entity
+            bridge_entity_new.id = bridge_entity_in_db.id
+
+        # Now merge everything
+        self.merge(bridge_entity_new)
+
+    @abstractmethod
+    def is_in_db(self, bridge_entity_new):
+        """
+        This is needed in the child classes. Since we have to do
+        a specific search.
+
+        Example:
+        erp_nr=bridge_entity_new.erp_nr
+        BridgeCategoryEntity.query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
+
+        """
+        pass
+
+    def merge(self, bridge_entity_new):
+        """Merges the new Bridge entity into the database.
+
+        :param bridge_entity_new: The new Bridge entity to merge.
+        :type bridge_entity_new: BridgeCategoryEntity
+        """
+        try:
+            self.logger.info(f"Merging entity with ERP number: {bridge_entity_new.erp_nr}")
+            text = bridge_entity_new.translations[0].description
+            name = bridge_entity_new.translations[0].name
+            self.token_counter += self.count_tokens(text=text)
+            print(name, self.count_tokens(text=text), "Tokens - Accumulated:", self.token_counter)
+            self.db.session.merge(bridge_entity_new)
+            self.db.session.commit()
+        except Exception as e:
+            self.logger.error(f"An error occurred while merging the entity: {str(e)}")
+            self.db.session.rollback()

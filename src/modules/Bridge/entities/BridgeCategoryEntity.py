@@ -1,13 +1,6 @@
 from src import db
 import datetime
 
-# Definieren der Assoziationstabelle
-bridge_category_marketplace_association = db.Table(
-    'bridge_category_marketplace_association',
-    db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id'), primary_key=True),
-    db.Column('marketplace_id', db.Integer, db.ForeignKey('bridge_marketplace_entity.id'), primary_key=True)
-)
-
 
 class TranslationWrapper:
     def __init__(self, translation):
@@ -20,13 +13,12 @@ class TranslationWrapper:
 
 
 class BridgeCategoryEntity(db.Model):
-
     __tablename__ = 'bridge_category_entity'
 
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
     erp_nr = db.Column(db.Integer(), nullable=False)
     erp_nr_parent = db.Column(db.Integer(), nullable=True)
-    image = db.Column(db.String(255), nullable=True)
+    tree_path = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
@@ -37,13 +29,6 @@ class BridgeCategoryEntity(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan')
 
-    marketplaces = db.relationship(
-        'BridgeMarketplaceEntity',
-        secondary=bridge_category_marketplace_association,
-        back_populates='categories',
-        cascade='all, delete'
-    )
-
     def get_(self, language_code):
         # Usage example:
         # category = BridgeCategoryEntity.query.first()
@@ -51,6 +36,9 @@ class BridgeCategoryEntity(db.Model):
         # english_description = category.get_('GB_en').description
         translation = self.translations.filter_by(language=language_code).first()
         return TranslationWrapper(translation)
+
+    def __repr__(self):
+        print(f'"Bridge Category Entity: {self.get_("DE_de").title}" ID: {self.id}')
 
 
 class BridgeCategoryTranslation(db.Model):
@@ -63,5 +51,5 @@ class BridgeCategoryTranslation(db.Model):
     description_short = db.Column(db.Text(), nullable=True)
 
     # Relations
-    category_id = db.Column(db.Integer(), db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'), nullable=False)
-
+    category_id = db.Column(db.Integer(), db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'),
+                            nullable=False)
