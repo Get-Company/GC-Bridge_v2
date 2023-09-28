@@ -21,6 +21,6 @@ app, db = create_app()
 # time = after - before
 # print(f"The script took {time}")
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5002, debug=True, use_reloader=True)
 

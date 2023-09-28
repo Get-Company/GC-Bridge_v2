@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Kategorien {% endblock %}
+{% block h1 %} Kategorien {% endblock %}
+
+{% block body %}
+<table class="table table-striped table-bordered">
+    <thead>
+    <tr>
+        <th>Index</th>
+        <th scope="col">ERP Nr</th>
+        {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
+            <th scope="col">Name ({{ language_code }})</th>
+            <th scope="col">Description ({{ language_code }})</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for category in categories %}
+        <tr>
+        <td>{{ loop.index }}</td>
+            <td>{{ category.erp_nr }}</td>
+            {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
+                <td>{{ category.get_(language_code).name }}</td>
+                <td>{{ category.get_(language_code).description }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{%  endblock %}

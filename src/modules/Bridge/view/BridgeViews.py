@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template
-from src.modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController
+from src import db
+from src.modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController, BridgeCategoryEntity
 
 BridgeViews = Blueprint('bridge_views', __name__)
 
@@ -12,6 +13,13 @@ def bridge_dashboard_view():
 @BridgeViews.route('/rules', endpoint='rules')
 def bridge_rules_view():
     return render_template('bridge/rules/rules.html')
+
+
+@BridgeViews.route('/categories', endpoint='categories')
+def bridge_categories():
+    cat_ntt = BridgeCategoryEntity()
+    categories = db.session.query(BridgeCategoryEntity).all()
+    return render_template('bridge/category/categories.html', categories=categories)
 
 
 """ 

@@ -39,8 +39,8 @@ def create_app():
     # DB create_all to ensure all db tables are there
     with app.app_context():
 
-        artcat_ctrl = ERPArtikelKategorienController(110, range_end=21000)
-        artcat_ctrl.sync_all_to_bridge()
+        # artcat_ctrl = ERPArtikelKategorienController(1, range_end=21000)
+        # artcat_ctrl.sync_all_to_bridge()
         db.create_all()
 
 # Return the App Object

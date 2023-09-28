@@ -156,10 +156,6 @@ class ERPAbstractController(ERPCoreController):
         """
         try:
             self.logger.info(f"Merging entity with ERP number: {bridge_entity_new.erp_nr}")
-            text = bridge_entity_new.translations[0].description
-            name = bridge_entity_new.translations[0].name
-            self.token_counter += self.count_tokens(text=text)
-            print(name, self.count_tokens(text=text), "Tokens - Accumulated:", self.token_counter)
             self.db.session.merge(bridge_entity_new)
             self.db.session.commit()
         except Exception as e:

@@ -2,8 +2,12 @@ import logging
 import re
 from logging.handlers import TimedRotatingFileHandler
 import os
+from pprint import pprint
+
 import sqlalchemy
 from abc import ABC, abstractmethod
+import openai
+from config import OpenAIConfig
 
 
 class ModulesCoreController(ABC):
@@ -58,6 +62,44 @@ class ModulesCoreController(ABC):
         pattern = re.compile(r'\w+|\S')
         tokens = re.findall(pattern, text)
         return len(tokens)
+
+    def ai_translate_to(self,text:str, language="GB_en"):
+        """
+        Sends a prompt to GPT-3.5 and returns the generated response.
+
+        :param prompt: The prompt to send to GPT-3.5.
+        :type prompt: str
+        :return: The generated response from GPT-3.5.
+        :rtype: str
+        """
+        # Set up the OpenAI API client with your API key
+        if not text:
+            return
+        openai.api_key = OpenAIConfig.API_KEY
+
+        try:
+            # Send the prompt to GPT-3.5
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": f"Translate to {language}. Keep the html markup. No elaboration, just translate."
+                    },
+                    {
+                        "role": "user",
+                        "content": text
+                    }
+                ],
+                max_tokens=1000  # You can adjust the max tokens as needed
+            )
+            # Extract and return the generated text from the response
+            generated_text = response['choices'][0]['message']['content']
+            pprint(response)
+            return generated_text
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+            return None
 
     @abstractmethod
     def sync_all_to_bridge(self):

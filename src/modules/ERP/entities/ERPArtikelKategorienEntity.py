@@ -34,6 +34,15 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
         # Verknüpfen der Translation mit der Kategorie
         category_entity.translations.append(category_translation)
 
+        # Add GB_en
+        # category_translation_gb_en = BridgeCategoryTranslation(
+        #     language="GB_en",
+        #     name=self.ai_translate_to(self.get_("Bez"), language="GB_en"),
+        #     description=self.ai_translate_to(self.get_("Info"), language="GB_en"),
+        #     description_short=""
+        # )
+        # category_entity.translations.append(category_translation_gb_en)
+
         return category_entity
 
     def get_available_categories(self):
