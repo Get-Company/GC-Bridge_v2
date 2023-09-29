@@ -10,7 +10,7 @@ class BridgeCoreController(ModulesCoreController):
 
     """     
     Abstract Methods, defined in ModulesCoreController
-    These Methods must bes overwritten. If there is no use of it simply do a pass!
+    These Methods must be overwritten. If there is no use of it simply do a pass!
     """
     def sync_all_to_bridge(self):
         pass

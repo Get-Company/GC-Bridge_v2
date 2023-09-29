@@ -29,10 +29,10 @@ class BridgeCategoryEntity(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan')
 
-    def get_(self, language_code):
+    def get_translation_(self, language_code):
         # Usage example:
         # category = BridgeCategoryEntity.query.first()
-        # german_title = category.get_('DE_de').title
+        # german_title = category.get_translation_('DE_de').title
         # english_description = category.get_('GB_en').description
         translation = self.translations.filter_by(language=language_code).first()
         return TranslationWrapper(translation)

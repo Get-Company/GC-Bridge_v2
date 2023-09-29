@@ -1,6 +1,7 @@
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..entities.ERPArtikelEntity import ERPArtikelEntity
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
+from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
 
 
 class ERPArtikelController(ERPAbstractController):
@@ -28,13 +29,45 @@ class ERPArtikelController(ERPAbstractController):
 
     """
 
-    def __init__(self, search_value=None):
-        self._dataset_entity = ERPArtikelEntity(search_value=search_value)
+    def __init__(self, search_value=None, index=None, range_end=None):
+        self._dataset_entity = ERPArtikelEntity(
+            search_value=search_value,
+            index=index,
+            range_end=range_end
+        )
         self._category_dataset_entity = ERPArtikelKategorienEntity()
 
         super().__init__(
             dataset_entity=self._dataset_entity
         )
+
+    def is_in_db(self, bridge_entity_new: BridgeProductEntity) -> object:
+        """
+        Checks if a given BridgeProductEntity is already present in the database.
+
+        :param bridge_entity_new: The BridgeProductEntity to check.
+        :type bridge_entity_new: BridgeProductEntity
+        :return: The existing BridgeProductEntity from the database if found, otherwise False.
+        :rtype: BridgeProductEntity or bool
+        """
+        try:
+            # Attempt to query the database for the given BridgeProductEntity.
+            self.logger.info(f"Attempting to find BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr}")
+            entity_in_db = BridgeProductEntity.query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
+
+            if entity_in_db:
+                # If the entity is found in the database, log the success and return the entity.
+                self.logger.info(f"BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr} found in database.")
+                return entity_in_db
+            else:
+                # If the entity is not found in the database, log the failure and return False.
+                self.logger.warning(f"BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr} not found in database.")
+                return False
+
+        except Exception as e:
+            # If any exception occurs while querying the database, log the error and return False.
+            self.logger.error(f"An error occurred while querying the database: {str(e)}")
+            return False
 
     def get_entity(self):
         """

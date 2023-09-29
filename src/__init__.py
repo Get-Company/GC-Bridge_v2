@@ -28,7 +28,13 @@ def create_app():
     # Entities
     from .modules.Bridge.entities.BridgeCategoryEntity import (
         BridgeCategoryEntity,
-        BridgeCategoryTranslation)
+        BridgeCategoryTranslation
+    )
+
+    from .modules.Bridge.entities.BridgeProductEntity import (
+        BridgeProductEntity,
+        BridgeProductTranslation
+    )
 
 # ERP
     # Controller
@@ -41,6 +47,7 @@ def create_app():
 
         # artcat_ctrl = ERPArtikelKategorienController(1, range_end=21000)
         # artcat_ctrl.sync_all_to_bridge()
+        art_ctr = ERPArtikelController("1", range_end="ZZZZZZZZ").sync_all_to_bridge()
         db.create_all()
 
 # Return the App Object

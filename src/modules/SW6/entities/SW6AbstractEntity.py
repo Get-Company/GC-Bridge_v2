@@ -14,6 +14,7 @@ class QueryCriteria:
 
 
 class SW6AbstractEntity(SW6CoreController):
+
     def __init__(self, endpoint_name):
         super().__init__()
         self.sw6_api = SW6ConnectionController()
@@ -182,3 +183,25 @@ class SW6AbstractEntity(SW6CoreController):
             raise
         # Parse and return the JSON response
         return response.json()
+
+    """     
+    Abstract Methods, defined in ModulesCoreController
+    These Methods must be overwritten. If there is no use of it simply do a pass!
+    """
+    def sync_all_to_bridge(self):
+        pass
+
+    def sync_all_from_bridge(self):
+        pass
+
+    def sync_one_to_bridge(self):
+        pass
+
+    def sync_one_from_bridge(self):
+        pass
+
+    def sync_changed_to_bridge(self):
+        pass
+
+    def sync_changed_from_bridge(self):
+        pass

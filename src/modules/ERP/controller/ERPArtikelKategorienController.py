@@ -1,11 +1,15 @@
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
-from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity, BridgeCategoryTranslation
+from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 
 
 class ERPArtikelKategorienController(ERPAbstractController):
     def __init__(self, search_value=None, index=None, range_end=None):
-        self._dataset_entity = ERPArtikelKategorienEntity(search_value=search_value, index=index, range_end=range_end)
+        self._dataset_entity = ERPArtikelKategorienEntity(
+            search_value=search_value,
+            index=index,
+            range_end=range_end
+        )
 
         super().__init__(
             dataset_entity=self._dataset_entity

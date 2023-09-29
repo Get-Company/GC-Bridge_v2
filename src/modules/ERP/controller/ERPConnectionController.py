@@ -51,7 +51,6 @@ class ERPConnectionController(ERPCoreController):
             "ArtikelGewicht": 7
         }
 
-
     _instance = None
 
     def __new__(cls):
@@ -67,7 +66,8 @@ class ERPConnectionController(ERPCoreController):
             self._erp = win32.dynamic.Dispatch("BpNT.Application")
             self._erp.Init(f'{erp_config.FIRMA}', "", f'{erp_config.BENUTZER}', '')
             self._erp.SelectMand(erp_config.MANDANT)
-            message = f"ERP connects to:'{erp_config.MANDANT}' with user: '{erp_config.BENUTZER}'"
+            message = f"ERP connects to:'{erp_config.MANDANT}' with user: '{erp_config.BENUTZER}'. "
+            message += f"The Mandant State is:{self._erp.GetMandState()} | Process ID: {self._erp.GetSpecialObject(4).GetAppProcessId()}"
             self.logger.info(message)
 
     def ensure_connected(self):
@@ -93,5 +93,6 @@ class ERPConnectionController(ERPCoreController):
             self.close()
             self.logger.info(f"__del__ was called and forwarded to self.close() ERP: '{self._erp}'")
         else:
-            self.logger.info(f"__del__ was called, but erp is already None. ERP: '{self._erp}'")
-            return True
+            self.close()
+            self.logger.info(f"__del__ was called, but erp is already None. ERP: '{self._erp}'. Calling close to be sure!")
+

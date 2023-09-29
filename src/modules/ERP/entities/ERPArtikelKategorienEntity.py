@@ -5,7 +5,18 @@ from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntit
 
 
 class ERPArtikelKategorienEntity(ERPAbstractEntity):
+    """
+    Representation of an ERP article categories entity inherited from ERPAbstractEntity.
+    """
+
     def __init__(self, search_value=None, index=None, range_end=None):
+        """
+        Initializer for ERPArtikelKategorienEntity.
+
+        :param search_value: The value used for searching.
+        :param index: The index for the dataset, defaults to 'Nr' if not provided.
+        :param range_end: The range end value.
+        """
         super().__init__(
             dataset_name="ArtikelKategorien",
             dataset_index=index or "Nr",
@@ -14,36 +25,92 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
         )
 
     def map_erp_to_bridge(self):
-        # Erstellen einer neuen Instanz von BridgeCategoryEntity
-        category_entity = BridgeCategoryEntity(
-            erp_nr=self.get_("Nr"),
-            erp_nr_parent=self.get_("ParentNr"),
-            tree_path=json.dumps(self.get_category_nr_path()),
-            created_at=self.get_("ErstDat"),
-            edited_at=self.get_("AendDat")
-        )
+        """
+        Maps the current ERP article categories entity to a BridgeCategoryEntity.
 
-        # Erstellen einer neuen Instanz von BridgeCategoryTranslationEntity
-        category_translation = BridgeCategoryTranslation(
-            language='DE_de',  # Angenommen, dass die Sprache Deutsch ist, da das Feld im Dataset nicht spezifiziert ist
-            name=self.get_("Bez"),
-            description=self.get_("Info"),
-            description_short=self.get_("Memo")  # Angenommen, dass Memo als kurze Beschreibung dient
-        )
+        :return: A BridgeCategoryEntity instance with mapped values.
+        """
+        try:
+            # Create a new instance of BridgeCategoryEntity
+            category_entity = BridgeCategoryEntity(
+                erp_nr=self.get_erp_nr(),
+                erp_nr_parent=self.get_erp_nr_parent(),
+                tree_path=json.dumps(self.get_category_nr_path()),
+                created_at=self.get_created_at(),
+                edited_at=self.get_edited_at()
+            )
 
-        # Verknüpfen der Translation mit der Kategorie
-        category_entity.translations.append(category_translation)
+            # Create a new instance of BridgeCategoryTranslationEntity
+            category_translation = BridgeCategoryTranslation(
+                language='DE_de',
+                name=self.get_name(),
+                description=self.get_description(),
+                description_short=self.get_description()
+            )
 
-        # Add GB_en
-        # category_translation_gb_en = BridgeCategoryTranslation(
-        #     language="GB_en",
-        #     name=self.ai_translate_to(self.get_("Bez"), language="GB_en"),
-        #     description=self.ai_translate_to(self.get_("Info"), language="GB_en"),
-        #     description_short=""
-        # )
-        # category_entity.translations.append(category_translation_gb_en)
+            # Link the translation with the category
+            category_entity.translations.append(category_translation)
 
-        return category_entity
+            return category_entity
+        except Exception as e:
+            self.logger.error(f"Error mapping ERPArtikelKategorien to Bridge: {str(e)}")
+            return None
+
+    def get_erp_nr(self):
+        """
+        Fetches the ERP number from the dataset.
+
+        :return: ERP number.
+        """
+        return self.get_("Nr")
+
+    def get_erp_nr_parent(self):
+        """
+        Fetches the parent ERP number from the dataset.
+
+        :return: Parent ERP number.
+        """
+        return self.get_("ParentNr")
+
+    def get_name(self):
+        """
+        Fetches the name/label from the dataset.
+
+        :return: Name/label.
+        """
+        return self.get_("Bez")
+
+    def get_description(self):
+        """
+        Fetches the information from the dataset.
+
+        :return: Information.
+        """
+        return self.get_("Info")
+
+    def get_memo(self):
+        """
+        Fetches the memo field from the dataset, assumed to serve as a short description.
+
+        :return: Memo/short description.
+        """
+        return self.get_("Memo")
+
+    def get_created_at(self):
+        """
+        Fetches the creation date from the dataset.
+
+        :return: Creation date.
+        """
+        return self.get_("ErstDat")
+
+    def get_edited_at(self):
+        """
+        Fetches the edited date from the dataset.
+
+        :return: Edited date.
+        """
+        return self.get_("AendDat")
 
     def get_available_categories(self):
         """
