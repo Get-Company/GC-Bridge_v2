@@ -54,6 +54,9 @@ class ERPAdressenController(ERPAbstractController):
             dataset_entity=self._dataset_entity
         )
 
+    def is_in_db(self, bridge_entity_new):
+        pass
+
     def get_entity(self):
         """
         Retrieve the dataset entity of the controller.
@@ -83,9 +86,7 @@ class ERPAdressenController(ERPAbstractController):
         vtrnr = self.get_entity().get_(return_field="VtrNr")
         return vtrnr
 
-    """
-    Adressen
-    """
+    """ Adressen """
 
     def billing_address(self):
         self.logger.info(f"Get Billing Address from Entity: {self.get_entity().get_dataset_name()}")
@@ -98,9 +99,7 @@ class ERPAdressenController(ERPAbstractController):
         addresses = self.get_entity().get_addresses_range()
         return addresses
 
-    """
-    Anschriften
-    """
+    """ Anschriften """
 
     def billing_contact(self):
         contact = self.get_entity().get_billing_ansprechpartner_entity()
@@ -113,3 +112,4 @@ class ERPAdressenController(ERPAbstractController):
     def contacts(self):
         contacts = self.get_entity().get_contacts()
         return contacts
+

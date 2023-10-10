@@ -2,6 +2,12 @@ from src import db
 import datetime
 
 
+# Assoziationstabelle für die Many-to-Many Beziehung
+BridgeProductsCategoriesAssoc = db.Table('bridge_product_categories_assoc',
+                                          db.Column('product_id', db.Integer, db.ForeignKey('bridge_product_entity.id'), primary_key=True),
+                                          db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id'), primary_key=True)
+                                          )
+
 class TranslationWrapper:
     def __init__(self, translation):
         self.translation = translation
@@ -16,7 +22,7 @@ class BridgeCategoryEntity(db.Model):
     __tablename__ = 'bridge_category_entity'
 
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
-    erp_nr = db.Column(db.Integer(), nullable=False)
+    erp_nr = db.Column(db.Integer(), nullable=False, unique=True)
     erp_nr_parent = db.Column(db.Integer(), nullable=True)
     tree_path = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
@@ -28,6 +34,9 @@ class BridgeCategoryEntity(db.Model):
         backref='category',
         lazy='dynamic',
         cascade='all, delete-orphan')
+
+    products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
+                               backref=db.backref('categories', lazy=True))
 
     def get_translation_(self, language_code):
         # Usage example:

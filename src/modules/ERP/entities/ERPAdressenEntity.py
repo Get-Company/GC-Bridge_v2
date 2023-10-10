@@ -62,6 +62,10 @@ class ERPAdressenEntity(ERPAbstractEntity):
         )
         return contacts_range
 
+    def map_erp_to_bridge(self):
+        pass
+
+
 
 
 

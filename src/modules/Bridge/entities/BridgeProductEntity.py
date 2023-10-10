@@ -16,7 +16,7 @@ class BridgeProductEntity(db.Model):
     __tablename__ = 'bridge_product_entity'
 
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
-    erp_nr = db.Column(db.String(255), nullable=True)
+    erp_nr = db.Column(db.String(255), nullable=True, unique=True)
     stock = db.Column(db.Integer(), nullable=False)
     unit = db.Column(db.String(255), nullable=True)
     min_purchase = db.Column(db.Integer(), nullable=True)
@@ -26,7 +26,6 @@ class BridgeProductEntity(db.Model):
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
-
     # Relations
     translations = db.relationship(
         'BridgeProductTranslation',
@@ -34,6 +33,9 @@ class BridgeProductEntity(db.Model):
         lazy='dynamic',
         cascade='all, delete-orphan'
     )
+    tax_id = db.Column(db.Integer(), db.ForeignKey('bridge_tax_entity.id'), nullable=True)
+
+    # Categories ist set in the BridgeCategoryEntity
 
     def get_translation_(self, language_code):
         # Usage example:

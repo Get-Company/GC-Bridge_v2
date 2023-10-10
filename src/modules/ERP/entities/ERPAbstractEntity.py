@@ -766,8 +766,14 @@ class ERPAbstractEntity(ERPCoreController):
     def range_first(self):
         self._created_dataset.First()
 
+    def range_nested_first(self):
+        self._nested_dataset.First()
+
     def range_eof(self):
         return self._created_dataset.Eof
+
+    def range_nested_eof(self):
+        return self._nested_dataset.Eof
 
     def range_next(self):
         self._created_dataset.Next()
@@ -1053,8 +1059,9 @@ class ERPAbstractEntity(ERPCoreController):
             return False
 
     @abstractmethod
-    def map_erp_to_bridge(self):
+    def map_erp_to_bridge(self, *args, **kwargs):
         pass
+
 
 
 

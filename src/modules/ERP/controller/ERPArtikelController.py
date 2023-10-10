@@ -1,7 +1,11 @@
+import config
 from ..controller.ERPAbstractController import ERPAbstractController
+from ..controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelEntity import ERPArtikelEntity
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
 from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
+from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
+from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 
 
 class ERPArtikelController(ERPAbstractController):
@@ -47,27 +51,93 @@ class ERPArtikelController(ERPAbstractController):
 
         :param bridge_entity_new: The BridgeProductEntity to check.
         :type bridge_entity_new: BridgeProductEntity
-        :return: The existing BridgeProductEntity from the database if found, otherwise False.
-        :rtype: BridgeProductEntity or bool
+        :return: The existing BridgeProductEntity from the database if found, None if not found, and False if an error occurs.
+        :rtype: BridgeProductEntity or bool or None
         """
         try:
-            # Attempt to query the database for the given BridgeProductEntity.
             self.logger.info(f"Attempting to find BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr}")
             entity_in_db = BridgeProductEntity.query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
 
             if entity_in_db:
-                # If the entity is found in the database, log the success and return the entity.
                 self.logger.info(f"BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr} found in database.")
                 return entity_in_db
             else:
-                # If the entity is not found in the database, log the failure and return False.
                 self.logger.warning(f"BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr} not found in database.")
-                return False
+                return None
 
         except Exception as e:
-            # If any exception occurs while querying the database, log the error and return False.
             self.logger.error(f"An error occurred while querying the database: {str(e)}")
             return False
+
+    """ Relations """
+    def set_relations(self, bridge_entity):
+        """
+        Set various relations for a given bridge entity.
+
+        This method is designed to handle relations for the given bridge entity
+        with other entities such as taxes, categories, etc. The individual relations
+        are set using helper methods dedicated to each type of relation.
+
+        :param bridge_entity: The BridgeProductEntity to set relations for.
+        :type bridge_entity: BridgeProductEntity
+        :return: BridgeProductEntity with relations set.
+        :rtype: BridgeProductEntity
+        """
+        bridge_entity = self._set_tax_relation(bridge_entity)
+        bridge_entity = self._set_category_relation(bridge_entity)
+        return bridge_entity
+
+    def _set_tax_relation(self, bridge_entity):
+        """
+        Set the tax relation for a given bridge entity.
+
+        :param bridge_entity: The BridgeProductEntity to set tax relation for.
+        :type bridge_entity: BridgeProductEntity
+        :return: BridgeProductEntity with tax relation set.
+        :rtype: BridgeProductEntity
+        """
+        try:
+            tax_ctrl = ERPMandantSteuerController(config.ERPConfig.MANDANT)
+            stschl = self.get_entity().get_stschl()
+            # Do an upsert with the taxes, as the tax status might have changed.
+            tax_ctrl.sync_one_to_bridge(stschl=stschl)
+            tax_from_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
+
+            if tax_from_db:
+                bridge_entity.tax = tax_from_db
+            else:
+                self.logger.warning(f"Tax with ERP number: {stschl} not found in database.")
+
+        except Exception as e:
+            self.logger.error(f"An error occurred while setting tax relation: {str(e)}")
+
+        return bridge_entity
+
+    def _set_category_relation(self, bridge_entity):
+        """
+        Set the category relation for a given bridge entity.
+
+        :param bridge_entity: The BridgeProductEntity to set category relation for.
+        :type bridge_entity: BridgeProductEntity
+        :return: BridgeProductEntity with category relation set.
+        :rtype: BridgeProductEntity
+        """
+        categories_list = self.get_categories_list()
+        if categories_list:
+            for category in categories_list:
+                try:
+                    category_ntt = BridgeCategoryEntity.query.filter_by(erp_nr=category).one_or_none()
+
+                    if category_ntt:
+                        bridge_entity.categories.append(category_ntt)
+                        self.logger.info(f"Added category with ERP number: {category} to product.")
+                    else:
+                        self.logger.warning(f"Category with ERP number: {category} not found in database.")
+
+                except Exception as e:
+                    self.logger.error(f"An error occurred while adding category with ERP number: {category} to product. Error: {str(e)}")
+
+        return bridge_entity
 
     def get_entity(self):
         """
@@ -98,49 +168,8 @@ class ERPArtikelController(ERPAbstractController):
                 self.logger.warning("No Umsatz retrieved")
             return ums
 
-    def get_categories(self):
-        """
-        Retrieve all the category numbers available in the ERP.
-
-        This method fetches each category number from 'ArtKat1' up to the maximum available
-        category number determined by the `get_available_categories` method.
-
-        Returns:
-            list[int] or bool: A list of all available category numbers if successful, otherwise False.
-
-        Raises:
-            Exception: If there's an issue retrieving the category numbers.
-        """
-        try:
-            # Initialize the ERPArtikelKategorienEntity to fetch available categories
-
-            available_categories = self._category_dataset_entity.get_available_categories()
-
-            # If available_categories is False or not an integer, return False
-            if not isinstance(available_categories, int):
-                self.logger.warning("Unable to determine the total available categories.")
-                return False
-
-            # Retrieve each category number from 'ArtKat1' up to 'ArtKat{available_categories}'
-            categories = [self.get_entity().get_(f"ArtKat{i}") for i in range(1, available_categories + 1)]
-
-            # Remove empty or None category numbers from the list
-            categories = [cat for cat in categories if cat]
-
-            # Log the successful retrieval of category numbers
-            self.logger.info(f"Successfully retrieved {len(categories)} category numbers from the ERP.")
-
-            return categories
-
-        except Exception as e:
-            self.logger.error(f"An error occurred while fetching the category numbers: {str(e)}")
-            return False
-
-    def category(self, catnr=None):
-        if not catnr:
-            categories = self.get_categories()
-            catnr = categories[0]
-        return ERPArtikelKategorienEntity(catnr)
+    def get_categories_list(self):
+        return self._dataset_entity.get_categories_list()
 
     def price_infos(self):
         infos = {

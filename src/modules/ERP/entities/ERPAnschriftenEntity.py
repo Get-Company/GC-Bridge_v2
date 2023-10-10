@@ -21,6 +21,9 @@ class ERPAnschriftenEntity(ERPAbstractEntity):
             ]
         )
 
+    def map_erp_to_bridge(self):
+        pass
+
 
 
 
