@@ -7,3 +7,5 @@ class BridgeProductController(BridgeAbstractController):
         self._bridge_entity = BridgeProductEntity()
         super().__init__(bridge_entity=self._bridge_entity)
 
+
+
