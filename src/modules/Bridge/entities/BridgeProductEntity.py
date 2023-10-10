@@ -46,7 +46,7 @@ class BridgeProductEntity(db.Model):
         return TranslationWrapper(translation)
 
     def __repr__(self):
-        return f'Bridge Product Entity: {self.get_("DE_de").name} ID: {self.id}'
+        return f'Bridge Product Entity: {self.get_translation_("DE_de").name} ID: {self.id}'
 
 
 class BridgeProductTranslation(db.Model):

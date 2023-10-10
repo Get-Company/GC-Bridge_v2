@@ -31,6 +31,9 @@ def create_app():
     from .modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity, BridgeCategoryTranslation, BridgeProductsCategoriesAssoc
     from .modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation
 
+    # Controller
+    from .modules.Bridge.controller.BridgeProductController import BridgeProductController
+
 # ERP
     # Controller
     from .modules.ERP.controller.ERPMandantSteuerController import ERPMandantSteuerController
@@ -42,11 +45,7 @@ def create_app():
 
     # DB create_all to ensure all db tables are there
     with app.app_context():
-        products = BridgeProductEntity.query.all()
-        for product in products:
-            db.session.delete(product)
-            db.session.commit()
-            db.session.close()
+        BridgeProductController().delete_all()
         # ERPArtikelController(search_value=581000).sync_one_to_bridge()
 
 # Return the App Object
