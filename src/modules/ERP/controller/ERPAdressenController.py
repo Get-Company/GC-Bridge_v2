@@ -54,9 +54,6 @@ class ERPAdressenController(ERPAbstractController):
             dataset_entity=self._dataset_entity
         )
 
-    def is_in_db(self, bridge_entity_new):
-        pass
-
     def get_entity(self):
         """
         Retrieve the dataset entity of the controller.
@@ -86,6 +83,9 @@ class ERPAdressenController(ERPAbstractController):
         vtrnr = self.get_entity().get_(return_field="VtrNr")
         return vtrnr
 
+    def set_relations(self, bridge_entity):
+        pass
+
     """ Adressen """
 
     def billing_address(self):
@@ -100,6 +100,7 @@ class ERPAdressenController(ERPAbstractController):
         return addresses
 
     """ Anschriften """
+
 
     def billing_contact(self):
         contact = self.get_entity().get_billing_ansprechpartner_entity()

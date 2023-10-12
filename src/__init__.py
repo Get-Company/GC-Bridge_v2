@@ -45,8 +45,9 @@ def create_app():
 
     # DB create_all to ensure all db tables are there
     with app.app_context():
-        BridgeProductController().delete_all()
-        # ERPArtikelController(search_value=581000).sync_one_to_bridge()
+        # BridgeProductController().delete_all()
+        ERPArtikelController(581000).sync_one_to_bridge()
+        pass
 
 # Return the App Object
     return app, db

@@ -8,6 +8,9 @@ class ERPMandantSteuerController(ERPAbstractController):
     Examples:
     """
 
+    def set_relations(self, bridge_entity):
+        pass
+
     def __init__(self, search_value=None, index=None, range_end=None):
         self._dataset_entity = ERPMandantSteuerEntity(
             search_value=search_value,
@@ -28,35 +31,6 @@ class ERPMandantSteuerController(ERPAbstractController):
         else:
             self.logger.error("no Tax Dataset is set. Can't return.")
 
-    def is_in_db(self, bridge_entity_new: BridgeTaxEntity) -> object:
-        """
-        Checks if a given BridgeTaxEntity is already present in the database.
-
-        :param bridge_entity_new: The BridgeTaxEntity to check.
-        :type bridge_entity_new: BridgeTaxEntity
-        :return: The existing BridgeTaxEntity from the database if found, otherwise False.
-        :rtype: BridgeTaxEntity or bool
-        """
-        try:
-            # Attempt to query the database for the given BridgeTaxEntity.
-            self.logger.info(f"Attempting to find BridgeTaxEntity with ERP number: {bridge_entity_new.erp_nr}")
-            entity_in_db = BridgeTaxEntity.query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
-
-            if entity_in_db:
-                # If the entity is found in the database, log the success and return the entity.
-                self.logger.info(f"BridgeTaxEntity with ERP number: {bridge_entity_new.erp_nr} found in database.")
-                return entity_in_db
-            else:
-                # If the entity is not found in the database, log the failure and return False.
-                self.logger.warning(
-                    f"BridgeTaxEntity with ERP number: {bridge_entity_new.erp_nr} not found in database.")
-                return False
-
-        except Exception as e:
-            # If any exception occurs while querying the database, log the error and return False.
-            self.logger.error(f"An error occurred while querying the database for BridgeTaxEntity: {str(e)}")
-            return False
-
     def upsert(self, *args, **kwargs):
         # Map the ERPDataset to the BridgeObject
         bridge_entity_new = self._dataset_entity.map_erp_to_bridge(**kwargs)
@@ -69,7 +43,6 @@ class ERPMandantSteuerController(ERPAbstractController):
 
         # Now merge everything
         self.merge(bridge_entity_new)
-
 
     def get_entity(self):
         """

@@ -4,6 +4,7 @@ from ..controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelEntity import ERPArtikelEntity
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
 from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
+from src.modules.Bridge.controller.BridgeProductController import BridgeProductController
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 
@@ -39,35 +40,12 @@ class ERPArtikelController(ERPAbstractController):
             index=index,
             range_end=range_end
         )
-        self._category_dataset_entity = ERPArtikelKategorienEntity()
+        self._bridge_entity_controller = BridgeProductController()
 
         super().__init__(
-            dataset_entity=self._dataset_entity
+            dataset_entity=self._dataset_entity,
+            bridge_entity_controller=self._bridge_entity_controller
         )
-
-    def is_in_db(self, bridge_entity_new: BridgeProductEntity) -> object:
-        """
-        Checks if a given BridgeProductEntity is already present in the database.
-
-        :param bridge_entity_new: The BridgeProductEntity to check.
-        :type bridge_entity_new: BridgeProductEntity
-        :return: The existing BridgeProductEntity from the database if found, None if not found, and False if an error occurs.
-        :rtype: BridgeProductEntity or bool or None
-        """
-        try:
-            self.logger.info(f"Attempting to find BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr}")
-            entity_in_db = BridgeProductEntity.query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
-
-            if entity_in_db:
-                self.logger.info(f"BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr} found in database.")
-                return entity_in_db
-            else:
-                self.logger.warning(f"BridgeProductEntity with ERP number: {bridge_entity_new.erp_nr} not found in database.")
-                return None
-
-        except Exception as e:
-            self.logger.error(f"An error occurred while querying the database: {str(e)}")
-            return False
 
     """ Relations """
     def set_relations(self, bridge_entity):
@@ -83,6 +61,7 @@ class ERPArtikelController(ERPAbstractController):
         :return: BridgeProductEntity with relations set.
         :rtype: BridgeProductEntity
         """
+
         bridge_entity = self._set_tax_relation(bridge_entity)
         bridge_entity = self._set_category_relation(bridge_entity)
         return bridge_entity
@@ -91,22 +70,33 @@ class ERPArtikelController(ERPAbstractController):
         """
         Set the tax relation for a given bridge entity.
 
+        If the tax is not found in the database, it attempts to sync the tax using the provided sync method.
+
         :param bridge_entity: The BridgeProductEntity to set tax relation for.
         :type bridge_entity: BridgeProductEntity
         :return: BridgeProductEntity with tax relation set.
         :rtype: BridgeProductEntity
         """
         try:
-            tax_ctrl = ERPMandantSteuerController(config.ERPConfig.MANDANT)
             stschl = self.get_entity().get_stschl()
-            # Do an upsert with the taxes, as the tax status might have changed.
-            tax_ctrl.sync_one_to_bridge(stschl=stschl)
             tax_from_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
 
             if tax_from_db:
+                self.logger.info(f"Added Tax with ERP number: {tax_from_db.erp_nr} to product.")
                 bridge_entity.tax = tax_from_db
             else:
-                self.logger.warning(f"Tax with ERP number: {stschl} not found in database.")
+                self.logger.warning(f"Tax with ERP number: {stschl} not found in database. Attempting to sync.")
+
+                # If tax is not found, attempt to sync it.
+                tax_ctrl = ERPMandantSteuerController(config.ERPConfig.MANDANT)
+                tax_ctrl.sync_one_to_bridge(stschl=stschl)
+
+                # After syncing, attempt to retrieve the tax again from the database.
+                tax_from_db_after_sync = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
+                if tax_from_db_after_sync:
+                    bridge_entity.tax = tax_from_db_after_sync
+                else:
+                    self.logger.error(f"Tax with ERP number: {stschl} still not found in database after syncing.")
 
         except Exception as e:
             self.logger.error(f"An error occurred while setting tax relation: {str(e)}")
@@ -123,9 +113,11 @@ class ERPArtikelController(ERPAbstractController):
         :rtype: BridgeProductEntity
         """
         categories_list = self.get_categories_list()
+        bridge_entity.categories = []
         if categories_list:
             for category in categories_list:
                 try:
+                    self.logger.info(f"Searching BridgeCategoryEntity for {category}")
                     category_ntt = BridgeCategoryEntity.query.filter_by(erp_nr=category).one_or_none()
 
                     if category_ntt:
@@ -181,3 +173,5 @@ class ERPArtikelController(ERPAbstractController):
             "Steuerverteilung Brutto": self._dataset_entity.get_("StVertBt"),
         }
         return infos
+
+
