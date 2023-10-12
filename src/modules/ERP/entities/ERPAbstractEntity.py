@@ -76,12 +76,11 @@ class ERPAbstractEntity(ERPCoreController):
             # initialize Search Value as Empty:
             self._search_value = None
             # When the cursor is set, this attributes changes to True
-            self._found = False
+            self._found = None
             if search_value:
                 self.logger.info(f"Search Value provided: {search_value}. Call self.set_search_value.")
                 self.set_search_value(search_value=search_value)
                 self.logger.info(f"Search Value is set. Call self.set_cursor.")
-                self.set_cursor()
 
             # Set range if range_end
             self._range_end = None
@@ -93,6 +92,9 @@ class ERPAbstractEntity(ERPCoreController):
                 self.range_set()
                 self.set_is_ranged()
                 self.set_range_count()
+            # If we do not have a range, set the cursor
+            else:
+                self.set_cursor()
 
             # Initialize nested dataset as none until it is set
             self._nested_dataset = None
@@ -285,7 +287,6 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             self._search_value = search_value
             self.logger.info(f"Search Value is set to: {search_value}")
-            self.set_cursor()
         except Exception as e:
             self.logger.error(f"Error setting search value: {str(e)}")
             raise
@@ -505,6 +506,7 @@ class ERPAbstractEntity(ERPCoreController):
             return field_read
         else:
             self.logger.error(f"Value {self.get_search_value()} NOT found in field {self.get_dataset_index()} of DataSet {self.get_dataset_name()}.")
+
             self.set_cursor()
             return False
 
@@ -757,6 +759,7 @@ class ERPAbstractEntity(ERPCoreController):
 
         if found:
             self.logger.info(f"Range successfully set for Index: {self.get_dataset_index()} with start value {self.get_search_value()} and end value {self.get_range_end()}.")
+            self._found = True
             self.range_first()
         else:
             self.logger.warning("Failed to set the range.")
