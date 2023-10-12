@@ -116,15 +116,15 @@ class ERPArtikelEntity(ERPAbstractEntity):
         """
         value = self.get_("Sel10")
 
-        if value is None:
+        if value is None or value == "":
             self.logger.warning("Mindestbestellmenge is empty")
-            return None
+            return 0
 
         try:
             return int(value)
         except (ValueError, TypeError):
             self.logger.error(f"Error on converting '{value}' into an Integer.")
-            return None
+            return 0
 
     def get_purchase_unit(self):
         """
@@ -134,15 +134,15 @@ class ERPArtikelEntity(ERPAbstractEntity):
         """
         value = self.get_("Sel11")
 
-        if value is None:
+        if value is None or value == "":
             self.logger.warning("Purchase unit is empty")
-            return None
+            return 0
 
         try:
             return int(value)
         except (ValueError, TypeError):
             self.logger.error(f"Error on converting '{value}' into an Integer.")
-            return None
+            return 0
 
     def get_shipping_cost_per_bundle(self):
         """
