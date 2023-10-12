@@ -4,8 +4,8 @@ import datetime
 
 # Assoziationstabelle für die Many-to-Many Beziehung
 BridgeProductsCategoriesAssoc = db.Table('bridge_product_categories_assoc',
-                                          db.Column('product_id', db.Integer, db.ForeignKey('bridge_product_entity.id'), primary_key=True),
-                                          db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id'), primary_key=True)
+                                          db.Column('product_id', db.Integer, db.ForeignKey('bridge_product_entity.id', ondelete='CASCADE'), primary_key=True),
+                                          db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'), primary_key=True)
                                           )
 
 class TranslationWrapper:
