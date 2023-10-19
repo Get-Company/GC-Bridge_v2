@@ -111,7 +111,8 @@ class ERPAbstractEntity(ERPCoreController):
                 'Byte': 'AsInteger',
                 'Info': 'Text',
                 'String': 'AsString',
-                'Double': 'AsString'
+                'Double': 'AsString',
+                'AutoInc': 'AsInteger'
             }
             # Field types and how to write them
             self.field_types_to_write = {
@@ -694,6 +695,7 @@ class ERPAbstractEntity(ERPCoreController):
 
     def set_cursor(self) -> bool:
         """
+        If the dataset is ranged, the cursor is set to the first element.
         Set the cursor position in the dataset based on the provided index and search value.
 
         Returns:
@@ -701,7 +703,6 @@ class ERPAbstractEntity(ERPCoreController):
                 - A boolean indicating if the record was found.
                 - The dataset object.
         """
-
         self._found = self._created_dataset.FindKey(self.get_dataset_index(), self.get_search_value())
 
         if self._found:
@@ -712,6 +713,20 @@ class ERPAbstractEntity(ERPCoreController):
             self.logger.warning(f"Failed to set cursor for Index: {self.get_dataset_index()} with value "
                                 f"{self.get_search_value()}.")
             return False
+
+    def get_id(self):
+        return self.get_("ID")
+
+    def get_erstdat(self):
+        """
+        Fetches the creation date from the dataset.
+
+        :return: Creation date.
+        """
+        return self.get_("ErstDat")
+
+    def get_aenddat(self):
+        return self.get_("AendDat")
 
     """ Nested """
     def get_nested_(self, nested_dataset_name, index_field, search_value, return_field):
@@ -740,33 +755,68 @@ class ERPAbstractEntity(ERPCoreController):
 
     """ Ranges """
 
-    def range_set(self) -> bool:
+    def range_set(self, index=None, search_value=None, range_end=None) -> bool:
         """
         Set a range on the dataset based on the provided index, search value, and range end.
 
+        The method attempts to set a range on the dataset using the provided index, search value, and range end.
+        If any of these values are not set, the method logs an error and returns False.
+        Otherwise, it sets the range and logs the outcome (success or failure).
+
         Returns:
-            A boolean indicating if the range was successfully set.
+            bool: True if the range was successfully set, False otherwise.
         """
+        if index:
+            self.set_dataset_index(dataset_index=index)
+
+        if search_value:
+            self.set_search_value(search_value=search_value)
+
+        if range_end:
+            self.set_range_end(range_end=range_end)
+
+        # Check if all required values are set
         if not self.get_dataset_index() or not self.get_search_value() or not self.get_range_end():
-            self.logger.error("Required values (Dataset Index, Search Value, Range End) are not set. Cannot set the range.")
+            self.logger.error(
+                "Required values (Dataset Index, Search Value, Range End) are not set. Cannot set the range."
+            )
             return False
 
-        found = self._created_dataset.SetRange(
-            self.get_dataset_index(),
-            self.get_search_value(),
-            self.get_range_end()
-        )
+        try:
+            self.logger.info(
+                f"Try set_range for Index: {self.get_dataset_index()}:{type(self.get_dataset_index())} with start value {self.get_search_value()}:{type(self.get_search_value())} and end value {self.get_range_end()}:{type(self.get_range_end())}."
+            )
+            # Attempt to set the range on the dataset
+            self._created_dataset.SetRange(
+                self.get_dataset_index(),
+                self.get_search_value(),
+                self.get_range_end()
+            )
+            # Apply the range
+            self._created_dataset.ApplyRange()
 
-        if found:
-            self.logger.info(f"Range successfully set for Index: {self.get_dataset_index()} with start value {self.get_search_value()} and end value {self.get_range_end()}.")
-            self._found = True
-            self.range_first()
-        else:
-            self.logger.warning("Failed to set the range.")
+            # Log the outcome of the set range operation
+            if self._created_dataset.RecordCount >= 1:
+                self._is_ranged = True
 
-        return found
+                self.logger.info(
+                    f"Range successfully set for Index: {self.get_dataset_index()} with start value {self.get_search_value()} and end value {self.get_range_end()}."
+                )
+                self._found = True
+                self.range_first()
+            else:
+                self.logger.warning("Failed to set the range.")
+            return self._is_ranged
+
+        except Exception as e:
+            # Log any exceptions that occur during the set range operation
+            self.logger.error(
+                f"An unexpected error occurred while setting the range: {str(e)}"
+            )
+            return False
 
     def range_first(self):
+        self.logger.info("Try to set the cursor to the first element.")
         self._created_dataset.First()
 
     def range_nested_first(self):
@@ -779,16 +829,18 @@ class ERPAbstractEntity(ERPCoreController):
         return self._nested_dataset.Eof
 
     def range_next(self):
+        self.logger.info("Jumping to next Element.")
         self._created_dataset.Next()
 
     def range_count(self):
         if self._is_ranged:
-            range_count = self._created_dataset.RecordCount()
+            range_count = self._created_dataset.RecordCount
             self.logger.info(f"Dataset range count. {range_count}")
-            self.set_range_count(range_count=range_count)
-            return True
+            self.set_range_count()
+            return range_count
         else:
             self.logger.warning("Dataset range count called, but dataset is not ranged!")
+            return None
 
     """ Utility Methods """
 
@@ -1064,8 +1116,5 @@ class ERPAbstractEntity(ERPCoreController):
     @abstractmethod
     def map_erp_to_bridge(self, *args, **kwargs):
         pass
-
-
-
 
 
