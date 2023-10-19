@@ -1,5 +1,6 @@
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
+from src.modules.Bridge.controller.BridgeCategoryController import BridgeCategoryController
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 
 
@@ -11,12 +12,15 @@ class ERPArtikelKategorienController(ERPAbstractController):
             range_end=range_end
         )
 
+        self._bridge_controller = BridgeCategoryController()
+
         super().__init__(
-            dataset_entity=self._dataset_entity
+            dataset_entity=self._dataset_entity,
+            bridge_controller=self._bridge_controller
         )
 
     def set_relations(self, bridge_entity):
-        pass
+        return bridge_entity
 
     def get_entity(self):
         """
@@ -38,5 +42,4 @@ class ERPArtikelKategorienController(ERPAbstractController):
             message = "Dataset entity is not set"
             self.logger.warning(message)
             raise ValueError(message)
-
 
