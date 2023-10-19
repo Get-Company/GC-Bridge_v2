@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template
 from src import db
-from src.modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController, BridgeCategoryEntity
+from src.modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController
+from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 
 BridgeViews = Blueprint('bridge_views', __name__)
 
