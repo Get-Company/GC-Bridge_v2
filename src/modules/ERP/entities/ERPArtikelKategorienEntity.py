@@ -33,24 +33,28 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
         try:
             # Create a new instance of BridgeCategoryEntity
             category_entity = BridgeCategoryEntity(
+                id=self.get_id(),
                 erp_nr=self.get_erp_nr(),
                 erp_nr_parent=self.get_erp_nr_parent(),
                 tree_path=json.dumps(self.get_category_nr_path()),
-                created_at=self.get_created_at(),
-                edited_at=self.get_edited_at()
+                created_at=self.get_erstdat(),
+                edited_at=self.get_aenddat()
             )
-
+            self.logger.info(f"Category Enitiy mapped: {category_entity.id}:{category_entity.erp_nr}")
             # Create a new instance of BridgeCategoryTranslationEntity
             category_translation = BridgeCategoryTranslation(
                 language='DE_de',
                 name=self.get_name(),
                 description=self.get_description(),
-                description_short=self.get_description()
-            )
+                description_short=self.get_description(),
+                created_at=self.get_erstdat(),
+                edited_at=self.get_aenddat()
 
+            )
+            self.logger.info(f"Category Translation Entity mapped: {category_translation.language} - {category_translation.name}")
             # Link the translation with the category
             category_entity.translations.append(category_translation)
-
+            self.logger.info(f"Category Translation Entity appended to Category Entity.")
             return category_entity
         except Exception as e:
             self.logger.error(f"Error mapping ERPArtikelKategorien to Bridge: {str(e)}")
@@ -95,22 +99,6 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
         :return: Memo/short description.
         """
         return self.get_("Memo")
-
-    def get_created_at(self):
-        """
-        Fetches the creation date from the dataset.
-
-        :return: Creation date.
-        """
-        return self.get_("ErstDat")
-
-    def get_edited_at(self):
-        """
-        Fetches the edited date from the dataset.
-
-        :return: Edited date.
-        """
-        return self.get_("AendDat")
 
     def get_available_categories(self):
         """
@@ -183,5 +171,8 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
             self.logger.error(f"An unexpected error occurred: {e}")
         # Return an empty list in case of an error or if path_raw is None or empty
         return []
+
+    def __repr__(self):
+        return f'ArtikelKategorie {self.get_erp_nr() } - {self.get_name()}'
 
 
