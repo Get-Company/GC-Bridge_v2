@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from ..ERPCoreController import ERPCoreController
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from abc import abstractmethod
@@ -12,15 +14,15 @@ class ERPAbstractController(ERPCoreController):
         dataset_entity: An instance of ERPAbstractEntity used for accessing datasets.
     """
 
-    def __init__(self, dataset_entity: ERPAbstractEntity, bridge_entity_controller=None, search_value=None):
+    def __init__(self, dataset_entity: ERPAbstractEntity, bridge_controller=None, search_value=None):
         super().__init__()
         """Initialize the ERPAbstractController."""
         self._dataset_entity = dataset_entity
         self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, self._dataset_entity.get_dataset_name())
         self.token_counter = 0
         self.db = db
-        self._bridge_entity_controller = bridge_entity_controller
-        self._entity_for_db = None
+        self.db.session.autoflush = False
+        self._bridge_controller = bridge_controller
 
     def set_entity(self, dataset_entity) -> None:
         """
@@ -98,16 +100,12 @@ class ERPAbstractController(ERPCoreController):
             raise ValueError(message)
 
     def sync_all_to_bridge(self):
-        # 1. Get all datasets
-        dataset = self.get_entity()
-        dataset.range_first()
-
-        # 2. For Loop through all the datasets
-        self.logger.info(f'We have a range to loop of {dataset.get_range_count()} items.')
-        while not dataset.range_eof():
+        # For Loop through all the datasets
+        self.logger.info(f'We have a range to loop of {self._dataset_entity.get_range_count()} items.')
+        while not self._dataset_entity.range_eof():
+            self.logger.info(f"Next Element in range: {self._dataset_entity}")
             self.upsert()
-            dataset.range_next()
-            self.logger.info(f'Jumping to next element in range {dataset}')
+            self._dataset_entity.range_next()
 
         return True
 
@@ -137,24 +135,21 @@ class ERPAbstractController(ERPCoreController):
         :param kwargs: Keyword arguments passed to map_erp_to_bridge method.
         """
         try:
-            # Map the ERPDataset to the BridgeObject and add it to the session
-            # Do a merge. This searches the db for unique id and fetches the object
-            # bridge_entity_new is now compared to the one which is in the db (if there is one)
+            # Log the initiation of upsert
+            self.logger.info("Upsert called in parent")
+
+            # Map the ERP dataset to a new bridge entity
             bridge_entity_new = self._dataset_entity.map_erp_to_bridge(*args, **kwargs)
-            db.session.add(bridge_entity_new)
-            db.session.merge(bridge_entity_new)
+            # Set relations
 
-            # Set all the relations
-            bridge_entity_for_db = self.set_relations(bridge_entity=bridge_entity_new)
+            bridge_entity_new = self.db.session.merge(bridge_entity_new)
+            bridge_entity_new = self.set_relations(bridge_entity=bridge_entity_new)
 
-            # Add the bridge object with its relations to the db
-            self.logger.info(f"Added BridgeEntity with ERP number: {bridge_entity_new.erp_nr} to the session.")
-
-            # Merge the new entity (either updates the existing entity or inserts a new one)
-            self.merge(bridge_entity_for_db)
+            # Commit the changes (either insert or update) to the database
+            self.merge_it(bridge_entity=bridge_entity_new)
 
         except Exception as e:
-            # Handle any other unexpected errors during the upsert process
+            # Log the error
             self.logger.error(f"An unexpected error occurred during the upsert process: {str(e)}")
 
     @abstractmethod
@@ -180,22 +175,25 @@ class ERPAbstractController(ERPCoreController):
         """
         raise NotImplementedError("Child classes must implement this method.")
 
-    def merge(self, bridge_entity_new):
+    def merge_it(self, bridge_entity):
         """Merges the new Bridge entity into the database.
 
-        :param bridge_entity_new: The new Bridge entity to merge.
-        :type bridge_entity_new: BridgeCategoryEntity
+        :param bridge_entity: The new Bridge entity to merge.
+        :type bridge_entity: BridgeCategoryEntity
         """
         try:
-            self.logger.info(f"Merging entity with ERP number: {bridge_entity_new.erp_nr}")
-            self.db.session.merge(bridge_entity_new)
+
+            # Merge entity to session
+            if not self.db.session.is_modified(bridge_entity, include_collections=False):
+                self.logger.info(f"Entity has changed after setting relations. Merging entity with ERP number again: {bridge_entity.erp_nr}")
+                self.db.session.merge(bridge_entity)
+
             self.logger.info("Commiting entity")
             self.db.session.commit()
-            self.logger.info("Closing connection")
-            self.db.session.close()
+
         except Exception as e:
             self.logger.error(f"An error occurred while merging the entity: {str(e)}")
             self.db.session.rollback()
-            self.db.session.close()
-            return None
-
+        finally:
+            self.logger.info("Closing connection")
+            self.db.session.close_all()
