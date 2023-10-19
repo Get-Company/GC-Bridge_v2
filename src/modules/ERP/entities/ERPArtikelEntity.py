@@ -36,13 +36,15 @@ class ERPArtikelEntity(ERPAbstractEntity):
         try:
             # Create a new BridgeProductEntity with the fetched values
             product_entity = BridgeProductEntity(
+                id=self.get_id(),
                 erp_nr=self.get_nr(),
                 stock=self.get_stock(),
                 unit=self.get_unit(),
                 min_purchase=self.get_min_purchase(),
                 purchase_unit=self.get_purchase_unit(),
                 shipping_cost_per_bundle=self.get_shipping_cost_per_bundle(),
-                shipping_bundle_size=self.get_shipping_bundle_size()
+                shipping_bundle_size=self.get_shipping_bundle_size(),
+                edited_at=self.get_aenddat()
             )
 
             # Create a translation entity and append it to the product entity
@@ -50,6 +52,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 language='DE_de',
                 name=self.get_name(),
                 description=self.get_description(),
+                editted_at=self.get_aenddat()
             )
             product_entity.translations.append(product_translation)
 
@@ -59,7 +62,6 @@ class ERPArtikelEntity(ERPAbstractEntity):
             # Log the error and return None
             self.logger.error(f"Error mapping ERPArtikel to Bridge: {str(e)}")
             return None
-
 
     def get_nr(self):
         """
@@ -71,7 +73,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
             if nr is None:
                 self.logger.warning("Article number is empty.")
                 return None
-            return nr
+            return str(nr)
         except Exception as e:
             self.logger.error(f"An error occurred while retrieving the article number: {str(e)}")
             return None
@@ -302,4 +304,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
         except Exception as e:
             self.logger.error(f"An error occurred while fetching the category numbers: {str(e)}")
             return False
+
+    def __repr__(self):
+        return f'Artikel {self.get_nr()} - {self.get_name()}'
 
