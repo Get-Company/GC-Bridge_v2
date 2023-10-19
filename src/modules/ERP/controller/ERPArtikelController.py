@@ -33,18 +33,17 @@ class ERPArtikelController(ERPAbstractController):
             print(f"{key}: {value}")
 
     """
-
     def __init__(self, search_value=None, index=None, range_end=None):
         self._dataset_entity = ERPArtikelEntity(
             search_value=search_value,
             index=index,
             range_end=range_end
         )
-        self._bridge_entity_controller = BridgeProductController()
+        self._bridge_controller = BridgeProductController()
 
         super().__init__(
             dataset_entity=self._dataset_entity,
-            bridge_entity_controller=self._bridge_entity_controller
+            bridge_controller=self._bridge_controller
         )
 
     """ Relations """
@@ -61,7 +60,7 @@ class ERPArtikelController(ERPAbstractController):
         :return: BridgeProductEntity with relations set.
         :rtype: BridgeProductEntity
         """
-
+        # First merge the object to the db
         bridge_entity = self._set_tax_relation(bridge_entity)
         bridge_entity = self._set_category_relation(bridge_entity)
         return bridge_entity
@@ -173,5 +172,3 @@ class ERPArtikelController(ERPAbstractController):
             "Steuerverteilung Brutto": self._dataset_entity.get_("StVertBt"),
         }
         return infos
-
-

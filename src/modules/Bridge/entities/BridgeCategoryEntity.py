@@ -32,7 +32,7 @@ class BridgeCategoryEntity(db.Model):
     translations = db.relationship(
         'BridgeCategoryTranslation',
         backref='category',
-        lazy='dynamic',
+        lazy='subquery',
         cascade='all, delete-orphan')
 
     products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
@@ -47,7 +47,7 @@ class BridgeCategoryEntity(db.Model):
         return TranslationWrapper(translation)
 
     def __repr__(self):
-        print(f'"Bridge Category Entity: {self.get_("DE_de").title}" ID: {self.id}')
+        print(f'"Bridge Category Entity: {self.get_translation_("DE_de").title}" ID: {self.id}')
 
 
 class BridgeCategoryTranslation(db.Model):
@@ -58,6 +58,8 @@ class BridgeCategoryTranslation(db.Model):
     name = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text(), nullable=True)
     description_short = db.Column(db.Text(), nullable=True)
+    created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
+    edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
     # Relations
     category_id = db.Column(db.Integer(), db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'),

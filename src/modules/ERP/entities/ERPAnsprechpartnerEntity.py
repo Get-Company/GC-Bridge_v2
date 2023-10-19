@@ -10,4 +10,5 @@ class ERPAnsprechpartnerEntity(ERPAbstractEntity):
             range_end=range_end
         )
 
-
+    def __repr__(self):
+        return f'Ansprechpartner'

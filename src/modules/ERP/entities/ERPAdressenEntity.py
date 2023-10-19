@@ -65,6 +65,8 @@ class ERPAdressenEntity(ERPAbstractEntity):
     def map_erp_to_bridge(self):
         pass
 
+    def __repr__(self):
+        return f'Adresse {self.get_adrnr()}'
 
 
 

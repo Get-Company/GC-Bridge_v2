@@ -101,7 +101,6 @@ class ERPAdressenController(ERPAbstractController):
 
     """ Anschriften """
 
-
     def billing_contact(self):
         contact = self.get_entity().get_billing_ansprechpartner_entity()
         return contact

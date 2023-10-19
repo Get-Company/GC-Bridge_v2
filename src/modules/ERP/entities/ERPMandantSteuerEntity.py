@@ -36,17 +36,15 @@ class ERPMandantSteuerEntity(ERPAbstractEntity):
     def map_erp_to_bridge(self, stschl):
         tax_fields = self.get_tax_fields(stschl=stschl)
         tax_entity = BridgeTaxEntity(
+            id=self.get_id(),
             erp_nr=tax_fields["StSchl"],
             description=tax_fields["Bez"],
             key=tax_fields["Sz"]
         )
         return tax_entity
 
-
-
-
-
-
+    def __repr__(self):
+        return f'Mandant'
 
 
 

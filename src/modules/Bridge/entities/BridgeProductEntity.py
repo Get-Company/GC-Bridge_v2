@@ -16,7 +16,7 @@ class BridgeProductEntity(db.Model):
     __tablename__ = 'bridge_product_entity'
 
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
-    erp_nr = db.Column(db.String(255), nullable=True, unique=True)
+    erp_nr = db.Column(db.String(255), nullable=False, unique=True)
     stock = db.Column(db.Integer(), nullable=False)
     unit = db.Column(db.String(255), nullable=True)
     min_purchase = db.Column(db.Integer(), nullable=True)
@@ -30,7 +30,7 @@ class BridgeProductEntity(db.Model):
     translations = db.relationship(
         'BridgeProductTranslation',
         backref='product',
-        lazy='dynamic',
+        lazy='subquery',
         cascade='all, delete-orphan'
     )
     tax_id = db.Column(db.Integer(), db.ForeignKey('bridge_tax_entity.id'), nullable=True)
@@ -56,6 +56,8 @@ class BridgeProductTranslation(db.Model):
     language = db.Column(db.String(5), nullable=False)  # language format: 'DE_de', 'GB_en', etc.
     name = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text(4294967295), nullable=True)
+    created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
+    edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
     # Relations
     product_id = db.Column(db.Integer(), db.ForeignKey('bridge_product_entity.id', ondelete='CASCADE'), nullable=False)
