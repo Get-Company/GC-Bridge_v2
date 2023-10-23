@@ -1,5 +1,7 @@
+import datetime
+
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
-from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation
+from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation, BridgePriceEntity
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 from src.modules.ERP.controller.ERPMandantSteuerController import ERPMandantSteuerController
@@ -44,6 +46,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 purchase_unit=self.get_purchase_unit(),
                 shipping_cost_per_bundle=self.get_shipping_cost_per_bundle(),
                 shipping_bundle_size=self.get_shipping_bundle_size(),
+                created_at=self.get_erstdat(),
                 edited_at=self.get_aenddat()
             )
 
@@ -52,9 +55,21 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 language='DE_de',
                 name=self.get_name(),
                 description=self.get_description(),
-                editted_at=self.get_aenddat()
+                edited_at=self.get_aenddat()
             )
             product_entity.translations.append(product_translation)
+
+            # Create a price entity and assign it to the product
+            price = BridgePriceEntity(
+                price=self.get_price(),
+                rebate_quantity=self.get_rebate_quantity(),
+                special_price=self.get_special_price(),
+                special_start_date=self.get_special_start_date(),
+                special_end_date=self.get_special_end_date(),
+                created_at=self.get_erstdat(),
+                edited_at=self.get_aenddat()
+            )
+            product_entity.prices = price
 
             return product_entity
 
@@ -229,6 +244,115 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 return None
         except (ValueError, IndexError, TypeError) as e:
             self.logger.error(f"An error occurred while processing the tax key string: {str(e)}")
+            return None
+
+    def get_price(self, vk=0):
+        """
+        Fetches the price from the dataset based on the given vk and rab parameters and extracts the price from the string.
+        :param vk: The vk parameter to fetch the price.
+        :param rab: The rab parameter to fetch the price.
+        :return: Price as a float or None if the value is None, missing, or can't be converted to a float.
+        """
+        try:
+            price = self.get_(f"Vk{vk}.Preis")
+            if price:
+                return float(price)
+            else:
+                self.logger.warning("No price found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the price string: {str(e)}")
+            return None
+
+    def get_rebate_quantity(self, vk=0, rab=0):
+        """
+        Fetches the rebate quantity from the dataset based on the given vk and rab parameters and extracts the quantity from the string.
+        :param vk: The vk parameter to fetch the rebate quantity.
+        :param rab: The rab parameter to fetch the rebate quantity.
+        :return: Rebate quantity as an integer or None if the value is None, missing, or can't be converted to an integer.
+        """
+        try:
+            rebate_quantity = self.get_(f"Vk{vk}.Rab{rab}.Mge")
+            if rebate_quantity:
+                return int(rebate_quantity)
+            else:
+                self.logger.warning("No rebate quantity found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the rebate quantity string: {str(e)}")
+            return None
+
+    def get_rebate_price(self, vk=0, rab=0):
+        """
+        Fetches the rebate price from the dataset based on the given vk and rab parameters and extracts the price from the string.
+        :param vk: The vk parameter to fetch the rebate price.
+        :param rab: The rab parameter to fetch the rebate price.
+        :return: Rebate price as a float or None if the value is None, missing, or can't be converted to a float.
+        """
+        try:
+            rebate_price = self.get_(f"Vk{vk}.Rab{rab}.Pr")
+            if rebate_price:
+                return float(rebate_price)
+            else:
+                self.logger.warning("No rebate price found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the rebate price string: {str(e)}")
+            return None
+
+    def get_special_price(self, vk=0):
+        """
+        Fetches the special price from the dataset based on the given vk parameter and extracts the price from the string.
+        :param vk: The vk parameter to fetch the special price.
+        :return: Special price as a float or None if the value is None, missing, or can't be converted to a float.
+        """
+        try:
+            special_price = self.get_(f"Vk{vk}.SPr")
+            if special_price:
+                return float(special_price)
+            else:
+                self.logger.warning("No special price found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the special price string: {str(e)}")
+            return None
+
+    def get_special_start_date(self, vk=0):
+        """
+        Fetches the special start date from the dataset based on the given vk parameter.
+        :param vk: The vk parameter to fetch the special start date.
+        :return: Special start date as a string or None if the value is None or missing.
+        """
+        try:
+            special_start_date = self.get_(f"Vk{vk}.SVonDat")
+            if special_start_date:
+                # Convert pywintypes.datetime to standard datetime.datetime
+                special_start_date = datetime.datetime(special_start_date.year, special_start_date.month, special_start_date.day, special_start_date.hour, special_start_date.minute, special_start_date.second)
+                return special_start_date
+            else:
+                self.logger.warning("No special start date found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the special start date string: {str(e)}")
+            return None
+
+    def get_special_end_date(self, vk=0):
+        """
+        Fetches the special end date from the dataset based on the given vk parameter.
+        :param vk: The vk parameter to fetch the special end date.
+        :return: Special end date as a string or None if the value is None or missing.
+        """
+        try:
+            special_end_date = self.get_(f"Vk{vk}.SBisDat")
+            if special_end_date:
+                # Convert pywintypes.datetime to standard datetime.datetime
+                special_end_date = datetime.datetime(special_end_date.year, special_end_date.month, special_end_date.day, special_end_date.hour, special_end_date.minute, special_end_date.second)
+                return special_end_date
+            else:
+                self.logger.warning("No special end date found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the special end date string: {str(e)}")
             return None
 
     def get_nested_ums(self, jahr, return_field):

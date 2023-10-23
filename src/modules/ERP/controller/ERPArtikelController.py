@@ -1,9 +1,11 @@
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+
 import config
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelEntity import ERPArtikelEntity
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
-from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
+from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation, BridgePriceEntity
 from src.modules.Bridge.controller.BridgeProductController import BridgeProductController
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
@@ -61,8 +63,51 @@ class ERPArtikelController(ERPAbstractController):
         :rtype: BridgeProductEntity
         """
         # First merge the object to the db
+        bridge_entity = self._set_translation_relation(bridge_entity)
+        bridge_entity = self._set_price_relation(bridge_entity)
         bridge_entity = self._set_tax_relation(bridge_entity)
         bridge_entity = self._set_category_relation(bridge_entity)
+        return bridge_entity
+
+    def _set_translation_relation(self, bridge_entity):
+        for translation in bridge_entity.translations:
+            try:
+                self.logger.info(f"Looking for Translation: {translation.name} for Product ID: {translation.product_id}")
+                translation_in_db = BridgeProductTranslation.query \
+                    .filter(BridgeProductTranslation.name == translation.name) \
+                    .filter(BridgeProductTranslation.name != "") \
+                    .filter(BridgeProductTranslation.product_id == bridge_entity.id) \
+                    .one_or_none()
+                translation.id = translation_in_db.id
+            except NoResultFound:
+                # Translation not found in the database
+                pass
+            except MultipleResultsFound:
+                # More than one translation with the same name found in the database
+                self.logger.warning(f"Multiple translations found for name: {translation.name}")
+            except Exception as e:
+                # Handle other unexpected errors
+                self.logger.error(f"An error occurred while setting translation relation: {str(e)}")
+        return bridge_entity
+
+    def _set_price_relation(self, bridge_entity):
+        try:
+            self.logger.info(f"Looking for Price related to Product ID: {bridge_entity.id}")
+            price_in_db = BridgePriceEntity.query \
+                .filter(BridgePriceEntity.product_id == bridge_entity.id) \
+                .one_or_none()
+
+            if price_in_db:
+                bridge_entity.prices.id = price_in_db.id
+            else:
+                self.logger.info(f"No price found for Product ID: {bridge_entity.id}")
+
+        except MultipleResultsFound:
+            # More than one price with the same product_id found in the database
+            self.logger.warning(f"Multiple prices found for Product ID: {bridge_entity.id}")
+        except Exception as e:
+            # Handle other unexpected errors
+            self.logger.error(f"An error occurred while setting price relation: {str(e)}")
         return bridge_entity
 
     def _set_tax_relation(self, bridge_entity):
