@@ -1,7 +1,9 @@
+from sqlalchemy.exc import NoResultFound, MultipleResultsFound
+
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
 from src.modules.Bridge.controller.BridgeCategoryController import BridgeCategoryController
-from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
+from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity, BridgeCategoryTranslation
 
 
 class ERPArtikelKategorienController(ERPAbstractController):
@@ -20,6 +22,28 @@ class ERPArtikelKategorienController(ERPAbstractController):
         )
 
     def set_relations(self, bridge_entity):
+        bridge_entity = self._set_translation_relation(bridge_entity)
+        return bridge_entity
+
+    def _set_translation_relation(self, bridge_entity):
+        for translation in bridge_entity.translations:
+            try:
+                self.logger.info(f"Looking for Translation: {translation.name} for Product ID: {translation.product_id}")
+                translation_in_db = BridgeCategoryTranslation.query \
+                    .filter(BridgeCategoryTranslation.name == translation.name) \
+                    .filter(BridgeCategoryTranslation.name != "") \
+                    .filter(BridgeCategoryTranslation.category_id_id == bridge_entity.id) \
+                    .one_or_none()
+                translation.id = translation_in_db.id
+            except NoResultFound:
+                # Translation not found in the database
+                pass
+            except MultipleResultsFound:
+                # More than one translation with the same name found in the database
+                self.logger.warning(f"Multiple translations found for name: {translation.name}")
+            except Exception as e:
+                # Handle other unexpected errors
+                self.logger.error(f"An error occurred while setting translation relation: {str(e)}")
         return bridge_entity
 
     def get_entity(self):
