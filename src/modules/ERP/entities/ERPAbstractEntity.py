@@ -726,7 +726,7 @@ class ERPAbstractEntity(ERPCoreController):
         return self.get_("ErstDat")
 
     def get_aenddat(self):
-        return self.get_("AendDat")
+        return self.get_("LtzAend")
 
     """ Nested """
     def get_nested_(self, nested_dataset_name, index_field, search_value, return_field):
@@ -754,7 +754,6 @@ class ERPAbstractEntity(ERPCoreController):
         return nested_datasets_list
 
     """ Ranges """
-
     def range_set(self, index=None, search_value=None, range_end=None) -> bool:
         """
         Set a range on the dataset based on the provided index, search value, and range end.
@@ -843,7 +842,6 @@ class ERPAbstractEntity(ERPCoreController):
             return None
 
     """ Utility Methods """
-
     def print_all_datasets(self):
         """Print the names and descriptions of all datasets."""
         for ds_info in self._dataset_infos:
@@ -909,7 +907,6 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             # Using the getattr function to dynamically access the attribute or method
             casted_attribute_or_method = getattr(field, cast_type)
-
             # Check if it's callable (i.e., a method) or just an attribute
             if callable(casted_attribute_or_method):
                 casted_value = casted_attribute_or_method()
