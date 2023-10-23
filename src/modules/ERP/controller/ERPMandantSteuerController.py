@@ -31,19 +31,6 @@ class ERPMandantSteuerController(ERPAbstractController):
         else:
             self.logger.error("no Tax Dataset is set. Can't return.")
 
-    def upsert(self, *args, **kwargs):
-        # Map the ERPDataset to the BridgeObject
-        bridge_entity_new = self._dataset_entity.map_erp_to_bridge(**kwargs)
-        # Query for an existing entry
-        bridge_entity_in_db = self.is_in_db(bridge_entity_new)
-
-        if bridge_entity_in_db:
-            # Forward the existing id to the new entity
-            bridge_entity_new.id = bridge_entity_in_db.id
-
-        # Now merge everything
-        self.merge(bridge_entity_new)
-
     def get_entity(self):
         """
         Retrieve the dataset entity of the controller.
@@ -68,4 +55,3 @@ class ERPMandantSteuerController(ERPAbstractController):
     def get_tax_fields_by_stschl(self, stschl):
         tax_fields = self._dataset_entity.get_tax_fields(stschl=stschl)
         return tax_fields
-
