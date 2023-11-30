@@ -1,14 +1,17 @@
-from pprint import pprint
+from abc import abstractmethod
+from src import db
 
 from ..ERPCoreController import ERPCoreController
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
-from abc import abstractmethod
-from src import db
+from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 
 
 class ERPAbstractController(ERPCoreController):
     """
     Abstract Controller class for ERP dataset operations.
+
+    The Abstract Controller Class holds all general methods and attributes, which are needed for
+    all child classes.
 
     Attributes:
         dataset_entity: An instance of ERPAbstractEntity used for accessing datasets.
@@ -126,7 +129,7 @@ class ERPAbstractController(ERPCoreController):
 
     def upsert(self, *args, **kwargs):
         """
-        Inserts or updates the BridgeProductEntity in the database based on whether it already exists.
+        Inserts or updates the BridgeEntity in the database based on whether it already exists or not.
 
         This method maps the ERPDataset to the BridgeObject, then checks if this entity is already
         present in the database. If the entity exists, it updates the entity, otherwise, it inserts a new one.
@@ -135,18 +138,16 @@ class ERPAbstractController(ERPCoreController):
         :param kwargs: Keyword arguments passed to map_erp_to_bridge method.
         """
         try:
-            # Log the initiation of upsert
-            self.logger.info("Upsert called in parent")
-
             # Map the ERP dataset to a new bridge entity
             bridge_entity_new = self._dataset_entity.map_erp_to_bridge(*args, **kwargs)
+
             # Set relations
+            if bridge_entity_new:
+                self.db.session.merge(bridge_entity_new)
+                self.set_relations(bridge_entity=bridge_entity_new)
 
-            bridge_entity_new = self.db.session.merge(bridge_entity_new)
-            bridge_entity_new = self.set_relations(bridge_entity=bridge_entity_new)
-
-            # Commit the changes (either insert or update) to the database
-            self.merge_it(bridge_entity=bridge_entity_new)
+                # Commit the changes (either insert or update) to the database
+                self.merge_it(bridge_entity=bridge_entity_new)
 
         except Exception as e:
             # Log the error
@@ -175,20 +176,35 @@ class ERPAbstractController(ERPCoreController):
         """
         raise NotImplementedError("Child classes must implement this method.")
 
+    def _set_media_relation(self, bridge_entity):
+        """
+        Set the media relation for a given bridge product entity.
+
+        :param bridge_entity: The BridgeProductEntity to set media relation for.
+        :type bridge_entity: BridgeProductEntity
+        :return: BridgeProductEntity with media relation set.
+        :rtype: BridgeProductEntity
+        """
+        medias_list = bridge_entity.media
+        for media in medias_list:
+            media_in_db = BridgeMediaEntity.query.filter_by(file_name=media.file_name).one_or_none()
+            if media_in_db:
+                media.id = media_in_db.id
+        return bridge_entity
+
     def merge_it(self, bridge_entity):
+
         """Merges the new Bridge entity into the database.
 
         :param bridge_entity: The new Bridge entity to merge.
         :type bridge_entity: BridgeCategoryEntity
         """
         try:
-
             # Merge entity to session
-            if not self.db.session.is_modified(bridge_entity, include_collections=False):
-                self.logger.info(f"Entity has changed after setting relations. Merging entity with ERP number again: {bridge_entity.erp_nr}")
-                self.db.session.merge(bridge_entity)
-
-            self.logger.info("Commiting entity")
+            # if not self.db.session.is_modified(bridge_entity, include_collections=False):
+            #     self.logger.info(f"Entity has changed after setting relations. Merging entity with ERP number again: {bridge_entity.erp_nr}")
+            # self.db.session.merge(bridge_entity)
+            # self.logger.info("Commiting entity")
             self.db.session.commit()
 
         except Exception as e:
