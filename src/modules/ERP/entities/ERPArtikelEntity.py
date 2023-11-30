@@ -1,12 +1,15 @@
 import datetime
+import os
+import requests
 
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation, BridgePriceEntity
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
+from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 from src.modules.ERP.controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
-from config import ERPConfig
+from config import ERPConfig, GCBridgeConfig
 
 
 class ERPArtikelEntity(ERPAbstractEntity):
@@ -70,6 +73,19 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 edited_at=self.get_aenddat()
             )
             product_entity.prices = price
+
+            # Create image entities and assign them
+            medias = self.get_images_file_list()
+            for media in medias:
+                name = self.get_med_file_name(media)
+                med = BridgeMediaEntity(
+                    file_name=name,
+                    file_type=self.get_med_file_type(media),
+                    file_size=self.get_med_file_size(media),
+                    title=name,
+                    description=name
+                )
+                product_entity.media.append(med)
 
             return product_entity
 
