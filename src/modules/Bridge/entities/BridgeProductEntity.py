@@ -41,16 +41,13 @@ class BridgeProductEntity(db.Model):
 
     # Categories ist set in the BridgeCategoryEntity
 
-    def get_translation_(self, language_code):
-        # Usage example:
-        # product = BridgeProductEntity.query.first()
-        # german_name = product.get_translation_('DE_de').name
-        # english_description = product.get_translation_('GB_en').description
-        translation = self.translations.filter_by(language=language_code).first()
+    def get_translation(self, language_code):
+        # Find the translation with the given language code using list comprehension
+        translation = next((t for t in self.translations if t.language == language_code), None)
         return TranslationWrapper(translation)
 
     def __repr__(self):
-        return f'Bridge Product Entity: {self.get_translation_("DE_de").name} ID: {self.id}'
+        return f'Bridge Product Entity: {self.get_translation("DE_de").name} ID: {self.id}'
 
 
 class BridgeProductTranslation(db.Model):
