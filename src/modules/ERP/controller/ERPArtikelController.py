@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
 import config
@@ -63,10 +65,12 @@ class ERPArtikelController(ERPAbstractController):
         :rtype: BridgeProductEntity
         """
         # First merge the object to the db
+
         bridge_entity = self._set_translation_relation(bridge_entity)
         bridge_entity = self._set_price_relation(bridge_entity)
         bridge_entity = self._set_tax_relation(bridge_entity)
         bridge_entity = self._set_category_relation(bridge_entity)
+        bridge_entity = self._set_media_relation(bridge_entity)
         return bridge_entity
 
     def _set_translation_relation(self, bridge_entity):
@@ -113,7 +117,6 @@ class ERPArtikelController(ERPAbstractController):
     def _set_tax_relation(self, bridge_entity):
         """
         Set the tax relation for a given bridge entity.
-
         If the tax is not found in the database, it attempts to sync the tax using the provided sync method.
 
         :param bridge_entity: The BridgeProductEntity to set tax relation for.
@@ -125,20 +128,21 @@ class ERPArtikelController(ERPAbstractController):
             stschl = self.get_entity().get_stschl()
             tax_from_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
 
-            if tax_from_db:
-                self.logger.info(f"Added Tax with ERP number: {tax_from_db.erp_nr} to product.")
-                bridge_entity.tax = tax_from_db
-            else:
+            # Wenn die Steuer nicht in der Datenbank gefunden wird, erfolgt ein Sync-Versuch
+            if tax_from_db is None:
                 self.logger.warning(f"Tax with ERP number: {stschl} not found in database. Attempting to sync.")
 
-                # If tax is not found, attempt to sync it.
+                # Hier den Sync-Vorgang einfügen
                 tax_ctrl = ERPMandantSteuerController(config.ERPConfig.MANDANT)
                 tax_ctrl.sync_one_to_bridge(stschl=stschl)
 
-                # After syncing, attempt to retrieve the tax again from the database.
-                tax_from_db_after_sync = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
-                if tax_from_db_after_sync:
-                    bridge_entity.tax = tax_from_db_after_sync
+                # Nach dem Sync erneut versuchen, die Steuer aus der Datenbank zu holen
+                tax_from_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
+
+                # Wenn die Steuer nun vorhanden ist, wird sie dem Produkt zugeordnet
+                if tax_from_db:
+                    bridge_entity.tax = tax_from_db
+                    self.logger.info(f"Added Tax with ERP number: {tax_from_db.erp_nr} to product.")
                 else:
                     self.logger.error(f"Tax with ERP number: {stschl} still not found in database after syncing.")
 
@@ -157,21 +161,29 @@ class ERPArtikelController(ERPAbstractController):
         :rtype: BridgeProductEntity
         """
         categories_list = self.get_categories_list()
-        bridge_entity.categories = []
-        if categories_list:
-            for category in categories_list:
-                try:
-                    self.logger.info(f"Searching BridgeCategoryEntity for {category}")
-                    category_ntt = BridgeCategoryEntity.query.filter_by(erp_nr=category).one_or_none()
+        if not categories_list:
+            self.logger.info("No categories to add.")
+            return bridge_entity
 
-                    if category_ntt:
-                        bridge_entity.categories.append(category_ntt)
-                        self.logger.info(f"Added category with ERP number: {category} to product.")
-                    else:
-                        self.logger.warning(f"Category with ERP number: {category} not found in database.")
+        # Bereinigen Sie zuerst die bestehenden Kategorien, um Duplikate oder veraltete Beziehungen zu vermeiden
+        bridge_entity.categories.clear()
 
-                except Exception as e:
-                    self.logger.error(f"An error occurred while adding category with ERP number: {category} to product. Error: {str(e)}")
+        for category_erp_nr in categories_list:
+            try:
+                self.logger.info(f"Searching for category with ERP number: {category_erp_nr}")
+                category_entity = BridgeCategoryEntity.query.filter_by(erp_nr=category_erp_nr).one_or_none()
+
+                if category_entity:
+                    self.db.session.add(category_entity)
+                    # Wenn die Kategorie gefunden wird, füge sie zum Produkt hinzu
+                    bridge_entity.categories.append(category_entity)
+                    self.logger.info(f"Added category with ERP number: {category_erp_nr} to product.")
+                else:
+                    # Wenn die Kategorie nicht existiert, kann hier optional eine Logik zum Erstellen einer neuen Kategorie eingefügt werden
+                    self.logger.warning(f"Category with ERP number: {category_erp_nr} not found in database.")
+
+            except Exception as e:
+                self.logger.error(f"An error occurred while adding category with ERP number: {category_erp_nr} to product. Error: {str(e)}")
 
         return bridge_entity
 
