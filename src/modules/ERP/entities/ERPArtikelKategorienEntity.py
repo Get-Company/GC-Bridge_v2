@@ -1,7 +1,9 @@
 import json
+from config import ERPConfig
 
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity, BridgeCategoryTranslation
+from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 
 
 class ERPArtikelKategorienEntity(ERPAbstractEntity):
@@ -41,16 +43,35 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
                 edited_at=self.get_aenddat()
             )
             self.logger.info(f"Category Enitiy mapped: {category_entity.id}:{category_entity.erp_nr}")
-            # Create a new instance of BridgeCategoryTranslationEntity
+
+            cat_nr_path = self.get_category_nr_path()
+            # Get the first and root element of the tree path.
+            # Use the emthod get_languge_for_value classmethod in config.py to get the corresponding language
+            language = ERPConfig.get_language_for_value(int(cat_nr_path[0]))
+
             category_translation = BridgeCategoryTranslation(
-                language='DE_de',
+                language=language,
                 name=self.get_name(),
                 description=self.get_description(),
                 description_short=self.get_description(),
                 created_at=self.get_erstdat(),
                 edited_at=self.get_aenddat()
-
             )
+
+            # Create image entities and assign them
+            medias = self.get_images_file_list()
+            if medias:
+                for media in medias:
+                    name = self.get_med_file_name(media)
+                    med = BridgeMediaEntity(
+                        file_name=name,
+                        file_type=self.get_med_file_type(media),
+                        file_size=self.get_med_file_size(media),
+                        title=name,
+                        description=name
+                    )
+                    category_entity.media.append(med)
+
             self.logger.info(f"Category Translation Entity mapped: {category_translation.language} - {category_translation.name}")
             # Link the translation with the category
             category_entity.translations.append(category_translation)
