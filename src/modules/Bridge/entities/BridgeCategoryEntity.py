@@ -36,18 +36,15 @@ class BridgeCategoryEntity(db.Model):
         cascade='all, delete-orphan')
 
     products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
-                               backref=db.backref('categories', lazy=True))
+                               backref=db.backref('categories', lazy=False))
 
-    def get_translation_(self, language_code):
-        # Usage example:
-        # category = BridgeCategoryEntity.query.first()
-        # german_title = category.get_translation_('DE_de').title
-        # english_description = category.get_('GB_en').description
-        translation = self.translations.filter_by(language=language_code).first()
+    def get_translation(self, language_code):
+        # Find the translation with the given language code using list comprehension
+        translation = next((t for t in self.translations if t.language == language_code), None)
         return TranslationWrapper(translation)
 
     def __repr__(self):
-        print(f'"Bridge Category Entity: {self.get_translation_("DE_de").title}" ID: {self.id}')
+        print(f'Bridge Category Entity: {self.get_translation("DE_de").name} ID: {self.id}')
 
 
 class BridgeCategoryTranslation(db.Model):
