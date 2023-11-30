@@ -21,9 +21,11 @@ from typing import List, Union, Tuple, Any, Dict
 # Is used to get the basename of the image
 import os
 from abc import abstractmethod
+import requests
 
 from ..ERPCoreController import ERPCoreController
 from ..controller.ERPConnectionController import ERPConnectionController
+from config import GCBridgeConfig
 
 
 class ERPAbstractEntity(ERPCoreController):
@@ -53,6 +55,7 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             #1 Get the singleton instance of ERPConnectionController
             erp_co_ctrl = ERPConnectionController()
+
             self._erp = erp_co_ctrl.get_erp()
             self._erp_special_objects = erp_co_ctrl.special_objects_dict
             self._erp_app_var = erp_co_ctrl.app_variablen_dict
@@ -1008,6 +1011,53 @@ class ERPAbstractEntity(ERPCoreController):
         except Exception as e:
             self.logger.error(f"An error occurred while fetching the 'soAppObject': {str(e)}")
             return False
+
+    """ Medias """
+    def get_med_file_name(self, media):
+        """
+        Extracts the file name without the extension from the file_path.
+        Example: beispiel_schrank_schublade.jpg returns beispiel_schrank_schublade
+        :return: File name without extension or None if an error occurs.
+        """
+        try:
+            base_name = os.path.basename(media)  # Get the last part of the path
+            file_name_without_extension = os.path.splitext(base_name)[0]  # Split the base name and get the name part
+            if file_name_without_extension:
+                return file_name_without_extension
+            else:
+                self.logger.warning("No file name found in the provided path.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the file path: {str(e)}")
+            return None
+
+    def get_med_file_type(self, media):
+        """
+        Extracts the file type (extension) from the file_path.
+        Example: beispiel_schrank_schublade.jpg returns jpg
+        :return: File type (extension) without the dot or None if an error occurs.
+        """
+        try:
+            file_type = os.path.splitext(media)[1][1:]  # Split the path and get the extension part without the dot
+            if file_type:
+                return file_type
+            else:
+                self.logger.warning("No file type found in the provided path.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the file path: {str(e)}")
+            return None
+
+    def get_med_file_size(self, media):
+        path = GCBridgeConfig.ASSETS_PATH + GCBridgeConfig.IMG_PATH
+        try:
+            img_from_web = requests.head(f"{path}/{media}")
+            img_from_web.raise_for_status()
+            file_size = int(img_from_web.headers.get('Content-Length', 0))
+            return file_size
+        except requests.RequestException as e:
+            self.logger.error(f"An error occurred while calculating the file size from the web: {str(e)}")
+            return None
 
     def get_max_img_nr(self):
         """
