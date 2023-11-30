@@ -12,10 +12,16 @@ from config import OpenAIConfig
 
 class ModulesCoreController(ABC):
     def __init__(self):
+        """
+        The constructor of the class. Initializes the logger for this class.
+        """
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_logging()
 
     def setup_logging(self):
+        """
+        Sets up the logging for this class. Creates a time-based rotating log file in specified directory.
+        """
         # Set the logging level
         self.logger.setLevel(logging.DEBUG)
 
@@ -41,17 +47,27 @@ class ModulesCoreController(ABC):
     # SQL Alchemy Method
     def set_null(self):
         """
-        When sending none to a field, the string none is set.
-        We need the actual NONE to set the field to NULL
+        This method is used to return a SQLAlchemy null value.
+
+        Often, this is necessary when you want to set a database field to NULL. By default, SQLAlchemy considers
+        NULL as the absence of a value. This method, therefore, can be used to explicitly remove any existing value
+        for a certain database field, thus setting it to NULL.
+
+        It does not take any parameters and does not modify any object states. It simply returns a special value that
+        represents NULL in SQLAlchemy's database abstraction layer.
+
+        :return: sqlalchemy.null()
         """
+
+        # The method returns a special constant that SQLAlchemy uses to represent NULL
         return sqlalchemy.null()
 
     # AI - ChatGPT
     def count_tokens(self, text):
         """
         Counts the number of tokens in a given text.
-
         A token is defined as a word, a number, or a punctuation mark.
+        This is usefull for calculating the price for AI
 
         :param text: The text to tokenize.
         :type text: str
