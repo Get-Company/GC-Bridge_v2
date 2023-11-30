@@ -3,28 +3,46 @@
 {% block h1 %} Kategorien {% endblock %}
 
 {% block body %}
-<table class="table table-striped table-bordered">
-    <thead>
-    <tr>
-        <th>Index</th>
-        <th scope="col">ERP Nr</th>
-        {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
-            <th scope="col">Name ({{ language_code }})</th>
-            <th scope="col">Description ({{ language_code }})</th>
-        {% endfor %}
-    </tr>
-    </thead>
-    <tbody>
-    {% for category in categories %}
-        <tr>
-        <td>{{ loop.index }}</td>
-            <td>{{ category.erp_nr }}</td>
-            {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
-                <td>{{ category.get_(language_code).name }}</td>
-                <td>{{ category.get_(language_code).description }}</td>
+    <div class="row">
+    <div class="col">
+        <h1>Kategorien</h1>
+    </div>
+
+    </div>
+
+    <div class="row">
+    <div class="col">
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>Index</th>
+                <th scope="col">ERP Nr</th>
+                {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
+                    <th scope="col">Name ({{ language_code }})</th>
+                    <th scope="col">Description ({{ language_code }})</th>
+                {% endfor %}
+                <th scope="col">Images</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for category in categories %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ category.erp_nr }}</td>
+                    {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
+                        <td>{{ category.get_translation(language_code).name }}</td>
+                        <td>{{ category.get_translation(language_code).description | safe }}</td>
+                    {% endfor %}
+
+                    <td>
+                        {% for img in category.media %}
+                            {{ loop.index }} {{ img.file_name }}.{{ img.file_type }}<br>
+                        {% endfor %}
+                    </td>
+                </tr>
             {% endfor %}
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-{%  endblock %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+{% endblock %}
