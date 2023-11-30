@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 from src import db
 from src.modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
+from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
 
 BridgeViews = Blueprint('bridge_views', __name__)
 
@@ -21,6 +22,15 @@ def bridge_categories():
     cat_ntt = BridgeCategoryEntity()
     categories = db.session.query(BridgeCategoryEntity).all()
     return render_template('bridge/category/categories.html', categories=categories)
+
+@BridgeViews.route('/products', endpoint='products')
+def bridge_products():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    query = BridgeProductEntity.query
+    products = query.paginate(page=page, per_page=per_page, error_out=False)
+    return render_template('bridge/product/products.html', products=products, per_page=per_page)
 
 
 """ 
