@@ -8,9 +8,6 @@ class ERPMandantSteuerController(ERPAbstractController):
     Examples:
     """
 
-    def set_relations(self, bridge_entity):
-        pass
-
     def __init__(self, search_value=None, index=None, range_end=None):
         self._dataset_entity = ERPMandantSteuerEntity(
             search_value=search_value,
@@ -21,6 +18,9 @@ class ERPMandantSteuerController(ERPAbstractController):
             dataset_entity=self._dataset_entity
         )
         self._tax_dataset = None
+
+    def set_relations(self, bridge_entity):
+        pass
 
     def set_tax_dataset(self, tax_dataset):
         self._tax_dataset = tax_dataset
