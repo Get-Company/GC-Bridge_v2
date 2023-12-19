@@ -1,4 +1,6 @@
 from abc import abstractmethod
+from pprint import pprint
+
 from src import db
 
 from ..ERPCoreController import ERPCoreController
@@ -105,6 +107,7 @@ class ERPAbstractController(ERPCoreController):
     def sync_all_to_bridge(self):
         # For Loop through all the datasets
         self.logger.info(f'We have a range to loop of {self._dataset_entity.get_range_count()} items.')
+
         while not self._dataset_entity.range_eof():
             self.logger.info(f"Next Element in range: {self._dataset_entity}")
             self.upsert()
@@ -115,8 +118,8 @@ class ERPAbstractController(ERPCoreController):
     def sync_all_from_bridge(self):
         pass
 
-    def sync_one_to_bridge(self, *args, **kwargs):
-        self.upsert(*args, **kwargs)
+    def sync_one_to_bridge(self):
+        self.upsert()
 
     def sync_one_from_bridge(self):
         pass
@@ -127,31 +130,73 @@ class ERPAbstractController(ERPCoreController):
     def sync_changed_from_bridge(self):
         pass
 
-    def upsert(self, *args, **kwargs):
+    def upsert(self):
         """
         Inserts or updates the BridgeEntity in the database based on whether it already exists or not.
-
         This method maps the ERPDataset to the BridgeObject, then checks if this entity is already
         present in the database. If the entity exists, it updates the entity, otherwise, it inserts a new one.
-
         :param args: Positional arguments passed to map_erp_to_bridge method.
         :param kwargs: Keyword arguments passed to map_erp_to_bridge method.
         """
+        self.logger.info("Starting the upsert process.")
         try:
             # Map the ERP dataset to a new bridge entity
-            bridge_entity_new = self._dataset_entity.map_erp_to_bridge(*args, **kwargs)
-
-            # Set relations
-            if bridge_entity_new:
-                self.db.session.merge(bridge_entity_new)
-                self.set_relations(bridge_entity=bridge_entity_new)
-
-                # Commit the changes (either insert or update) to the database
-                self.merge_it(bridge_entity=bridge_entity_new)
-
+            bridge_entity_new = self._dataset_entity.map_erp_to_bridge()
         except Exception as e:
-            # Log the error
-            self.logger.error(f"An unexpected error occurred during the upsert process: {str(e)}")
+            self.logger.error(f"Failed to map ERP dataset to new BridgeEntity: {e}")
+            return
+
+        try:
+            # Check for existing entity
+            bridge_entity_in_db = self.is_in_db(bridge_entity_new=bridge_entity_new)
+        except Exception as e:
+            self.logger.error(f"Failed to check if entity exists in DB: {e}")
+            return
+
+        if bridge_entity_in_db:
+            self.logger.info(f"Entity found in DB, preparing to update: {bridge_entity_in_db}")
+            bridge_entity_for_db = bridge_entity_in_db.update(bridge_entity_new=bridge_entity_new)
+            self.db.session.merge(bridge_entity_for_db)
+        else:
+            self.logger.info("No existing entity found in DB, preparing to insert new entity.")
+            bridge_entity_for_db = bridge_entity_new
+            self.db.session.add(bridge_entity_for_db)
+
+        try:
+            # Flush it first, for we have the relations to set
+            self.db.session.flush()
+        except Exception as e:
+            self.logger.error(f"Failed to flush DB session: {e}")
+            return
+        try:
+            # Refresh the entity, to get it back from the flush with its id
+            self.db.session.refresh(bridge_entity_for_db)
+        except Exception as e:
+            self.logger.error(f"Failed to refresh entity: {e}")
+            return
+
+        self.db.session.add(bridge_entity_for_db)
+
+        try:
+            # Set relations
+            bridge_entity_for_db_with_relations = self.set_relations(bridge_entity_for_db)
+            self.logger.info("Set relations for the entity.")
+        except Exception as e:
+            self.logger.error(f"Failed to set entity relations: {e}")
+            return
+        try:
+            self.db.session.merge(bridge_entity_for_db_with_relations)
+        except Exception as e:
+            self.logger.error(f"Failed to merge entity with its relations into the session: {e}")
+            return
+        try:
+            self.db.session.commit()
+        except Exception as e:
+            self.logger.error(f"Failed to commit changes to DB: {e}")
+
+    @abstractmethod
+    def is_in_db(self, bridge_entity_new):
+        pass
 
     @abstractmethod
     def set_relations(self, bridge_entity):
@@ -178,38 +223,26 @@ class ERPAbstractController(ERPCoreController):
 
     def _set_media_relation(self, bridge_entity):
         """
-        Set the media relation for a given bridge product entity.
+        Update the media relation for a given bridge product entity.
 
         :param bridge_entity: The BridgeProductEntity to set media relation for.
         :type bridge_entity: BridgeProductEntity
         :return: BridgeProductEntity with media relation set.
         :rtype: BridgeProductEntity
         """
+        bridge_entity.map_erp
         medias_list = bridge_entity.media
         for media in medias_list:
             media_in_db = BridgeMediaEntity.query.filter_by(file_name=media.file_name).one_or_none()
+
             if media_in_db:
-                media.id = media_in_db.id
+                # Aktualisieren Sie hier das media_in_db-Objekt mit den Daten aus media, falls notwendig
+                media_in_db.update(media)
+                self.db.session.merge(media_in_db)
+            else:
+                self.db.session.add(media)  # Neues Media-Objekt zur Session hinzufügen
+                bridge_entity.media.append(media)
+
         return bridge_entity
 
-    def merge_it(self, bridge_entity):
 
-        """Merges the new Bridge entity into the database.
-
-        :param bridge_entity: The new Bridge entity to merge.
-        :type bridge_entity: BridgeCategoryEntity
-        """
-        try:
-            # Merge entity to session
-            # if not self.db.session.is_modified(bridge_entity, include_collections=False):
-            #     self.logger.info(f"Entity has changed after setting relations. Merging entity with ERP number again: {bridge_entity.erp_nr}")
-            # self.db.session.merge(bridge_entity)
-            # self.logger.info("Commiting entity")
-            self.db.session.commit()
-
-        except Exception as e:
-            self.logger.error(f"An error occurred while merging the entity: {str(e)}")
-            self.db.session.rollback()
-        finally:
-            self.logger.info("Closing connection")
-            self.db.session.close_all()
