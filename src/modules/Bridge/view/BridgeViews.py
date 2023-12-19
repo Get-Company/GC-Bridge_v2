@@ -1,8 +1,10 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, abort
 from src import db
 from src.modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
+from config import GCBridgeConfig
+from sqlalchemy import or_, desc, asc
 
 BridgeViews = Blueprint('bridge_views', __name__)
 
@@ -27,11 +29,31 @@ def bridge_categories():
 def bridge_products():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    search = request.args.get('search', '', type=str)
+    sort_by = request.args.get('sort_by', 'id')  # default column to sort by
+    sort_order = request.args.get('sort_order', 'asc', type=str)  # default sort order
 
     query = BridgeProductEntity.query
+
+    if search:
+        # for example if your entity has 'name' and 'description' exposed
+        query = query.filter(
+                BridgeProductEntity.erp_nr.contains(search)
+        )
+
     products = query.paginate(page=page, per_page=per_page, error_out=False)
     return render_template('bridge/product/products.html', products=products, per_page=per_page)
 
+@BridgeViews.route('/product/<id>', endpoint='product')
+def bridge_product(id):
+    product = BridgeProductEntity().query.filter_by(id=id).one_or_none()
+    if product:
+        return render_template('bridge/product/product.html',
+                               product=product,
+                               assets_img_path=GCBridgeConfig.ASSETS_PATH + "/" + GCBridgeConfig.IMG_PATH
+                               )
+    else:
+        abort(404)
 
 """ 
     Example for the template:
