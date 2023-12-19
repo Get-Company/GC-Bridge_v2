@@ -16,6 +16,6 @@ class BridgeTaxEntity(db.Model):
     products = db.relationship('BridgeProductEntity', backref='tax', lazy=True)
 
     def __repr__(self):
-        return f'Bridge Tax Entity: {self.name} ID: {self.id}'
+        return f'Bridge Tax Entity: {self.description} ID: {self.id}'
 
     
