@@ -1,0 +1,12 @@
+<div class="card mb-4">
+    <div class="card-header">
+        Beschreibung
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="card-body">
+                {{ product.get_translation('DE_de').description | safe }}
+            </div>
+        </div>
+    </div>
+</div>
