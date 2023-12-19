@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from sqlalchemy.exc import NoResultFound, MultipleResultsFound
 
 from ..controller.ERPAbstractController import ERPAbstractController
@@ -23,30 +25,45 @@ class ERPArtikelKategorienController(ERPAbstractController):
 
     def set_relations(self, bridge_entity):
         bridge_entity = self._set_translation_relation(bridge_entity)
-        bridge_entity = self._set_media_relation(bridge_entity)
+        # bridge_entity = self._set_media_relation(bridge_entity)
         return bridge_entity
 
-    def _set_translation_relation(self, bridge_entity):
-        for translation in bridge_entity.translations:
-            try:
-                translation_in_db = BridgeCategoryTranslation.query \
-                    .filter(BridgeCategoryTranslation.name == translation.name) \
-                    .filter(BridgeCategoryTranslation.language == translation.language) \
-                    .one_or_none()
-                if translation_in_db:
-                    translation.id = translation_in_db.id
+    def is_in_db(self, bridge_entity_new):
+        bridge_entity_in_db = self._bridge_controller.get_entity().query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
+        if bridge_entity_in_db:
+            self.logger.info(f"Entity {bridge_entity_new.erp_nr} found in the db!")
+            return bridge_entity_in_db
+        else:
+            self.logger.info(f"No Entity {bridge_entity_new.erp_nr} found in the db!")
+            return None
 
-            except NoResultFound:
-                self.logger.info("No Translation found")
-                # Translation not found in the database
-                continue
-            except MultipleResultsFound:
-                # More than one translation with the same name found in the database
-                self.logger.warning(f"Multiple translations found for name: {translation.name}")
-            except Exception as e:
-                # Handle other unexpected errors
-                self.logger.error(f"An error occurred while setting translation relation: {str(e)}")
-        self.logger.info("Returning bridge_entity from set_translations")
+    def _set_translation_relation(self, bridge_entity):
+        try:
+            # 1 Map new object
+            bridge_category_translation_new = self._dataset_entity.map_erp_translation_to_bridge()
+
+            self.logger.info(f"Looking for Translation: {self._dataset_entity.get_name()} for Category ID: {bridge_entity.id}")
+
+            # 2 Check DB for existing entries
+            bridge_category_translation_in_db = BridgeCategoryTranslation.query \
+                .filter(BridgeCategoryTranslation.category_id == bridge_entity.id) \
+                .filter(BridgeCategoryTranslation.language == "DE_de") \
+                .one_or_none()
+
+            if bridge_category_translation_in_db:
+                # Update
+                bridge_product_translation_for_db = bridge_category_translation_in_db.update(bridge_category_translation_new)
+                self.logger.info(f"Updated existing translation: {bridge_category_translation_in_db.id}")
+            else:
+                # Insert
+                bridge_product_translation_for_db = bridge_category_translation_new
+
+            bridge_entity.translations.append(bridge_product_translation_for_db)
+
+        except Exception as e:
+            # Unerwarteter Fehler
+            self.logger.error(f"An error occurred while setting translation relation: {str(e)}")
+
         return bridge_entity
 
     def get_entity(self):
@@ -69,4 +86,3 @@ class ERPArtikelKategorienController(ERPAbstractController):
             message = "Dataset entity is not set"
             self.logger.warning(message)
             raise ValueError(message)
-
