@@ -36,15 +36,65 @@ class BridgeCategoryEntity(db.Model):
         cascade='all, delete-orphan')
 
     products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
-                               backref=db.backref('categories', lazy=False))
+                               backref=db.backref('categories', lazy=True))
 
     def get_translation(self, language_code):
         # Find the translation with the given language code using list comprehension
         translation = next((t for t in self.translations if t.language == language_code), None)
         return TranslationWrapper(translation)
 
+    # Getter and Setter for erp_nr
+    def get_erp_nr(self):
+        return self.erp_nr
+
+    def set_erp_nr(self, value):
+        self.erp_nr = value
+
+    # Getter and Setter for erp_nr_parent
+    def get_erp_nr_parent(self):
+        return self.erp_nr_parent
+
+    def set_erp_nr_parent(self, value):
+        self.erp_nr_parent = value
+
+    # Getter and Setter for tree_path
+    def get_tree_path(self):
+        return self.tree_path
+
+    def set_tree_path(self, value):
+        self.tree_path = value
+
+    # Getter and Setter for created_at
+    def get_created_at(self):
+        return self.created_at
+
+    def set_created_at(self, value):
+        self.created_at = value
+
+    # Getter and Setter for edited_at
+    def get_edited_at(self):
+        return self.edited_at
+
+    def set_edited_at(self, value):
+        self.edited_at = value
+
+    def update(self, bridge_entity_new):
+        """
+        Updates the current BridgeCategoryEntity instance with values from a new instance.
+
+        Args:
+            bridge_entity_new (BridgeCategoryEntity): The new BridgeCategoryEntity instance with updated values.
+        """
+        self.set_erp_nr(bridge_entity_new.get_erp_nr())
+        self.set_erp_nr_parent(bridge_entity_new.get_erp_nr_parent())
+        self.set_tree_path(bridge_entity_new.get_tree_path())
+        self.set_created_at(bridge_entity_new.get_created_at())
+        self.set_edited_at(bridge_entity_new.get_edited_at())
+
+        return self
+
     def __repr__(self):
-        print(f'Bridge Category Entity: {self.get_translation("DE_de").name} ID: {self.id}')
+        return f'Bridge Category Entity ID: {self.erp_nr}'
 
 
 class BridgeCategoryTranslation(db.Model):
@@ -61,3 +111,64 @@ class BridgeCategoryTranslation(db.Model):
     # Relations
     category_id = db.Column(db.Integer(), db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'),
                             nullable=False)
+
+    # Getter and Setter for language
+    def get_language(self):
+        return self.language
+
+    def set_language(self, value):
+        self.language = value
+
+    # Getter and Setter for name
+    def get_name(self):
+        return self.name
+
+    def set_name(self, value):
+        self.name = value
+
+    # Getter and Setter for description
+    def get_description(self):
+        return self.description
+
+    def set_description(self, value):
+        self.description = value
+
+    # Getter and Setter for description_short
+    def get_description_short(self):
+        return self.description_short
+
+    def set_description_short(self, value):
+        self.description_short = value
+
+    # Getter and Setter for created_at
+    def get_created_at(self):
+        return self.created_at
+
+    def set_created_at(self, value):
+        self.created_at = value
+
+    # Getter and Setter for edited_at
+    def get_edited_at(self):
+        return self.edited_at
+
+    def set_edited_at(self, value):
+        self.edited_at = value
+
+    def update(self, bridge_category_translation_new):
+        """
+        Aktualisiert die aktuelle BridgeCategoryTranslation-Instanz mit Werten aus einer neuen Instanz.
+
+        Args:
+            bridge_category_translation_new (BridgeCategoryTranslation): Die neue BridgeCategoryTranslation-Instanz mit aktualisierten Werten.
+        """
+        self.set_language(bridge_category_translation_new.get_language())
+        self.set_name(bridge_category_translation_new.get_name())
+        self.set_description(bridge_category_translation_new.get_description())
+        self.set_description_short(bridge_category_translation_new.get_description_short())
+        self.set_created_at(bridge_category_translation_new.get_created_at())
+        self.set_edited_at(bridge_category_translation_new.get_edited_at())
+
+        return self
+
+    def __repr__(self):
+        return f'Bridge Category Translation ID: {self.name}'
