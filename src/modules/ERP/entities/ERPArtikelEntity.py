@@ -1,12 +1,14 @@
 import datetime
 import os
+from pprint import pprint
 import requests
 
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
-from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation, BridgePriceEntity
+from src.modules.Bridge.entities.BridgeProductEntity import (
+    BridgeProductEntity, BridgeProductTranslation)
+from src.modules.Bridge.entities.BridgePriceEntity import BridgePriceEntity
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
-from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 from src.modules.ERP.controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
 from config import ERPConfig, GCBridgeConfig
@@ -30,6 +32,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
             dataset_index=index or "Nr",
             search_value=search_value,
             range_end=range_end
+
         )
 
     def map_erp_to_bridge(self):
@@ -53,39 +56,21 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 edited_at=self.get_aenddat()
             )
 
-            # Create a translation entity and append it to the product entity
-            product_translation = BridgeProductTranslation(
-                language='DE_de',
-                name=self.get_name(),
-                description=self.get_description(),
-                edited_at=self.get_aenddat()
-            )
-            product_entity.translations.append(product_translation)
-
-            # Create a price entity and assign it to the product
-            price = BridgePriceEntity(
-                price=self.get_price(),
-                rebate_quantity=self.get_rebate_quantity(),
-                special_price=self.get_special_price(),
-                special_start_date=self.get_special_start_date(),
-                special_end_date=self.get_special_end_date(),
-                created_at=self.get_erstdat(),
-                edited_at=self.get_aenddat()
-            )
-            product_entity.prices = price
-
             # Create image entities and assign them
-            medias = self.get_images_file_list()
-            for media in medias:
-                name = self.get_med_file_name(media)
-                med = BridgeMediaEntity(
-                    file_name=name,
-                    file_type=self.get_med_file_type(media),
-                    file_size=self.get_med_file_size(media),
-                    title=name,
-                    description=name
-                )
-                product_entity.media.append(med)
+            # medias = self.get_images_file_list()
+            # for media in medias:
+            #     name = self.get_med_file_name(media)
+            #     med = BridgeMediaEntity(
+            #         file_name=name,
+            #         file_type=self.get_med_file_type(media),
+            #         file_size=self.get_med_file_size(media),
+            #         title=name,
+            #         description=name
+            #     )
+            #     product_entity.media.append(med)
+
+            # Create category entities and assign them
+            # categories = self.get_categories_list()
 
             return product_entity
 
@@ -93,6 +78,30 @@ class ERPArtikelEntity(ERPAbstractEntity):
             # Log the error and return None
             self.logger.error(f"Error mapping ERPArtikel to Bridge: {str(e)}")
             return None
+
+    def map_erp_translation_to_bridge(self):
+        # Create a translation entity and append it to the product entity
+        product_translation = BridgeProductTranslation(
+            language='DE_de',
+            name=self.get_name(),
+            description=self.get_description(),
+            edited_at=self.get_aenddat()
+        )
+        return product_translation
+
+    def map_erp_price_to_bridge(self):
+        # Create a price entity and assign it to the product
+        price = BridgePriceEntity(
+            price=self.get_price(),
+            rebate_quantity=self.get_rebate_quantity(),
+            rebate_price=self.get_rebate_price(),
+            special_price=self.get_special_price(),
+            special_start_date=self.get_special_start_date(),
+            special_end_date=self.get_special_end_date(),
+            created_at=self.get_erstdat(),
+            edited_at=self.get_aenddat()
+        )
+        return price
 
     def get_nr(self):
         """
@@ -248,11 +257,14 @@ class ERPArtikelEntity(ERPAbstractEntity):
     def get_stschl(self):
         """
         Fetches the tax key from the dataset and extracts the key from the string.
+        Example: In the artikel The Stschl and the description are combined. We just need the first digit,
+        or everything before the first white space.
         :return: Tax key as an integer or None if the value is None, missing, or can't be converted to an integer.
         """
         try:
             stschl_str = self.get_("StSchl")
             if stschl_str:
+
                 stschl_list = stschl_str.split()
                 return int(stschl_list[0])
             else:
