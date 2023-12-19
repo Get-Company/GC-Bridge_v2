@@ -6,16 +6,19 @@ import config
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelEntity import ERPArtikelEntity
-from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
-from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation, BridgePriceEntity
+from ..controller.ERPArtikelKategorienController import ERPArtikelKategorienController
+from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation
+from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
 from src.modules.Bridge.controller.BridgeProductController import BridgeProductController
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
+from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
+from src.modules.Bridge.controller.BridgePriceController import BridgePriceController
 
 
 class ERPArtikelController(ERPAbstractController):
     """
-    Examples:
+    Examples:1
 
         Get the Bez from the cat of the product 204116
         art_ctrl = ERPArtikelController(204116)
@@ -50,6 +53,15 @@ class ERPArtikelController(ERPAbstractController):
             bridge_controller=self._bridge_controller
         )
 
+    def is_in_db(self, bridge_entity_new):
+        bridge_product_entity_in_db = self._bridge_controller.get_entity().query.filter_by(erp_nr=bridge_entity_new.erp_nr).one_or_none()
+        if bridge_product_entity_in_db:
+            self.logger.info(f"Entity {bridge_entity_new.erp_nr} found in the db!")
+            return bridge_product_entity_in_db
+        else:
+            self.logger.info(f"No Entity {bridge_entity_new.erp_nr} found in the db!")
+            return None
+
     """ Relations """
     def set_relations(self, bridge_entity):
         """
@@ -74,44 +86,45 @@ class ERPArtikelController(ERPAbstractController):
         return bridge_entity
 
     def _set_translation_relation(self, bridge_entity):
-        for translation in bridge_entity.translations:
-            try:
-                self.logger.info(f"Looking for Translation: {translation.name} for Product ID: {translation.product_id}")
-                translation_in_db = BridgeProductTranslation.query \
-                    .filter(BridgeProductTranslation.name == translation.name) \
-                    .filter(BridgeProductTranslation.name != "") \
-                    .filter(BridgeProductTranslation.product_id == bridge_entity.id) \
-                    .one_or_none()
-                translation.id = translation_in_db.id
-            except NoResultFound:
-                # Translation not found in the database
-                pass
-            except MultipleResultsFound:
-                # More than one translation with the same name found in the database
-                self.logger.warning(f"Multiple translations found for name: {translation.name}")
-            except Exception as e:
-                # Handle other unexpected errors
-                self.logger.error(f"An error occurred while setting translation relation: {str(e)}")
+        try:
+            # 1 Map new object
+            bridge_product_translation_new = self._dataset_entity.map_erp_translation_to_bridge()
+            self.logger.info(f"Looking for Translation: {self._dataset_entity.get_name()} for Product ID: {bridge_entity.id}")
+
+            # 2 Check DB for existing entries
+            bridge_product_translation_in_db = BridgeProductTranslation.query \
+                .filter(BridgeProductTranslation.product_id == bridge_entity.id) \
+                .filter(BridgeProductTranslation.language == "DE_de") \
+                .one_or_none()
+
+            if bridge_product_translation_in_db:
+                # Update
+                bridge_product_translation_for_db = bridge_product_translation_in_db.update(bridge_product_translation_new)
+                self.logger.info(f"Updated existing translation: {bridge_product_translation_in_db.id}")
+            else:
+                # Insert
+                bridge_product_translation_for_db = bridge_product_translation_new
+
+            bridge_entity.translations.append(bridge_product_translation_for_db)
+
+        except Exception as e:
+            # Unerwarteter Fehler
+            self.logger.error(f"An error occurred while setting translation relation: {str(e)}")
+
         return bridge_entity
 
     def _set_price_relation(self, bridge_entity):
         try:
-            self.logger.info(f"Looking for Price related to Product ID: {bridge_entity.id}")
-            price_in_db = BridgePriceEntity.query \
-                .filter(BridgePriceEntity.product_id == bridge_entity.id) \
-                .one_or_none()
+            # 1 Upsert price for all marketplaces
+            bridge_price_new = self._dataset_entity.map_erp_price_to_bridge()
+            BridgePriceController().upsert_price_for_all_marketplaces(
+                bridge_price_entity=bridge_price_new,
+                bridge_product_entity=bridge_entity
+            )
 
-            if price_in_db:
-                bridge_entity.prices.id = price_in_db.id
-            else:
-                self.logger.info(f"No price found for Product ID: {bridge_entity.id}")
-
-        except MultipleResultsFound:
-            # More than one price with the same product_id found in the database
-            self.logger.warning(f"Multiple prices found for Product ID: {bridge_entity.id}")
         except Exception as e:
-            # Handle other unexpected errors
             self.logger.error(f"An error occurred while setting price relation: {str(e)}")
+
         return bridge_entity
 
     def _set_tax_relation(self, bridge_entity):
@@ -124,27 +137,22 @@ class ERPArtikelController(ERPAbstractController):
         :return: BridgeProductEntity with tax relation set.
         :rtype: BridgeProductEntity
         """
+        if bridge_entity is None:
+            self.logger.error("Invalid argument: bridge_entity is None.")
+            raise ValueError("Invalid argument: bridge_entity is None.")
+
         try:
             stschl = self.get_entity().get_stschl()
-            tax_from_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
+            tax_in_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
 
             # Wenn die Steuer nicht in der Datenbank gefunden wird, erfolgt ein Sync-Versuch
-            if tax_from_db is None:
+            if tax_in_db is None:
                 self.logger.warning(f"Tax with ERP number: {stschl} not found in database. Attempting to sync.")
 
                 # Hier den Sync-Vorgang einfügen
                 tax_ctrl = ERPMandantSteuerController(config.ERPConfig.MANDANT)
-                tax_ctrl.sync_one_to_bridge(stschl=stschl)
-
-                # Nach dem Sync erneut versuchen, die Steuer aus der Datenbank zu holen
-                tax_from_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
-
-                # Wenn die Steuer nun vorhanden ist, wird sie dem Produkt zugeordnet
-                if tax_from_db:
-                    bridge_entity.tax = tax_from_db
-                    self.logger.info(f"Added Tax with ERP number: {tax_from_db.erp_nr} to product.")
-                else:
-                    self.logger.error(f"Tax with ERP number: {stschl} still not found in database after syncing.")
+                bridge_tax_entity_new = tax_ctrl.get_entity().map_erp_to_bridge(stschl=stschl)
+                bridge_entity.tax = bridge_tax_entity_new
 
         except Exception as e:
             self.logger.error(f"An error occurred while setting tax relation: {str(e)}")
@@ -152,38 +160,55 @@ class ERPArtikelController(ERPAbstractController):
         return bridge_entity
 
     def _set_category_relation(self, bridge_entity):
-        """
-        Set the category relation for a given bridge entity.
-
-        :param bridge_entity: The BridgeProductEntity to set category relation for.
-        :type bridge_entity: BridgeProductEntity
-        :return: BridgeProductEntity with category relation set.
-        :rtype: BridgeProductEntity
-        """
-        categories_list = self.get_categories_list()
-        if not categories_list:
-            self.logger.info("No categories to add.")
-            return bridge_entity
-
-        # Bereinigen Sie zuerst die bestehenden Kategorien, um Duplikate oder veraltete Beziehungen zu vermeiden
-        bridge_entity.categories.clear()
-
-        for category_erp_nr in categories_list:
-            try:
-                self.logger.info(f"Searching for category with ERP number: {category_erp_nr}")
-                category_entity = BridgeCategoryEntity.query.filter_by(erp_nr=category_erp_nr).one_or_none()
-
+        try:
+            # Map new object
+            categories_list = self.get_categories_list()
+            self.logger.info(f"We have {len(categories_list)} categories to add, Categories: {categories_list} for Product ID: {bridge_entity.id}")
+            if not categories_list:
+                self.logger.info("No categories to add.")
+                return bridge_entity
+            # First clear the existing categories to avoid duplicates or obsolete relations
+            bridge_entity.categories.clear()
+            for category_erp_nr in categories_list:
+                # Check DB for existing entries
+                try:
+                    category_entity = BridgeCategoryEntity.query.filter_by(erp_nr=category_erp_nr).one_or_none()
+                except Exception as e:
+                    self.logger.error(f"No category found with this ID {category_erp_nr}")
+                    continue
                 if category_entity:
-                    self.db.session.add(category_entity)
-                    # Wenn die Kategorie gefunden wird, füge sie zum Produkt hinzu
+                    # Update
                     bridge_entity.categories.append(category_entity)
-                    self.logger.info(f"Added category with ERP number: {category_erp_nr} to product.")
+                    self.logger.info(f"Updated existing Category Relation: {category_erp_nr}")
                 else:
-                    # Wenn die Kategorie nicht existiert, kann hier optional eine Logik zum Erstellen einer neuen Kategorie eingefügt werden
-                    self.logger.warning(f"Category with ERP number: {category_erp_nr} not found in database.")
+                    # Insert
+                    self.logger.info(f"Category {category_erp_nr} not found. Sync all Categories first")
+        except Exception as e:
+            # Unexpected Error
+            self.logger.error(f"An error occurred while setting category relation: {str(e)}")
 
-            except Exception as e:
-                self.logger.error(f"An error occurred while adding category with ERP number: {category_erp_nr} to product. Error: {str(e)}")
+        return bridge_entity
+
+    def _set_media_relation(self, bridge_entity):
+        # 1. Get the list of medias
+        bridge_entity.medias.clear()
+        images = self._dataset_entity.get_images_file_list()
+        for image in images:
+
+            # 2. Map new object
+            bridge_media_entity_new = self._dataset_entity.map_erp_media_to_bridge(media=image)
+
+            # 3 Chek if media is already in db
+            media_in_db = BridgeMediaEntity().query.filter_by(file_name=bridge_media_entity_new.get_file_name()).one_or_none()
+
+            if media_in_db:
+                self.logger.info(f"Updating Media {bridge_media_entity_new.get_file_name()}")
+                bridge_media_entity_for_db = media_in_db.update(bridge_media_entity_new)
+            else:
+                bridge_media_entity_for_db = bridge_media_entity_new
+
+            # 4 Append to the bridge_entity
+            bridge_entity.medias.append(bridge_media_entity_for_db)
 
         return bridge_entity
 
