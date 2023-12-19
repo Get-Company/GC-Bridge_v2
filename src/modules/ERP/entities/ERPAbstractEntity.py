@@ -26,6 +26,7 @@ import requests
 from ..ERPCoreController import ERPCoreController
 from ..controller.ERPConnectionController import ERPConnectionController
 from config import GCBridgeConfig
+from ...Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 
 
 class ERPAbstractEntity(ERPCoreController):
@@ -1161,7 +1162,17 @@ class ERPAbstractEntity(ERPCoreController):
             return False
 
     @abstractmethod
-    def map_erp_to_bridge(self, *args, **kwargs):
+    def map_erp_to_bridge(self):
         pass
 
-
+    def map_erp_media_to_bridge(self, media):
+        bridge_media_entity = BridgeMediaEntity(
+            file_name=self.get_med_file_name(media),
+            file_type=self.get_med_file_type(media),
+            file_size=self.get_med_file_size(media),
+            # title should be configered elsewhere
+            # description should be configered elsewhere
+            created_at=self.get_erstdat(),
+            edited_at=self.get_aenddat()
+        )
+        return bridge_media_entity
