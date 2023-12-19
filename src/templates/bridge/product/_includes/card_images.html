@@ -1,0 +1,16 @@
+<div class="card mb-4">
+    <div class="card-header">
+        Bilder
+    </div>
+    <div class="card-body">
+            <div class="card-body">
+                <div class="row">
+                {% for img in product.media %}
+                    <div class="col">
+                        <img class="img-fluid" src="{{ assets_img_path }}/{{ img.file_name }}.{{ img.file_type }}"/>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
