@@ -1,6 +1,6 @@
 from src import db
 import datetime
-
+import json
 
 # Assoziationstabelle für die Many-to-Many Beziehung
 BridgeProductsCategoriesAssoc = db.Table('bridge_product_categories_assoc',
@@ -38,7 +38,7 @@ class BridgeCategoryEntity(db.Model):
     products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
                                backref=db.backref('categories', lazy=True))
 
-    def get_translation(self, language_code):
+    def get_translation(self, language_code="DE_de"):
         # Find the translation with the given language code using list comprehension
         translation = next((t for t in self.translations if t.language == language_code), None)
         return TranslationWrapper(translation)
@@ -92,6 +92,29 @@ class BridgeCategoryEntity(db.Model):
         self.set_edited_at(bridge_entity_new.get_edited_at())
 
         return self
+
+    """
+    Special Getter and Setter
+    """
+    def get_main(self):
+        tree_path_list = json.loads(self.get_tree_path())
+        main_category_id = tree_path_list[0]
+        main_category = self.query.filter_by(erp_nr=main_category_id).one_or_none()
+        if main_category:
+            return main_category
+        else:
+            return None
+
+    def get_tree_path_names_as_list(self):
+        tree_path_list = json.loads(self.get_tree_path())
+        if tree_path_list:
+            names_list = []
+            tree_path_list.pop(0)  # Entfernt das erste Element, falls die Liste nicht leer ist
+            for item in tree_path_list:
+                names_list.add = self.query.filter_by(erp_nr=item).one_or_none()
+            return tree_path_list
+        else:
+            return None
 
     def __repr__(self):
         return f'Bridge Category Entity ID: {self.erp_nr}'
