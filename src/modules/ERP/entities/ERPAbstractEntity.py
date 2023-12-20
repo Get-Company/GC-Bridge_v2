@@ -41,7 +41,12 @@ class ERPAbstractEntity(ERPCoreController):
         created_dataset: Cached created dataset object.
     """
 
-    def __init__(self, dataset_name, dataset_index, search_value=None, range_end=None):
+    def __init__(self,
+                 dataset_name,
+                 dataset_index,
+                 search_value=None,
+                 range_end=None,
+                 filter_expression=None):
         """
         Initialize the ERPAbstractEntity.
 
@@ -99,6 +104,10 @@ class ERPAbstractEntity(ERPCoreController):
             # If we do not have a range, set the cursor
             else:
                 self.set_cursor()
+
+            # Set the filter
+            if filter_expression:
+                self.set_filter(filter_expression=filter_expression)
 
             # Initialize nested dataset as none until it is set
             self._nested_dataset = None
@@ -393,6 +402,14 @@ class ERPAbstractEntity(ERPCoreController):
             self.set_range_count()
 
         return self._range_count
+
+    def set_filter(self, filter_expression: str):
+        if filter_expression:
+            self._created_dataset.Filter = filter_expression
+            self._created_dataset.Filtered = True
+            self.logger.info(f"Filter expression: {filter_expression}")
+        else:
+            return True
 
     def set_dataset_state(self, state: Union[int, None] = None) -> None:
         """
