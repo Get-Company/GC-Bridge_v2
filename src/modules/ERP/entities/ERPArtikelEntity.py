@@ -31,8 +31,8 @@ class ERPArtikelEntity(ERPAbstractEntity):
             dataset_name="Artikel",
             dataset_index=index or "Nr",
             search_value=search_value,
-            range_end=range_end
-
+            range_end=range_end,
+            filter_expression="WShopKz='1'"
         )
 
     def map_erp_to_bridge(self):
@@ -52,25 +52,10 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 purchase_unit=self.get_purchase_unit(),
                 shipping_cost_per_bundle=self.get_shipping_cost_per_bundle(),
                 shipping_bundle_size=self.get_shipping_bundle_size(),
+                active=self.get_active(),
                 created_at=self.get_erstdat(),
                 edited_at=self.get_aenddat()
             )
-
-            # Create image entities and assign them
-            # medias = self.get_images_file_list()
-            # for media in medias:
-            #     name = self.get_med_file_name(media)
-            #     med = BridgeMediaEntity(
-            #         file_name=name,
-            #         file_type=self.get_med_file_type(media),
-            #         file_size=self.get_med_file_size(media),
-            #         title=name,
-            #         description=name
-            #     )
-            #     product_entity.media.append(med)
-
-            # Create category entities and assign them
-            # categories = self.get_categories_list()
 
             return product_entity
 
@@ -216,6 +201,22 @@ class ERPArtikelEntity(ERPAbstractEntity):
             return int(value)
         except (ValueError, TypeError):
             self.logger.error(f"Error on converting '{value}' into an Integer for shipping bundle size.")
+            return None
+
+    def get_active(self):
+        """
+        Fetches the active status from the dataset.
+        :return: Active status as an integer or None if the value is None or can't be converted to an integer.
+        """
+        value = self.get_("WShopKz")
+        if value is None:
+            self.logger.warning("Active status is empty.")
+            return None
+
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            self.logger.error(f"Error on converting '{value}' into an Integer for active status.")
             return None
 
     def get_name(self) -> str:
