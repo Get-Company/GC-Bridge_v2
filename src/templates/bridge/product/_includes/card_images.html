@@ -3,14 +3,23 @@
         Bilder
     </div>
     <div class="card-body">
-            <div class="card-body">
-                <div class="row">
-                {% for img in product.media %}
-                    <div class="col">
-                        <img class="img-fluid" src="{{ assets_img_path }}/{{ img.file_name }}.{{ img.file_type }}"/>
+        <div id="productImagesCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                {% for img in product.medias %}
+                    <div class="carousel-item {{ 'active' if loop.first }}">
+                        <img class="d-block w-100" src="{{ assets_img_path }}/{{ img.file_name }}.{{ img.file_type }}"
+                             alt="Bild {{ loop.index }}">
                     </div>
                 {% endfor %}
             </div>
+            <a class="carousel-control-prev" href="#productImagesCarousel" role="button" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Vorheriges</span>
+            </a>
+            <a class="carousel-control-next" href="#productImagesCarousel" role="button" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Nächstes</span>
+            </a>
         </div>
     </div>
 </div>
