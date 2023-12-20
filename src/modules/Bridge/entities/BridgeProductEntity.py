@@ -23,6 +23,7 @@ class BridgeProductEntity(db.Model):
     purchase_unit = db.Column(db.Integer(), nullable=True)
     shipping_cost_per_bundle = db.Column(db.Float(), nullable=True)
     shipping_bundle_size = db.Column(db.Integer(), nullable=True)
+    active = db.Column(db.Integer(), nullable=True)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
@@ -134,6 +135,23 @@ class BridgeProductEntity(db.Model):
         except Exception as e:
             raise ValueError(f"Error setting shipping bundle size: {e}")
 
+    def get_active(self):
+        """Gets the active status of the product."""
+        return self.active
+
+    def set_active(self, active):
+        """
+        Shoud not be set in the Bridge
+
+        Sets the active status of the product.
+        """
+        try:
+            if active is not None and not isinstance(active, int):
+                raise ValueError("Active status must be an integer.")
+            self.active = active
+        except Exception as e:
+            raise ValueError(f"Error setting active status: {e}")
+
     # Getter and Setter for created_at
     def get_created_at(self):
         """Gets the creation date and time of the product."""
@@ -151,11 +169,6 @@ class BridgeProductEntity(db.Model):
     def set_edited_at(self, edited_at):
         """Sets the last edited date and time of the product."""
         self.edited_at = edited_at
-
-    def get_translation(self, language_code="DE_de"):
-        # Find the translation with the given language code using list comprehension
-        translation = next((t for t in self.translations if t.language == language_code), None)
-        return TranslationWrapper(translation)
 
     def update(self, bridge_entity_new):
         """
@@ -182,6 +195,9 @@ class BridgeProductEntity(db.Model):
         # Update shipping cost per bundle
         self.set_shipping_cost_per_bundle(bridge_entity_new.get_shipping_cost_per_bundle())
 
+        # Update active
+        self.set_active(bridge_entity_new.get_active())
+
         # Update shipping bundle size
         self.set_shipping_bundle_size(bridge_entity_new.get_shipping_bundle_size())
 
@@ -191,6 +207,11 @@ class BridgeProductEntity(db.Model):
         self.translations = bridge_entity_new.translations
 
         return self
+
+    def get_translation(self, language_code="DE_de"):
+        # Find the translation with the given language code using list comprehension
+        translation = next((t for t in self.translations if t.language == language_code), None)
+        return TranslationWrapper(translation)
 
     def __repr__(self):
         """
