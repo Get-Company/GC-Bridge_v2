@@ -1,0 +1,13 @@
+{#
+    Can be included by
+    {% include '_includes/_search.html' %}
+#}
+<form method="get" action="">
+    <div class="input-group">
+        <input type="text" class="form-control" name="search" placeholder="Search"
+               value="{{ request.args.get('q', '') }}">
+        <div class="input-group-append">
+            <button class="btn btn-primary" type="submit">Suche</button>
+        </div>
+    </div>
+</form>

@@ -14,25 +14,13 @@
                 <a class="list-group-item" href="#">Kunden</a>
                 <a class="list-group-item" href="{{ url_for('bridge_views.products') }}">Produkte</a>
                 <a class="list-group-item" href="{{ url_for('bridge_views.categories') }}">Kategorien</a>
+                <a class="list-group-item" href="{{ url_for('bridge_views.marketplaces') }}">Marktplätze</a>
             </div>
         </div>
 
         <!-- Einzelner Menüpunkt für Regeln -->
         <div class="list-group-item list-group-item-action">
             <a href="{{ url_for('bridge_views.rules') }}">Regeln</a>
-        </div>
-
-        <!-- Slide-Down für Marktplätze -->
-        <div class="list-group-item list-group-item-action">
-            <a href="#" data-bs-toggle="collapse" data-bs-target="#marktplaetzeMenu" aria-expanded="false">
-                Marktplätze
-            </a>
-            <div id="marktplaetzeMenu" class="collapse">
-                <a class="list-group-item" href="#">Shopware 6</a>
-                <a class="list-group-item" href="#">Shopware 5</a>
-                <a class="list-group-item" href="#">Amazon</a>
-                <a class="list-group-item" href="#">Otto</a>
-            </div>
         </div>
 
         <!-- Einzelner Menüpunkt für Einstellungen -->

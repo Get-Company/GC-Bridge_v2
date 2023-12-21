@@ -1,0 +1,50 @@
+{#
+    Can be included by
+
+    {% with items=products %}
+        {% include '_includes/_pagination.html' %}
+    {% endwith %}
+#}
+
+<!-- Navbar für Pagination und Ergebnisse pro Seite -->
+<nav class="navbar navbar-expand-lg bg-primary">
+    <div class="container-fluid">
+        <!-- Pagination Controls -->
+        <ul class="pagination">
+            <li class="page-item {% if not items.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="?page=1">First</a>
+            </li>
+            <li class="page-item {% if not items.has_prev %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ items.prev_num }}">&laquo; Previous</a>
+            </li>
+            {% for num in items.iter_pages() %}
+                <li class="page-item {% if num == items.page %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+            <li class="page-item {% if not items.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ items.next_num }}">Next &raquo;</a>
+            </li>
+            <li class="page-item {% if not items.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ items.pages }}">Last</a>
+            </li>
+        </ul>
+        <!-- Results per page -->
+        <form class="d-flex" action="" method="get">
+            <label for="perPage" class="nav-link">Ergebnisse pro Seite:</label>
+            <select id="perPage" name="per_page" class="form-select from-select-sm"
+                    onchange="this.form.submit()">
+                <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+            </select>
+        </form>
+        <!-- Pagination Page Jump -->
+        <form class="d-flex" action="" method="get">
+            <input type="number" name="page" class="form-control me-2" placeholder="Seite" min="1"
+                   max="{{ items.pages }}" required>
+            <button type="submit" class="btn btn-outline-primary btn-sm">Gehe zu</button>
+        </form>
+    </div>
+</nav>
