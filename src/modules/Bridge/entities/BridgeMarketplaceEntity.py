@@ -1,6 +1,7 @@
 from src import db
 import datetime
-
+from .BridgePriceEntity import BridgePriceEntity
+from .BridgeProductEntity import BridgeProductEntity
 """
 # CH 01.03.21: 1.4 -> 1.35
 # CH 01.03.22: 1.35 -> 1.3
