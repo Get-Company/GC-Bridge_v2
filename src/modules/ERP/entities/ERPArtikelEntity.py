@@ -11,6 +11,7 @@ from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 from src.modules.ERP.controller.ERPMandantSteuerController import ERPMandantSteuerController
 from ..entities.ERPArtikelKategorienEntity import ERPArtikelKategorienEntity
+from src.modules.ERP.controller.ERPLagerController import ERPLagerController
 from config import ERPConfig, GCBridgeConfig
 
 
@@ -47,6 +48,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 id=self.get_id(),
                 erp_nr=self.get_nr(),
                 stock=self.get_stock(),
+                storage_location=self.get_storage_location(),
                 unit=self.get_unit(),
                 min_purchase=self.get_min_purchase(),
                 purchase_unit=self.get_purchase_unit(),
@@ -457,6 +459,16 @@ class ERPArtikelEntity(ERPAbstractEntity):
         except Exception as e:
             self.logger.error(f"An error occurred while fetching the category numbers: {str(e)}")
             return False
+
+    def get_storage_location(self):
+        if self.get_nr():
+            location = ERPLagerController(search_value=[self.get_nr(), 1]).get_entity().get_position()
+            if location:
+                self.logger.info("Storage location found:", location)
+                return location
+            else:
+                self.logger.error("No storage location foun for", self.get_nr())
+                return None
 
     def __repr__(self):
         return f'Artikel {self.get_nr()} - {self.get_name()}'
