@@ -18,6 +18,7 @@ class BridgeProductEntity(db.Model):
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
     erp_nr = db.Column(db.String(255), nullable=False, unique=True)
     stock = db.Column(db.Integer(), nullable=False)
+    storage_location = db.Column(db.String(255), nullable=True)
     unit = db.Column(db.String(255), nullable=True)
     min_purchase = db.Column(db.Integer(), nullable=True)
     purchase_unit = db.Column(db.Integer(), nullable=True)
@@ -74,6 +75,16 @@ class BridgeProductEntity(db.Model):
             self.stock = stock
         except Exception as e:
             raise ValueError(f"Error setting stock: {e}")
+
+    # Getter for storage_location
+    def get_storage_location(self):
+        """Gets the storage location of the product."""
+        return self.storage_location
+
+    # Setter for storage_location
+    def set_storage_location(self, storage_location):
+        """Sets the storage location of the product."""
+        self.storage_location = storage_location
 
     # Getter and Setter for unit
     def get_unit(self):
@@ -170,6 +181,8 @@ class BridgeProductEntity(db.Model):
         """Sets the last edited date and time of the product."""
         self.edited_at = edited_at
 
+
+
     def update(self, bridge_entity_new):
         """
         Updates the current BridgeProductEntity instance with values from a new instance.
@@ -182,6 +195,9 @@ class BridgeProductEntity(db.Model):
 
         # Update stock
         self.set_stock(bridge_entity_new.get_stock())
+
+        # Update storage_location
+        self.set_storage_location(bridge_entity_new.get_storage_location())
 
         # Update unit
         self.set_unit(bridge_entity_new.get_unit())
