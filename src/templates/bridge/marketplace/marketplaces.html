@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - MMarketplaces {% endblock %}
+{% block h1 %} Marketplaces {% endblock %}
+
+{% block body %}
+    <div class="row">
+        <div class="col">
+            <h1>marketplaces</h1>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="col">
+        {% include '_includes/_search.html' %}
+    </div>
+
+
+    <div class="row">
+        <div class="col">
+            <table class="table table-responsive table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th>Index</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Faktor</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for marketplace in marketplaces %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <a href="{{ url_for('bridge_views.marketplace', id=marketplace.id) }}">
+                                {{ marketplace.name }}
+                            </a>
+                        </td>
+                        <td>{{ marketplace.description }}</td>
+
+                        <td>{{ marketplace.factor }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            {% with items=marketplaces %}
+                {% include '_includes/_pagination.html' %}
+            {% endwith %}
+        </div>
+    </div>
+
+{% endblock %}
+

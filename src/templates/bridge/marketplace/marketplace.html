@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Marketplace {{ marketplace.name }} {% endblock %}
+{% block h1 %} GC-Bridge - Marketplace {{ marketplace.name }} {% endblock %}
+
+{% block body %}
+
+    <form method="post">
+        {{ form.csrf_token }}
+        <div class="row">
+            <div class="col-6">
+                <!-- Name Field -->
+                <div class="form-group">
+                    <label for="name">{{ form.name.label }}</label>
+                    {{ form.name(class="form-control") }}
+                    {% if form.name.errors %}
+                        <div class="alert alert-danger">{{ form.name.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Description Field -->
+                <div class="form-group">
+                    <label for="description">{{ form.description.label }}</label>
+                    {{ form.description(class="form-control") }}
+                    {% if form.description.errors %}
+                        <div class="alert alert-danger">{{ form.description.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- URL Field -->
+                <div class="form-group">
+                    <label for="url">{{ form.url.label }}</label>
+                    {{ form.url(class="form-control") }}
+                    {% if form.url.errors %}
+                        <div class="alert alert-danger">{{ form.url.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- API Key Field -->
+                <div class="form-group">
+                    <label for="api_key">{{ form.api_key.label }}</label>
+                    {{ form.api_key(class="form-control") }}
+                    {% if form.api_key.errors %}
+                        <div class="alert alert-danger">{{ form.api_key.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Config Field -->
+                <div class="form-group">
+                    <label for="config">{{ form.config.label }}</label>
+                    {{ form.config(class="form-control") }}
+                    {% if form.config.errors %}
+                        <div class="alert alert-danger">{{ form.config.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Factor Field -->
+                <div class="form-group">
+                    <label for="factor">{{ form.factor.label }}</label>
+                    {{ form.factor(class="form-control") }}
+                    {% if form.factor.errors %}
+                        <div class="alert alert-danger">{{ form.factor.errors[0] }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <input type="submit" value="Submit" class="btn btn-primary">
+                </div>
+            </div>
+            <div class="col-6">
+                <!-- Platz für zusätzliche Inhalte -->
+            </div>
+        </div>
+    </form>
+
+{% endblock %}
