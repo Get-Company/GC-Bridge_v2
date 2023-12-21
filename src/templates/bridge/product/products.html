@@ -11,14 +11,7 @@
 
     <!-- Search Bar -->
     <div class="col">
-        <form method="get" action="">
-            <div class="input-group">
-                <input type="text" class="form-control" name="search" placeholder="Search" value="{{ request.args.get('q', '') }}">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="submit">Suche</button>
-                </div>
-            </div>
-        </form>
+        {% include '_includes/_search.html' %}
     </div>
 
 
@@ -66,48 +59,9 @@
 
     <div class="row">
         <div class="col">
-            <!-- Navbar für Pagination und Ergebnisse pro Seite -->
-            <nav class="navbar navbar-expand-lg bg-primary">
-                <div class="container-fluid">
-                    <!-- Pagination Controls -->
-                    <ul class="pagination">
-                        <li class="page-item {% if not products.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="?page=1">First</a>
-                        </li>
-                        <li class="page-item {% if not products.has_prev %}disabled{% endif %}">
-                            <a class="page-link" href="?page={{ products.prev_num }}">&laquo; Previous</a>
-                        </li>
-                        {% for num in products.iter_pages() %}
-                            <li class="page-item {% if num == products.page %}active{% endif %}">
-                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                            </li>
-                        {% endfor %}
-                        <li class="page-item {% if not products.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="?page={{ products.next_num }}">Next &raquo;</a>
-                        </li>
-                        <li class="page-item {% if not products.has_next %}disabled{% endif %}">
-                            <a class="page-link" href="?page={{ products.pages }}">Last</a>
-                        </li>
-                    </ul>
-                    <!-- Results per page -->
-                    <form class="d-flex" action="" method="get">
-                        <label for="perPage" class="nav-link">Ergebnisse pro Seite:</label>
-                        <select id="perPage" name="per_page" class="form-select from-select-sm"
-                                onchange="this.form.submit()">
-                            <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-                            <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
-                            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-                            <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-                        </select>
-                    </form>
-                    <!-- Pagination Page Jump -->
-                    <form class="d-flex" action="" method="get">
-                        <input type="number" name="page" class="form-control me-2" placeholder="Seite" min="1"
-                               max="{{ products.pages }}" required>
-                        <button type="submit" class="btn btn-outline-primary btn-sm">Gehe zu</button>
-                    </form>
-                </div>
-            </nav>
+            {% with items=products %}
+                {% include '_includes/_pagination.html' %}
+            {% endwith %}
         </div>
     </div>
 
