@@ -5,40 +5,36 @@
 
 {% block body %}
     <div id="vue_bridge_products_product">
-    <div class="row">
+        <div class="row">
 
-        <div class="col">
-            <h1>{{ product.get_translation('DE_de').name }}</h1>
-        </div>
-
-    </div>
-    <div class="row">
-        <div class="col-8">
-            {% include 'bridge/product/_includes/card_description.html' %}
-        </div>
-        <div class="col-4">
-            {% include 'bridge/product/_includes/card_images.html' %}
-        </div>
-    </div>
-
-    <div class="row">
-        {% for assoc in product.marketplace_prices_assoc %}
             <div class="col">
-                {% include 'bridge/product/_includes/card_prices.html' with context %}
+                <h1>{{ product.get_translation('DE_de').name }}</h1>
             </div>
-        {% endfor %}
-    </div>{% include 'bridge/product/_includes/card_stock.html' %}
 
-        <h6 class="mt-3">Kategorien</h6>
-        <ul class="list-group list-group-flush">
-            {% for category in product.categories %}
-                <h5>{{ category.get_main().get_translation().name }}</h5>
-                <li class="list-group-item">
-                {{ category.get_translation().name }}
-                </li>
+        </div>
+        <div class="row">
+            <div class="col-8">
+                {% include 'bridge/product/_includes/card_description.html' %}
+            </div>
+            <div class="col-4">
+                {% include 'bridge/product/_includes/card_images.html' %}
+            </div>
+        </div>
+
+        <div class="row">
+            {% for assoc in product.marketplace_prices_assoc %}
+                <div class="col">
+                    {% include 'bridge/product/_includes/card_prices.html' with context %}
+                </div>
             {% endfor %}
-        </ul>
-    </div>
+        </div>
+        {% include 'bridge/product/_includes/card_stock.html' %}
+
+        <div class="row">
+            <div class="col">
+                {% include 'bridge/product/_includes/card_categories.html' with context %}
+            </div>
+        </div>
     </div> <!-- Vue App -->
 {% endblock %}
 
