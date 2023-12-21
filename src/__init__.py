@@ -53,6 +53,7 @@ def create_app():
     from .modules.ERP.controller.ERPArtikelKategorienController import ERPArtikelKategorienController
     from .modules.ERP.controller.ERPArtikelController import ERPArtikelController
     from .modules.ERP.controller.ERPAdressenController import ERPAdressenController
+    from .modules.ERP.controller.ERPLagerController import ERPLagerController
     from .modules.SW6.entities.SW6CategoryEntity import SW6CategoryEntity
     from .modules.SW6.entities.SW6ProductEntity import SW6ProductEntity
 
