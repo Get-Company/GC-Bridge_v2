@@ -1,6 +1,8 @@
 from ..controller.ERPAbstractController import ERPAbstractController
 from ..entities.ERPAdressenEntity import ERPAdressenEntity
 
+from src.modules.Bridge.controller.BridgeCustomerController import BridgeCustomerController
+from src.modules.Bridge.entities.BridgeCustomerEntity import BridgeCustomerAddressEntity
 from datetime import datetime
 
 
@@ -48,10 +50,16 @@ class ERPAdressenController(ERPAbstractController):
     """
 
     def __init__(self, search_value=None, index=None, range_end=None):
-        self._dataset_entity = ERPAdressenEntity(search_value=search_value, index=index, range_end=range_end)
+        self._dataset_entity = ERPAdressenEntity(
+            search_value=search_value,
+            index=index,
+            range_end=range_end)
+
+        self._bridge_controller = BridgeCustomerController()
 
         super().__init__(
-            dataset_entity=self._dataset_entity
+            dataset_entity=self._dataset_entity,
+            bridge_controller=self._bridge_controller
         )
 
     def get_entity(self):
@@ -84,7 +92,41 @@ class ERPAdressenController(ERPAbstractController):
         return vtrnr
 
     def set_relations(self, bridge_entity):
-        pass
+        bridge_entity = self._set_anschriften_and_ansprechpartner(bridge_entity=bridge_entity)
+        return bridge_entity
+
+    def is_in_db(self, bridge_entity_new):
+        bridge_entity_in_db = self._bridge_controller.get_entity().query.filter_by(id=bridge_entity_new.id).one_or_none()
+        if bridge_entity_in_db:
+            self.logger.info(f"Entity {bridge_entity_new.erp_nr} found in the db!")
+            return bridge_entity_in_db
+        else:
+            self.logger.info(f"No Entity {bridge_entity_new.erp_nr} found in the db!")
+            return None
+
+    def _set_anschriften_and_ansprechpartner(self, bridge_entity):
+        addresses = self.get_entity().get_anschriften()
+        while not addresses.range_eof():
+            contacts = addresses.get_ansprechpartner()
+            while not contacts.range_eof():
+                # 1. Map new objects
+                bridge_customer_address_entity_new = self.get_entity().map_erp_customer_address_to_bridge(erp_anschrift_entity=addresses, erp_ansprechpartner_entity=contacts)
+
+                # 2. Check DB for existing entries
+                bridge_customer_address_entity_in_db = BridgeCustomerAddressEntity.query.filter_by(id=bridge_customer_address_entity_new.id).one_or_none()
+
+                if bridge_customer_address_entity_in_db:
+                    # Update
+                    bridge_customer_address_entity_for_db = bridge_customer_address_entity_in_db.update(bridge_entity_new=bridge_customer_address_entity_new)
+                else:
+                    # Insert
+                    bridge_customer_address_entity_for_db = bridge_customer_address_entity_new
+
+                bridge_entity.addresses.append(bridge_customer_address_entity_for_db)
+                contacts.range_next()
+            addresses.range_next()
+
+        return bridge_entity
 
     """ Adressen """
 
@@ -94,10 +136,6 @@ class ERPAdressenController(ERPAbstractController):
 
     def shipping_address(self):
         return self.get_entity().get_shipping_address_entity()
-
-    def addresses(self):
-        addresses = self.get_entity().get_addresses_range()
-        return addresses
 
     """ Anschriften """
 
@@ -109,7 +147,21 @@ class ERPAdressenController(ERPAbstractController):
         contact = self.get_entity().get_shipping_ansprechpartner_entity()
         return contact
 
-    def contacts(self):
-        contacts = self.get_entity().get_contacts()
-        return contacts
-
+    """
+    Direction Bridge to ERP
+    """
+    def downsert(self, bridge_entity):
+        erp_entity = self._dataset_entity
+        found = erp_entity.find_one(
+            search_value=bridge_entity.get_id(),
+            dataset_index='ID'
+        )
+        if found:
+            # Update customer
+            print(erp_entity.get_("AdrNr"), erp_entity.get_("ID"))
+            erp_entity.map_bridge_to_erp(bridge_entity=bridge_entity)
+            erp_entity.start_transaction()
+            erp_entity.post()
+        else:
+            # Insert customer
+            print(f"No customer with id {bridge_entity.get_id()} found.")
