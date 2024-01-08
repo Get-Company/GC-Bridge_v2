@@ -12,17 +12,17 @@ class ERPCoreController(ModulesCoreController):
     def sync_all_to_bridge(self):
         pass
 
-    def sync_all_from_bridge(self):
+    def sync_all_from_bridge(self, bridge_entities):
         pass
 
     def sync_one_to_bridge(self):
         pass
 
-    def sync_one_from_bridge(self):
+    def sync_one_from_bridge(self, bridge_entity):
         pass
 
     def sync_changed_to_bridge(self):
         pass
 
-    def sync_changed_from_bridge(self):
+    def sync_changed_from_bridge(self, bridge_entities):
         pass
