@@ -55,3 +55,8 @@ class ERPMandantSteuerController(ERPAbstractController):
     def get_tax_fields_by_stschl(self, stschl):
         tax_fields = self._dataset_entity.get_tax_fields(stschl=stschl)
         return tax_fields
+
+    def is_in_db(self, bridge_entity_new):
+        pass
+
+
