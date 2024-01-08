@@ -464,10 +464,10 @@ class ERPArtikelEntity(ERPAbstractEntity):
         if self.get_nr():
             location = ERPLagerController(search_value=[self.get_nr(), 1]).get_entity().get_position()
             if location:
-                self.logger.info("Storage location found:", location)
+                self.logger.info("Storage location found: %s", location)
                 return location
             else:
-                self.logger.error("No storage location foun for", self.get_nr())
+                self.logger.error("No storage location found for %s", self.get_nr())
                 return None
 
     def __repr__(self):
