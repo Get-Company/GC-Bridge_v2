@@ -82,6 +82,11 @@ class ERPAbstractEntity(ERPCoreController):
             self._dataset_index = None
             self.set_dataset_index(dataset_index=dataset_index)
 
+            # Set the filter
+            if filter_expression:
+                self.set_filter(filter_expression=filter_expression)
+
+
             # initialize Search Value as Empty:
             self._search_value = None
             # When the cursor is set, this attributes changes to True
@@ -104,10 +109,6 @@ class ERPAbstractEntity(ERPCoreController):
             # If we do not have a range, set the cursor
             else:
                 self.set_cursor()
-
-            # Set the filter
-            if filter_expression:
-                self.set_filter(filter_expression=filter_expression)
 
             # Initialize nested dataset as none until it is set
             self._nested_dataset = None
@@ -549,14 +550,15 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             field = self._created_dataset.Fields(field_name)
             if field:
-                self.field_writer(field, value)
-                self.logger.info(f"Value '{value}' set in field '{field_name}' of DataSet '{self.get_dataset_name()}'.")
-                self.post()
+                result = self.field_writer(field, value)
+                if result:
+                    self.logger.info(f"Value '{value}' set in field '{field_name}' of DataSet '{self.get_dataset_name()}'.")
+                    self.post()
+                else:
+                    print(f"Couldn't write {value} to field {field}")
                 return True
         except Exception as e:
             self.logger.error(f"Error while setting value '{value}' to field '{field_name}' of DataSet '{self.get_dataset_name()}': {e}")
-        finally:
-            pass  #self.commit()
 
         return False
 
@@ -623,7 +625,7 @@ class ERPAbstractEntity(ERPCoreController):
                 self.logger.info(f"Transaction started for dataset '{self._dataset_name}'. Dataset is now locked for exclusive use.")
             except Exception as e:
                 self.logger.error(f"An error occurred while starting a transaction for the dataset '{self._dataset_name}': {str(e)}")
-                raise
+                self.rollback()
         else:
             message = f"Cannot start transaction for dataset '{self._dataset_name}' as a transaction already exists."
             self.logger.warning(message)
@@ -863,6 +865,18 @@ class ERPAbstractEntity(ERPCoreController):
             return None
 
     """ Utility Methods """
+    def find_one(self, search_value, dataset_index):
+        if not search_value:
+            self.logger.warning("Search Value is needed!")
+        else:
+            self.set_search_value(search_value)
+
+        if dataset_index:
+            self.set_dataset_index(dataset_index=dataset_index)
+
+        found = self.set_cursor()
+        return found
+
     def print_all_datasets(self):
         """Print the names and descriptions of all datasets."""
         for ds_info in self._dataset_infos:
@@ -1193,3 +1207,7 @@ class ERPAbstractEntity(ERPCoreController):
             edited_at=self.get_aenddat()
         )
         return bridge_media_entity
+
+    @abstractmethod
+    def map_bridge_to_erp(self, bridge_entity):
+        pass
