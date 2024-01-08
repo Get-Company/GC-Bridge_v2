@@ -181,8 +181,6 @@ class BridgeProductEntity(db.Model):
         """Sets the last edited date and time of the product."""
         self.edited_at = edited_at
 
-
-
     def update(self, bridge_entity_new):
         """
         Updates the current BridgeProductEntity instance with values from a new instance.
