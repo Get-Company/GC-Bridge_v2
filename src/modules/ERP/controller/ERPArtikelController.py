@@ -50,7 +50,8 @@ class ERPArtikelController(ERPAbstractController):
 
         super().__init__(
             dataset_entity=self._dataset_entity,
-            bridge_controller=self._bridge_controller
+            bridge_controller=self._bridge_controller,
+            search_value=search_value
         )
 
     def is_in_db(self, bridge_entity_new):
@@ -199,7 +200,7 @@ class ERPArtikelController(ERPAbstractController):
             bridge_media_entity_new = self._dataset_entity.map_erp_media_to_bridge(media=image)
 
             # 3 Chek if media is already in db
-            media_in_db = BridgeMediaEntity().query.filter_by(file_name=bridge_media_entity_new.get_file_name()).one_or_none()
+            media_in_db = BridgeMediaEntity.query.filter_by(file_name=bridge_media_entity_new.get_file_name()).one_or_none()
 
             if media_in_db:
                 self.logger.info(f"Updating Media {bridge_media_entity_new.get_file_name()}")
