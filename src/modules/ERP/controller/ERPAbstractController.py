@@ -28,6 +28,9 @@ class ERPAbstractController(ERPCoreController):
         self.db = db
         self.db.session.autoflush = False
         self._bridge_controller = bridge_controller
+        self.search_value = None
+        if search_value:
+            self.search_value = search_value
 
     def set_entity(self, dataset_entity) -> None:
         """
@@ -115,19 +118,20 @@ class ERPAbstractController(ERPCoreController):
 
         return True
 
-    def sync_all_from_bridge(self):
-        pass
+    def sync_all_from_bridge(self, bridge_entities):
+        for bridge_entity in bridge_entities:
+            self.downsert(bridge_entity=bridge_entity)
 
     def sync_one_to_bridge(self):
         self.upsert()
 
-    def sync_one_from_bridge(self):
-        pass
+    def sync_one_from_bridge(self, bridge_entity):
+        self.downsert(bridge_entity=bridge_entity)
 
     def sync_changed_to_bridge(self):
         pass
 
-    def sync_changed_from_bridge(self):
+    def sync_changed_from_bridge(self, bridge_entities):
         pass
 
     def upsert(self):
@@ -193,6 +197,10 @@ class ERPAbstractController(ERPCoreController):
             self.db.session.commit()
         except Exception as e:
             self.logger.error(f"Failed to commit changes to DB: {e}")
+
+    # Direction to ERP
+    def downsert(self, bridge_entity):
+        pass
 
     @abstractmethod
     def is_in_db(self, bridge_entity_new):
