@@ -71,7 +71,7 @@ def bridge_products_inventur():
 
 @BridgeViews.route('/product/<id>', endpoint='product')
 def bridge_product(id):
-    product = BridgeProductEntity().query.get(id)
+    product = BridgeProductEntity.query.get(id)
 
     if product:
 
