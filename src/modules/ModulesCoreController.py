@@ -122,7 +122,7 @@ class ModulesCoreController(ABC):
         pass
 
     @abstractmethod
-    def sync_all_from_bridge(self):
+    def sync_all_from_bridge(self, bridge_entities):
         pass
 
     @abstractmethod
@@ -130,7 +130,7 @@ class ModulesCoreController(ABC):
         pass
 
     @abstractmethod
-    def sync_one_from_bridge(self):
+    def sync_one_from_bridge(self, bridge_entity):
         pass
 
     @abstractmethod
@@ -138,5 +138,5 @@ class ModulesCoreController(ABC):
         pass
 
     @abstractmethod
-    def sync_changed_from_bridge(self):
+    def sync_changed_from_bridge(self, bridge_entities):
         pass
