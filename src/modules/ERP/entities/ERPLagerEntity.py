@@ -29,6 +29,9 @@ class ERPLagerEntity(ERPAbstractEntity):
     def map_erp_to_bridge(self):
         pass
 
+    def map_bridge_to_erp(self, bridge_entity):
+        pass
+
     def get_id(self):
         """
         Fetches the ID from the dataset.
@@ -103,6 +106,7 @@ class ERPLagerEntity(ERPAbstractEntity):
     """
     Inventur
     """
+
     def get_inventurmenge_gueltig(self):
         """
         Fetches the validity of inventory quantity (Inventurmenge gültig).

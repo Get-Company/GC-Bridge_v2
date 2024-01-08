@@ -43,6 +43,9 @@ class ERPMandantSteuerEntity(ERPAbstractEntity):
         )
         return tax_entity
 
+    def map_bridge_to_erp(self, bridge_entity):
+        pass
+
     def __repr__(self):
         return f'Mandant'
 
