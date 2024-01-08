@@ -26,6 +26,15 @@ class BridgeProductMarketplacePriceAssoc(db.Model):
         return f'BridgeProductMarketplace Assoc. {self.product_id}-{self.marketplace_id}-{self.price_id}'
 
 
+class BridgeCustomerMarketplaceAssoc(db.Model):
+    __tablename__ = 'bridge_customer_marketplace_assoc'
+    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id'), primary_key=True)
+    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_marketplace_entity.id'), primary_key=True)
+
+    def __repr__(self):
+        return f'BridgeCustomerMarketplace Assoc. {self.customer_id}-{self.marketplace_id}'
+
+
 class BridgeMarketplaceEntity(db.Model):
     __tablename__ = 'bridge_marketplace_entity'
 
@@ -33,8 +42,8 @@ class BridgeMarketplaceEntity(db.Model):
     name = db.Column(db.String(255), nullable=False, unique=True)
     description = db.Column(db.Text(), nullable=True)
     url = db.Column(db.String(255), nullable=True)
-    api_key = db.Column(db.String(255), nullable=True)  # Falls erforderlich für API-Integration
-    config = db.Column(db.JSON(), nullable=True)  # JSON-Feld für flexible Konfigurationen
+    api_key = db.Column(db.String(255), nullable=True)  # If needed for API-Integration
+    config = db.Column(db.JSON(), nullable=True)  # JSON-Feld for some dynamic config
     factor = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
