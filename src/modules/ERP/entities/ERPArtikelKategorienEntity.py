@@ -48,6 +48,9 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
             self.logger.error(f"Error mapping ERPArtikelKategorien to Bridge: {str(e)}")
             return None
 
+    def map_bridge_to_erp(self, bridge_entity):
+        pass
+
     def map_erp_translation_to_bridge(self):
         # Create a translation entity and append it to the product entity
         category_translation = BridgeCategoryTranslation(
