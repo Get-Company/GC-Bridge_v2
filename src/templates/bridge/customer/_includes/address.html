@@ -1,0 +1,14 @@
+<p>
+    {{ customer_address.name1 }} {{ customer_address.name2 }}<br>
+    {% if customer_address.name3 %}
+        {{ customer_address.name3 }}
+    {% endif %}
+</p>
+<p>
+    {{ customer_address.title }} {{ customer_address.first_name }} {{ customer_address.last_name }}
+</p>
+<p>
+    {{ customer_address.street }} <br/>
+    {{ customer_address.postal_code }} {{ customer_address.city }}
+    {{ customer_address.land }}
+</p>
