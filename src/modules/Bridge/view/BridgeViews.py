@@ -12,11 +12,6 @@ from sqlalchemy import or_, desc, asc
 BridgeViews = Blueprint('bridge_views', __name__)
 
 
-@BridgeViews.route('/', endpoint='dashboard')
-def bridge_dashboard_view():
-    return render_template('bridge/dashboard.html')
-
-
 @BridgeViews.route('/rules', endpoint='rules')
 def bridge_rules_view():
     return render_template('bridge/rules/rules.html')
@@ -83,6 +78,20 @@ def bridge_product(id):
         abort(404)
 
 
+@BridgeViews.route('/product/erp_nr/<erp_nr>', endpoint='product_by_erp_nr')
+def bridge_product_by_erp_nr(erp_nr):
+    product = BridgeProductEntity.query.filter_by(erp_nr=erp_nr).one_or_none()
+
+    if product:
+
+        return render_template('bridge/product/product.html',
+                               product=product,
+                               assets_img_path=GCBridgeConfig.ASSETS_PATH + "/" + GCBridgeConfig.IMG_PATH
+                               )
+    else:
+        abort(404)
+
+
 @BridgeViews.route('/marketplaces', endpoint='marketplaces')
 def bridge_marketplaces():
     page = request.args.get('page', 1, type=int)
@@ -111,3 +120,4 @@ def bridge_marketplacet(id):
         form.populate_obj(marketplace)
         db.session.commit()
     return render_template('bridge/marketplace/marketplace.html', form=form, marketplace=marketplace)
+
