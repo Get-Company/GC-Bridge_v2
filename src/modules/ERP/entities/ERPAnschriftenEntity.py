@@ -1,3 +1,5 @@
+import json
+
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from ..entities.ERPAnsprechpartnerEntity import ERPAnsprechpartnerEntity
 
@@ -55,6 +57,17 @@ class ERPAnschriftenEntity(ERPAbstractEntity):
 
     def get_land(self):
         return self.get_("LandKennz")
+
+    def get_land_details(self, filter_list=None):
+        land_code_raw = self.get_("Land")
+        land_code = str(land_code_raw).zfill(3)
+        land_details = self.api_get_country_by_ccn3(ccn3=land_code, filter_list=filter_list)
+        return land_details
+
+    def get_land_iso2(self):
+        land_json = self.get_land_details(filter_list=['cca2'])
+
+        return land_json[0]['cca2']
 
     def get_email(self):
         return self.get_("EMail1")
