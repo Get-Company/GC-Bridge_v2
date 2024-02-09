@@ -7,7 +7,7 @@ const bootstrapJsPath = 'node_modules/bootstrap/dist/js/bootstrap.bundle.js';
 
 gulp.task('build-js', function(){
    return gulp.src(bootstrapJsPath)  // Pfad zu Bootstrap-JavaScript-Dateien
-       .pipe(concat('bootstrap.js'))  // Kombinieren in eine Datei namens bootstrap.js
+       .pipe(concat('bootstrap.bundle.js'))  // Kombinieren in eine Datei namens bootstrap.js
        // .pipe(browserify())  // Optional: Verwenden Sie Browserify für Modulbündelung, wenn benötigt
        .pipe(gulp.dest('src/static/js'));  // Zielverzeichnis
 });
