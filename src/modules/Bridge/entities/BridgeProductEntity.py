@@ -40,6 +40,8 @@ class BridgeProductEntity(db.Model):
 
     marketplace_prices_assoc = db.relationship('BridgeProductMarketplacePriceAssoc', back_populates='product')
 
+    order_details = db.relationship('BridgeOrderDetailsEntity', back_populates='product')
+
     def get_id(self):
         """Gets the id of the product.
 
