@@ -1,6 +1,8 @@
 import logging
 import re
-from logging.handlers import TimedRotatingFileHandler
+from datetime import datetime
+
+import requests
 import os
 from pprint import pprint
 
@@ -18,21 +20,21 @@ class ModulesCoreController(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_logging()
 
+
     def setup_logging(self):
         """
         Sets up the logging for this class. Creates a time-based rotating log file in specified directory.
         """
-        # Set the logging level
-        self.logger.setLevel(logging.DEBUG)
 
         # Ensure log directory exists
         if not os.path.exists('log'):
             os.makedirs('log')
 
         # Create a timed rotating file handler
-        # The 'midnight' argument means the log will rotate at midnight
-        log_filename = os.path.join('log', 'application.log')
-        fh = TimedRotatingFileHandler(log_filename, when='midnight', interval=1, backupCount=7)  # backupCount keeps the last 7 logs
+        # USe the current date in the filename
+        date_str = datetime.now().strftime("%Y-%m-%d")
+        log_filename = os.path.join('log', f'application_{date_str}.log')
+        fh = logging.FileHandler(log_filename)
         fh.setLevel(logging.DEBUG)
 
         # Create a formatter
@@ -62,7 +64,52 @@ class ModulesCoreController(ABC):
         # The method returns a special constant that SQLAlchemy uses to represent NULL
         return sqlalchemy.null()
 
-    # AI - ChatGPT
+
+    """ APIs """
+
+    # Countries
+    def api_get_country_by_ccn3(self, ccn3, filter_list=None):
+        """
+        Retrieves country information from the Rest Countries API using the CCN3 code.
+
+        Args:
+            ccn3 (str): The CCN3 code of the country (e.g., '276' for Germany).
+
+        Returns:
+            dict: A dictionary containing country information if successful, None otherwise.
+
+        Raises:
+            requests.exceptions.RequestException: An error occurred during the API request.
+        """
+        if len(ccn3) != 3:
+            self.logger.error("CCN3 needs to be 3 characters long. Given CCN3: %s", ccn3)
+            return None
+        try:
+            # Constructing the API URL
+            url = f"https://restcountries.com/v3.1/alpha?codes={ccn3}"
+            if filter_list:
+                url = url + "&fields="
+                for filter in filter_list:
+                    url = url + filter + ','
+
+            # Making the GET request to the API
+            response = requests.get(url)
+
+            # Raise an exception if the request was unsuccessful
+            response.raise_for_status()
+
+            # Parsing the JSON response
+            country_data = response.json()
+
+            # Return the country information
+            return country_data
+        except requests.exceptions.RequestException as e:
+            # Print the error and return None if an exception occurs
+            print(f"An error occurred: {e}")
+            return None
+
+    """  AI - ChatGPT """
+
     def count_tokens(self, text):
         """
         Counts the number of tokens in a given text.
@@ -116,6 +163,8 @@ class ModulesCoreController(ABC):
         except Exception as e:
             print(f"An error occurred: {str(e)}")
             return None
+
+    """ Abstract MEthods """
 
     @abstractmethod
     def sync_all_to_bridge(self):
