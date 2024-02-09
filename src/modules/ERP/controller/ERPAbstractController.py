@@ -110,12 +110,15 @@ class ERPAbstractController(ERPCoreController):
     def sync_all_to_bridge(self):
         # For Loop through all the datasets
         self.logger.info(f'We have a range to loop of {self._dataset_entity.get_range_count()} items.')
-
+        id_list = []
         while not self._dataset_entity.range_eof():
             self.logger.info(f"Next Element in range: {self._dataset_entity}")
-            self.upsert()
+            id = self.upsert()
+            if id:
+                id_list.append(id)
             self._dataset_entity.range_next()
-
+        if id_list:
+            return id_list
         return True
 
     def sync_all_from_bridge(self, bridge_entities):
@@ -123,7 +126,9 @@ class ERPAbstractController(ERPCoreController):
             self.downsert(bridge_entity=bridge_entity)
 
     def sync_one_to_bridge(self):
-        self.upsert()
+        id = self.upsert()
+        if id:
+            return id
 
     def sync_one_from_bridge(self, bridge_entity):
         self.downsert(bridge_entity=bridge_entity)
@@ -144,7 +149,7 @@ class ERPAbstractController(ERPCoreController):
         """
         self.logger.info("Starting the upsert process.")
         try:
-            # Map the ERP dataset to a new bridge entity
+            # Map the data to a new bridge entity
             bridge_entity_new = self._dataset_entity.map_erp_to_bridge()
         except Exception as e:
             self.logger.error(f"Failed to map ERP dataset to new BridgeEntity: {e}")
@@ -195,6 +200,9 @@ class ERPAbstractController(ERPCoreController):
             return
         try:
             self.db.session.commit()
+            entity_id = bridge_entity_for_db_with_relations.get_id()
+            self.logger.info(f"Entity successfully upserted with ID: {entity_id}")
+            return entity_id
         except Exception as e:
             self.logger.error(f"Failed to commit changes to DB: {e}")
 
@@ -208,26 +216,7 @@ class ERPAbstractController(ERPCoreController):
 
     @abstractmethod
     def set_relations(self, bridge_entity):
-        """
-        Establish various relations for a given bridge entity.
-
-        This method provides a framework for setting up relations for the provided
-        bridge entity. The actual relation setting mechanisms are expected to be
-        implemented in child classes based on their specific requirements. When setting
-        relations, it is crucial to invoke `db.session.add` on the bridge entity after
-        each relation is established to ensure the integrity of the session and the
-        object relationships.
-
-        It's advised for subclasses to follow this practice, and depending on the
-        specifics of the child class, this method might need to be overridden or
-        extended.
-
-        :param bridge_entity: The BridgeEntity to set relations for.
-        :type bridge_entity: BridgeEntity
-        :return: BridgeEntity with relations set or prepared to be set.
-        :rtype: BridgeEntity
-        """
-        raise NotImplementedError("Child classes must implement this method.")
+        pass
 
     def _set_media_relation(self, bridge_entity):
         """
