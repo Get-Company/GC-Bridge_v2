@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Kunden {% endblock %}
+{% block h1 %} Kunden {% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col">
+        <h1>Kunden</h1>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="col">
+    {% include '_includes/_search.html' %}
+</div>
+
+
+<div class="row">
+    <div class="col">
+        <table class="table table-responsive table-striped table-bordered">
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">AdrNr</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>
+                    {{customer.standard_billing_address.get_title_firstname_lastname()}}
+                </td>
+                <td>{{ customer.erp_nr }}</td>
+                {% endfor %}
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        {% with items=customers %}
+        {% include '_includes/_pagination.html' %}
+        {% endwith %}
+    </div>
+</div>
+
+{% endblock %}
+
