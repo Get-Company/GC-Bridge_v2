@@ -1,0 +1,15 @@
+<!-- Change AdrNr -->
+<strong>AdrNr ändern</strong>
+<form class="row"
+      @submit.prevent="api_customer_change_customer_nr($event, '{{ order.customer.get_customer_marketplace_id(order.marketplace_id) }}', '{{order.customer.erp_nr}}', '{{order.customer.id}}' )">
+    <div class="col-auto">
+        <label for="newCustomerNr-{{ order.id }}" class="form-label visually-hidden">Neue
+            Adrnr.</label>
+        <div class="input-group input-group-sm">
+            <div class="input-group-text">Neue AdrNr.</div>
+            <input type="text" class="form-control new-customer-nr"
+                   id="newCustomerNr-{{ order.id }}" required>
+            <button type="submit" class="btn btn-outline-primary">Ändern</button>
+        </div>
+    </div>
+</form>
