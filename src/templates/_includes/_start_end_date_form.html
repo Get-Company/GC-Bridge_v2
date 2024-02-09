@@ -1,0 +1,31 @@
+{#
+url
+button_text
+value_start
+value_end
+#}
+    <form class="row gx-3 align-items-center" action="{{ url }}" method="get">
+        <div class="col-auto">
+            <label class="visually-hidden" for="start_date">Startdatum</label>
+            <input
+                    type="datetime-local"
+                    class="form-control-sm"
+                    id="start_date"
+                    name="start_date"
+                    value="{{ start_date.strftime('%Y-%m-%dT%H:%M') }}"
+                    placeholder="Startdatum">
+        </div>
+        <div class="col-auto">
+            <label class="visually-hidden" for="end_date">Enddatum</label>
+            <input
+                    type="datetime-local"
+                    class="form-control-sm"
+                    id="end_date"
+                    name="end_date"
+                    value="{{ end_date.strftime('%Y-%m-%dT%H:%M') }}"
+                    placeholder="Enddatum">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">{{ button_text }}</button>
+        </div>
+    </form>
