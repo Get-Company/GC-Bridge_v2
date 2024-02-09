@@ -1,0 +1,23 @@
+<div class="row mt-4 order-states" data-order-api-id="{{ order.api_id }}" data-bridge-order-id="{{ order.id }}" id="states-{{ order.id }}">
+    <div class="col-3 order-state" data-order-state="{{order.order_state}}" data-order-state-machine-id="{{order_state_machine_id}}">
+        <strong>Bestellung </strong>
+        <div class="spinner-grow text-primary spinner-grow-sm" role="status">
+        </div>
+        <select class="form-select form-select-sm" @change="onSelectChangeState($event, '{{order.api_id}}', '{{order.id}}', 'order')" disabled>
+        </select>
+    </div>
+    <div class="col-3 payment-state" data-payment-state="{{order.payment_state}}" data-payment-state-machine-id="{{payment_state_machine_id}}">
+        <strong>Zahlung </strong>
+        <div class="spinner-grow text-primary spinner-grow-sm" role="status">
+        </div>
+        <select class="form-select form-select-sm" @change="onSelectChangeState($event, '{{order.api_id}}', '{{order.id}}', 'payment')" disabled>
+        </select>
+    </div>
+    <div class="col-3 shipping-state" data-shipping-state="{{order.shipping_state}}" data-shipping-state-machine-id="{{shipping_state_machine_id}}">
+        <strong>Versand </strong>
+        <div class="spinner-grow text-primary spinner-grow-sm" role="status">
+        </div>
+        <select class="form-select form-select-sm" @change="onSelectChangeState($event, '{{order.api_id}}', '{{order.id}}', 'shipping')" disabled>
+        </select>
+    </div>
+</div>
