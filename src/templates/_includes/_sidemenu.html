@@ -1,6 +1,8 @@
-<div class="border-right" id="sidebar-wrapper">
+<div class="border-right w-100" id="sidebar-wrapper">
     <div class="sidebar-heading">
-        <a href="{{ url_for('bridge_views.dashboard') }}">GC-Bridge</a>
+        <a href="{{ url_for('bridge_dashboard_views.dashboard') }}">
+            <img class="mb-4 img-fluid" width="200px" src="{{ url_for('static', filename='img/gc_logo.svg') }}" />
+        </a>
     </div>
     <div class="list-group list-group-flush">
 
@@ -10,17 +12,29 @@
                 Verwaltung
             </a>
             <div id="verwaltungMenu" class="collapse">
-                <a class="list-group-item" href="#">Bestellungen</a>
-                <a class="list-group-item" href="#">Kunden</a>
-                <a class="list-group-item" href="{{ url_for('bridge_views.products') }}">Produkte</a>
-                <a class="list-group-item" href="{{ url_for('bridge_views.categories') }}">Kategorien</a>
-                <a class="list-group-item" href="{{ url_for('bridge_views.marketplaces') }}">Marktplätze</a>
+                <a class="list-group-item" href="{{ url_for('bridge_order_views.orders') }}">
+                    <span class="fa-solid fa-truck"></span> Bestellungen
+                </a>
+                <a class="list-group-item" href="{{ url_for('bridge_customer_views.customers') }}">
+                    <span class="fa-solid fa-user"></span> Kunden
+                </a>
+                <a class="list-group-item" href="{{ url_for('bridge_views.products') }}">
+                    <span class="fa-solid fa-box-open"></span> Produkte
+                </a>
+                <a class="list-group-item" href="{{ url_for('bridge_views.categories') }}">
+                    <span class="fa-solid fa-tags"></span> Kategorien
+                </a>
+                <a class="list-group-item" href="{{ url_for('bridge_views.marketplaces') }}">
+                    <span class="fa-solid fa-store"></span> Marktplätze
+                </a>
             </div>
         </div>
 
         <!-- Einzelner Menüpunkt für Regeln -->
         <div class="list-group-item list-group-item-action">
-            <a href="{{ url_for('bridge_views.rules') }}">Regeln</a>
+            <a href="{{ url_for('bridge_views.rules') }}">
+                Regeln
+            </a>
         </div>
 
         <!-- Einzelner Menüpunkt für Einstellungen -->
