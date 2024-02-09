@@ -38,3 +38,28 @@ In today's digital world, it's critical that your systems interact seamlessly. M
 
 (Information about the project's licensing, e.g., MIT, GPL, etc.)
 
+### DB Struktur:
+Products:
+Haben eine many-to-many-Beziehung zu Marketplaces, da verschiedene Produkte auf verschiedenen Marktplätzen existieren können.
+Haben keine direkte Beziehung zu Prices. Die Preisbeziehung wird über Marketplaces definiert.
+Sind direkt mit Orders verbunden, was einer many-to-one-Beziehung entspricht, da jede Bestellung mehrere Produkte enthalten kann.
+
+Marketplaces:
+Haben eine many-to-many-Beziehung zu Products.
+Haben eine one-to-many-Beziehung zu Prices, da jeder Marktplatz verschiedene Preise für verschiedene Produkte haben kann. Jedes Produkt hat dabei nur einen Preis pro Marktplatz.
+Haben eine one-to-many-Beziehung zu Customers, da ein Kunde auf verschiedenen Marktplätzen sein kann.
+Haben eine one-to-many-Beziehung zu Orders, da ein Marktplatz mehrere Bestellungen haben kann.
+
+Prices:
+Haben eine many-to-one-Beziehung zu Marketplaces, da die Preise für Produkte über die Marktplätze definiert werden.
+Jedes Produkt hat je Marktplatz einen eigenen Preis, was durch die Beziehung zwischen Marketplaces und Prices reflektiert wird.
+
+Orders:
+Haben eine many-to-one-Beziehung zu Customers, da jede Bestellung nur einem Kunden zugeordnet ist.
+Haben eine many-to-one-Beziehung zu Marketplaces, da jede Bestellung direkt einem Marktplatz zugeordnet ist.
+Haben eine many-to-many-Beziehung zu Products, da eine Bestellung mehrere Produkte enthalten kann.
+
+Customers:
+Haben eine many-to-many-Beziehung zu Marketplaces, da Kunden auf verschiedenen Marktplätzen sein können.
+Haben eine one-to-many-Beziehung zu Orders, da ein Kunde mehrere Bestellungen haben kann.
+
