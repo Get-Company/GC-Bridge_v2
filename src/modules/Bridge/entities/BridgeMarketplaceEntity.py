@@ -28,11 +28,32 @@ class BridgeProductMarketplacePriceAssoc(db.Model):
 
 class BridgeCustomerMarketplaceAssoc(db.Model):
     __tablename__ = 'bridge_customer_marketplace_assoc'
-    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id'), primary_key=True)
-    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_marketplace_entity.id'), primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id', ondelete="CASCADE"), primary_key=True)
+    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_marketplace_entity.id', ondelete="CASCADE"), primary_key=True)
+
+    customer_marketplace_id = db.Column(db.String(255), nullable=True, unique=True)
+
+    customer = db.relationship(
+        'BridgeCustomerEntity',
+        back_populates='marketplace_assoc',
+
+    )
+    marketplace = db.relationship(
+        'BridgeMarketplaceEntity',
+        back_populates='customer_assoc'
+    )
 
     def __repr__(self):
-        return f'BridgeCustomerMarketplace Assoc. {self.customer_id}-{self.marketplace_id}'
+        return f'BridgeCustomerMarketplace Assoc. {self.customer_id}-{self.marketplace_id} | {self.customer_marketplace_id}'
+
+
+class BridgeOrderMarketplaceAssoc(db.Model):
+    __tablename__ = 'bridge_order_marketplace_assoc'
+    order_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id', ondelete="CASCADE"), primary_key=True)
+    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id', ondelete="CASCADE"), primary_key=True)
+
+    def __repr__(self):
+        return f'BridgeOrderMarketplace Assoc. {self.order_id}-{self.marketplace_id}'
 
 
 class BridgeMarketplaceEntity(db.Model):
@@ -43,13 +64,31 @@ class BridgeMarketplaceEntity(db.Model):
     description = db.Column(db.Text(), nullable=True)
     url = db.Column(db.String(255), nullable=True)
     api_key = db.Column(db.String(255), nullable=True)  # If needed for API-Integration
+    api_id = db.Column(db.String(255), nullable=True)
     config = db.Column(db.JSON(), nullable=True)  # JSON-Feld for some dynamic config
     factor = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
     # Relations
-    product_prices_assoc = db.relationship('BridgeProductMarketplacePriceAssoc', back_populates='marketplace')
+    product_prices_assoc = db.relationship(
+        'BridgeProductMarketplacePriceAssoc',
+        back_populates='marketplace')
+
+    customers = db.relationship(
+        'BridgeCustomerEntity',
+        secondary='bridge_customer_marketplace_assoc',
+        back_populates='marketplaces',
+        overlaps="marketplace, customer"
+    )
+
+    customer_assoc = db.relationship(
+        'BridgeCustomerMarketplaceAssoc',
+        back_populates='marketplace',
+        overlaps="customers"
+    )
+
+    orders = db.relationship('BridgeOrderEntity', back_populates='marketplace')
 
     # Getter and Setter Methods
     def get_id(self):
@@ -79,6 +118,12 @@ class BridgeMarketplaceEntity(db.Model):
     def set_api_key(self, api_key):
         self.api_key = api_key
 
+    def get_api_id(self):
+        return self.api_id
+
+    def set_api_id(self, api_id):
+        self.api_id = api_id
+
     def get_config(self):
         return self.config
 
@@ -94,23 +139,41 @@ class BridgeMarketplaceEntity(db.Model):
     def set_edited_at(self, edited_at):
         self.edited_at = edited_at
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'url': self.url,
+            'api_key': self.api_key,
+            'api_id': self.api_id,
+            'config': self.config,
+            'factor': self.factor,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'edited_at': self.edited_at.isoformat() if self.edited_at else None
+        }
+
     # Update Method
-    def update(self, new_entity):
+    def update(self, bridge_entity_new):
         """
         Updates the current BridgeMarketplaceEntity instance with values from a new instance.
 
         Args:
-            new_entity (BridgeMarketplaceEntity): The new BridgeMarketplaceEntity instance with updated values.
+            bridge_entity_new (BridgeMarketplaceEntity): The new BridgeMarketplaceEntity instance with updated values.
         """
-        self.set_name(new_entity.get_name())
-        self.set_title(new_entity.get_title())
-        self.set_description(new_entity.get_description())
-        self.set_url(new_entity.get_url())
-        self.set_api_key(new_entity.get_api_key())
-        self.set_config(new_entity.get_config())
+        self.set_name(bridge_entity_new.get_name())
+        self.set_description(bridge_entity_new.get_description())
+        self.set_url(bridge_entity_new.get_url())
+        self.set_api_key(bridge_entity_new.get_api_key())
+        self.set_api_id(bridge_entity_new.get_api_id())
+        # config is set manually
+        # factor is set manually
         self.set_edited_at(datetime.datetime.now())
 
         return self
+
+    def __repr__(self):
+        return f" Marketplace {self.name} id:{self.id}"
 
 """ 
 Example Queries from AI
