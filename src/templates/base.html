@@ -12,14 +12,19 @@
     {% endblock %}
 
     {% block js %}
-        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="{{ url_for('static', filename='js/vue/vue.global.js') }}"></script>
+<!--
+Later, there's a vue.global.prod.js
+<script src="{{ url_for('static', filename='js/vue/vue.global.prod.js') }}"></script>
+-->
+        <script src="https://kit.fontawesome.com/42ebd07a81.js" crossorigin="anonymous"></script>
     {% endblock %}
 
 </head>
 <body>
 <div class="container-fluid">
     <div class="row flex-nowrap">
-        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 ">
+        <div class="col-auto col-md-2 col-xl-3 px-sm-2 px-0 ">
             <div class="d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 min-vh-100">
                 {% include '_includes/_sidemenu.html' %}
             </div>
@@ -27,14 +32,17 @@
         <div class="col py-3">
         {% block body_open %}{% endblock %}
 
-        {% block body %}
-            <h1>
-                {% block h1 %} Base {% endblock %}
-            </h1>
+        {% block h1 %}
+            <h1 class="display-1">Base</h1>
         {% endblock %}
 
+        <div class="body-wrapper p-2">
+            {% block body %}
+            {% endblock %}
+        </div>
+
         <!-- Bootstrap JavaScript -->
-        <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/bootstrap.bundle.js') }}"></script>
         {% block body_close %}
 
         {% endblock %}
