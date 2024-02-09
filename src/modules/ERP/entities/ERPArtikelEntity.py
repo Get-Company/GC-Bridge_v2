@@ -76,6 +76,9 @@ class ERPArtikelEntity(ERPAbstractEntity):
         )
         return product_translation
 
+    def map_bridge_to_erp(self, bridge_entity):
+        pass
+
     def map_erp_price_to_bridge(self):
         # Create a price entity and assign it to the product
         price = BridgePriceEntity(
