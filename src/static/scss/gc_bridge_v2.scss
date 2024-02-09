@@ -1,3 +1,15 @@
 @import "../../../node_modules/bootswatch/dist/slate/variables";
 @import "../../../node_modules/bootstrap/scss/bootstrap";
 @import "../../../node_modules/bootswatch/dist/slate/bootswatch";
+
+$gray-base:              #000 !default;
+$gray-darker:            #272B30 !default; // #222
+$gray-dark:              #3A3F44 !default;   // #333
+$gray:                   #52575C !default; // #555
+$gray-light:             #7A8288 !default;   // #999
+$gray-lighter:           #999 !default; // #eee
+
+@import "modules/_form";
+@import "modules/_accordion";
+@import "modules/_list";
+@import "modules/_toast";
