@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block html_title %}
+GC-Bridge 2 - Dashboard
+{% endblock %}
+
+{% block h1 %}
+<a class="text-decoration-none link-light" href="{{ url_for('bridge_order_views.orders') }}">
+    <h1 class="mb-5 position-relative">
+        <span class="fa-solid fa-gauge-high"></span> Dashboard
+    </h1>
+</a>
+{% endblock %}
+
+{% block body %}
+<div class="row row-cols-2 row-cols-xxl-3 g-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_order_views.orders') }}">
+                    <h5 class="card-title"><i class="fas fa-truck"></i> Bestellungen</h5>
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Verwalten Sie eingehende Bestellungen und überwachen Sie den Versandstatus.</p>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('bridge_order_views.orders') }}" class="btn btn-sm btn-outline-primary">
+                    Bearbeiten
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_customer_views.customers') }}">
+                    <h5 class="card-title"><i class="fas fa-users"></i> Kunden</h5>
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Überblick über Ihre Kunden und ihre Bestellhistorie.</p>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-sm btn-outline-primary">Bearbeiten</button>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_views.products') }}">
+                    <h5 class="card-title"><i class="fas fa-box-open"></i> Produkte</h5>
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Details und Verwaltung Ihres Produktkatalogs.</p>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-sm btn-outline-primary">Bearbeiten</button>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_views.categories') }}">
+                    <h5 class="card-title"><i class="fas fa-tags"></i> Kategorien</h5>
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Organisieren Sie Ihre Produkte in Kategorien für eine bessere Übersicht.</p>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-sm btn-outline-primary">Bearbeiten</button>
+            </div>
+        </div>
+
+    </div>
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_views.marketplaces') }}">
+                    <h5 class="card-title"><i class="fas fa-store fa-bounce"></i> Marktplätze</h5>
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Verbinden und verwalten Sie Ihre Produkte auf verschiedenen Marktplätzen.</p>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-sm btn-outline-primary">Bearbeiten</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block body_close %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/bridge/orders/vapp_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/plugins/toastPlugin.js')}}"></script>
+<script>
+    app.use(ToastPlugin)
+    const mountedAppOrders = app.mount('#vapp_api_get_sw6_orders');
+</script>
+{% endblock %}
