@@ -1,0 +1,9 @@
+<ul class="list-group list-group-flush">
+    {% for order_detail in order_details %}
+        <li class="list-group-item">
+            {% if order_detail.product.medias %}
+                <img class="img-fluid rounded" width="50px" src="https://assets.classei.de/img/{{ order_detail.product.medias[0].file_name }}.{{ order_detail.product.medias[0].file_type }}" />
+            {% endif %}
+            {{ order_detail.erp_nr }} x {{ order_detail.quantity }}</li>
+    {% endfor %}
+</ul>
