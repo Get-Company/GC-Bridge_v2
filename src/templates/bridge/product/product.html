@@ -2,6 +2,9 @@
 {% block html_title %} GC-Bridge - Product {{ product.get_translation('DE_de').name }} {% endblock %}
 {% block h1 %} {{ product.get_translation('DE_de').name }} {% endblock %}
 
+{% block js %}
+    {{ super() }}
+{% endblock %}
 
 {% block body %}
     <div id="vue_bridge_products_product">
