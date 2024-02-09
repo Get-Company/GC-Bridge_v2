@@ -1,5 +1,9 @@
+from pprint import pprint
+
 from src import db
 from datetime import datetime
+
+from .BridgeMarketplaceEntity import BridgeCustomerMarketplaceAssoc
 
 
 class BridgeCustomerEntity(db.Model):
@@ -13,36 +17,45 @@ class BridgeCustomerEntity(db.Model):
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.now())
 
     # One-to-Many relation to addresses
-    addresses = db.relationship('BridgeCustomerAddressEntity', backref='customer', lazy=True, foreign_keys='BridgeCustomerAddressEntity.customer_id')
+    addresses = db.relationship(
+        'BridgeCustomerAddressEntity',
+        back_populates='customer',
+        lazy=True,
+        foreign_keys='[BridgeCustomerAddressEntity.customer_id]'
+    )
 
     # One-to-One-Relations
-    standard_shipping_address_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_address_entity.id', use_alter=True, name='fk_shipping_address'))
+    standard_shipping_address_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_address_entity.id', use_alter=True, name='fk_shipping_address', ondelete="CASCADE"))
     standard_shipping_address = db.relationship(
         'BridgeCustomerAddressEntity',
         foreign_keys=[standard_shipping_address_id],
-        uselist=False, backref=db.backref(
-            'shipping_customer',
-            uselist=False
-        )
+        uselist=False,
+        back_populates="shipping_customer"
     )
 
-    standard_billing_address_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_address_entity.id', use_alter=True, name='fk_billing_address'))
+    standard_billing_address_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_address_entity.id', use_alter=True, name='fk_billing_address', ondelete="CASCADE"))
     standard_billing_address = db.relationship(
         'BridgeCustomerAddressEntity',
         foreign_keys=[standard_billing_address_id],
         uselist=False,
-        backref=db.backref(
-            'billing_customer', uselist=False
-        )
+        back_populates="billing_customer"
     )
 
     # Many-to-Many relation to marketplaces
     marketplaces = db.relationship(
         'BridgeMarketplaceEntity',
         secondary='bridge_customer_marketplace_assoc',
-        backref=db.backref('customers', lazy='dynamic'),
-        lazy='dynamic'
+        back_populates='customers',
+        overlaps="customer,customer_assoc,marketplace"
     )
+
+    marketplace_assoc = db.relationship(
+        'BridgeCustomerMarketplaceAssoc',
+        back_populates='customer',
+        overlaps="marketplaces, customers"
+    )
+
+    orders = db.relationship("BridgeOrderEntity", back_populates="customer")
 
     # Getter and Setter
     def get_id(self):
@@ -54,6 +67,12 @@ class BridgeCustomerEntity(db.Model):
     def set_erp_number(self, erp_nr):
         self.erp_nr = erp_nr
 
+    def get_erp_nr(self):
+        return self.erp_nr
+
+    def set_erp_nr(self, erp_nr):
+        self.erp_nr = erp_nr
+
     def get_email(self):
         return self.email
 
@@ -61,7 +80,10 @@ class BridgeCustomerEntity(db.Model):
         self.email = email
 
     def get_vat_id(self):
-        return self.vat_id
+        if self.vat_id:
+            return self.vat_id
+        else:
+            return None
 
     def set_vat_id(self, vat_id):
         self.vat_id = vat_id
@@ -84,6 +106,15 @@ class BridgeCustomerEntity(db.Model):
     def get_updated_at(self):
         return self.updated_at
 
+    def get_customer_marketplace_id(self, marketplace_id):
+        customer_marketplace_assoc = (BridgeCustomerMarketplaceAssoc.query
+                                   .filter(BridgeCustomerMarketplaceAssoc.marketplace_id == marketplace_id,
+                                           BridgeCustomerMarketplaceAssoc.customer_id == self.get_id()
+                                   ).one_or_none())
+        if customer_marketplace_assoc:
+            pprint(customer_marketplace_assoc.customer_marketplace_id)
+            return customer_marketplace_assoc.customer_marketplace_id
+
     def update(self, bridge_entity_new):
         """
         Updates the current instance with values from a new instance.
@@ -101,7 +132,6 @@ class BridgeCustomerEntity(db.Model):
             self.set_vat_id(bridge_entity_new.get_vat_id())
             self.set_standard_shipping_address_id(bridge_entity_new.get_standard_shipping_address_id())
             self.set_standard_billing_address_id(bridge_entity_new.get_standard_billing_address_id())
-
             self.updated_at = datetime.now()
 
             return self
@@ -109,6 +139,19 @@ class BridgeCustomerEntity(db.Model):
         except Exception as e:
             print(f"Error updating BridgeCustomerEntity: {e}")
             return False
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'erp_nr': self.erp_nr,
+            'email': self.email,
+            'vat_id': self.vat_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'edited_at': self.edited_at.isoformat() if self.edited_at else None,
+            'addresses': [address.to_dict() for address in self.addresses],
+            'standard_shipping_address': self.standard_shipping_address.to_dict(),
+            'standard_billing_address': self.standard_billing_address.to_dict()
+        }
 
     def __repr__(self):
         return f"<BridgeCustomerEntity(id={self.id}, erp_nr='{self.erp_nr}', email='{self.email}', vat_id='{self.vat_id}', created_at='{self.created_at}', edited_at='{self.edited_at}')>"
@@ -118,12 +161,13 @@ class BridgeCustomerAddressEntity(db.Model):
     __tablename__ = 'bridge_customer_address_entity'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    erp_combined_id = db.Column(db.String(255), nullable=False)   # Format: "AdresseID;AnschriftID;AnsprechpartnerID"
-    erp_nr = db.Column(db.Integer, nullable=False)
-    erp_ans_nr = db.Column(db.Integer, nullable=False)
-    erp_asp_nr = db.Column(db.Integer, nullable=False)
+    erp_combined_id = db.Column(db.String(255), nullable=True)   # Format: "AdresseID;AnschriftID;AnsprechpartnerID"
+    erp_nr = db.Column(db.Integer, nullable=True)
+    sw6_id = db.Column(db.String(255), nullable=True)
+    erp_ans_nr = db.Column(db.Integer, nullable=True)
+    erp_asp_nr = db.Column(db.Integer, nullable=True)
     name1 = db.Column(db.String(255), nullable=False)
-    name2 = db.Column(db.String(255), nullable=True)
+    name2 = db.Column(db.String(255), nullable=False)
     name3 = db.Column(db.String(255), nullable=True)
     department = db.Column(db.String(255), nullable=True)
     street = db.Column(db.String(255), nullable=False)
@@ -137,7 +181,23 @@ class BridgeCustomerAddressEntity(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     edited_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
-    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id'))
+    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id', ondelete='CASCADE'))
+    customer = db.relationship('BridgeCustomerEntity', back_populates='addresses', foreign_keys=[customer_id])
+
+    shipping_customer = db.relationship(
+        'BridgeCustomerEntity',
+        back_populates='standard_shipping_address',
+        uselist=False,
+        foreign_keys='[BridgeCustomerEntity.standard_shipping_address_id]'
+
+    )
+
+    billing_customer = db.relationship(
+        'BridgeCustomerEntity',
+        back_populates='standard_billing_address',
+        uselist=False,
+        foreign_keys='[BridgeCustomerEntity.standard_billing_address_id]'
+    )
 
     # Getter and Setter for id
     def get_id(self):
@@ -175,6 +235,18 @@ class BridgeCustomerAddressEntity(db.Model):
             self.erp_nr = erp_nr
         except ValueError as e:
             print(f"Error setting erp_nr: {e}")
+
+    # Getter and Setter for sw6_id
+    def get_sw6_id(self):
+        return self.sw6_id
+
+    def set_sw6_id(self, sw6_id):
+        try:
+            if not sw6_id:
+                raise ValueError("SW6 ID cannot be empty.")
+            self.sw6_id = sw6_id
+        except ValueError as e:
+            print(f"Error setting sw6_id: {e}")
 
     # Getter and Setter for erp_ans_nr
     def get_erp_ans_nr(self):
@@ -345,16 +417,16 @@ class BridgeCustomerAddressEntity(db.Model):
             bridge_entity_new (BridgeCustomerAddressEntity): The new BridgeCustomerAddressEntity instance with updated values.
         """
         # Update erp_combined_id
-        self.set_erp_combined_id(bridge_entity_new.get_erp_combined_id())
+        # self.set_erp_combined_id(bridge_entity_new.get_erp_combined_id())
 
         # Update erp_nr
-        self.set_erp_nr(bridge_entity_new.get_erp_nr())
+        # self.set_erp_nr(bridge_entity_new.get_erp_nr())
 
         # Update ans_nr
-        self.set_erp_ans_nr(bridge_entity_new.get_erp_ans_nr())
+        # self.set_erp_ans_nr(bridge_entity_new.get_erp_ans_nr())
 
         # Update asp_nr
-        self.set_erp_asp_nr(bridge_entity_new.get_erp_asp_nr())
+        # self.set_erp_asp_nr(bridge_entity_new.get_erp_asp_nr())
 
         # Update name1
         self.set_name1(bridge_entity_new.get_name1())
@@ -396,6 +468,33 @@ class BridgeCustomerAddressEntity(db.Model):
         self.edited_at = datetime.now()
 
         return self
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'erp_combined_id': self.erp_combined_id,
+            'erp_nr': self.erp_nr,
+            'sw6_id': self.sw6_id,
+            'erp_ans_nr': self.erp_ans_nr,
+            'erp_asp_nr': self.erp_asp_nr,
+            'name1': self.name1,
+            'name2': self.name2,
+            'name3': self.name3,
+            'department': self.department,
+            'street': self.street,
+            'postal_code': self.postal_code,
+            'city': self.city,
+            'land': self.land,
+            'email': self.email,
+            'title': self.title,
+            'first_name': self.first_name,
+            'last_name': self.last_name,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'edited_at': self.edited_at.isoformat() if self.edited_at else None
+        }
+
+    def get_title_firstname_lastname(self):
+        return f"{self.get_title()} {self.get_first_name()} {self.get_last_name()}"
 
     def __repr__(self):
         return (f"<BridgeCustomerAddressEntity(id={self.id}, erp_combined_id='{self.erp_combined_id}', "
