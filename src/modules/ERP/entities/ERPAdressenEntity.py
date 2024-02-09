@@ -52,7 +52,7 @@ class ERPAdressenEntity(ERPAbstractEntity):
                 street=erp_anschrift_entity.get_street(),
                 postal_code=erp_anschrift_entity.get_postal_code(),
                 city=erp_anschrift_entity.get_city(),
-                land=erp_anschrift_entity.get_land(),
+                land=erp_anschrift_entity.get_land_iso2(),
                 email=erp_anschrift_entity.get_email(),
                 title=erp_ansprechpartner_entity.get_title(),
                 first_name=erp_ansprechpartner_entity.get_first_name(),
@@ -140,6 +140,12 @@ class ERPAdressenEntity(ERPAbstractEntity):
             range_end=[self.adrnr, 9999, 9999]
         )
         return contacts_range
+
+    def get_webshop_id(self):
+        return self.get_("WShopID")
+
+    def get_webshop_id_kz(self):
+        return self.get_("WShopAdrKz")
 
     def __repr__(self):
         return f'Adresse {self.get_adrnr()}'
