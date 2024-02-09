@@ -1,0 +1,78 @@
+<div class="accordion-item" id="accordion-item-{{ order.id }}">
+
+    <!-- Accordion Item Header -->
+    <h2 class="accordion-header" id="accordion-header-{{ order.id }}">
+
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#flush-collapse-{{ order.id }}" aria-expanded="false"
+                aria-controls="flush-collapse-{{ order.id }}">
+
+            <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_billing_address.land|lower }}"></span>&nbsp;
+            {{ order.order_number }}&nbsp;
+            {{ order.purchase_date.strftime('%d.%m.%Y %H:%M') }}
+            {{ order.customer.standard_billing_address.name1 }}
+            {{ order.customer.standard_billing_address.name2 }}
+            {% if order.customer.standard_billing_address.name1 == "Firma" %}
+            - {{ order.customer.standard_billing_address.get_title_firstname_lastname() }}
+            {% endif %}
+
+
+        </button>
+    </h2>
+
+    <!-- Accordion Item Body -->
+    <div class="accordion-collapse collapse" id="flush-collapse-{{ order.id }}">
+        <div class="accordion-body border border border-warning border-opacity-25">
+
+            <!-- Kunde + Bestellung-->
+            <div class="row">
+
+                <!-- Kundeninfos -->
+                <div class="col-8">
+                    <div class="row">
+                        <h3>Kunde: {{ order.customer.erp_nr }}</h3>
+
+                        <!-- Standard Billing Address -->
+                        <div class="col">
+                            {% with customer_address=order.customer.standard_billing_address %}
+                            <p>
+                                <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_billing_address.land|lower }}"></span>&nbsp;
+                                <strong>Rechnungsadresse</strong>
+                            </p>
+                            {% include 'bridge/customer/_includes/address.html' %}
+                            {% endwith %}
+                        </div>
+
+                        <!-- Standard Shipping Address -->
+                        <div class="col">
+                            {% with customer_address=order.customer.standard_shipping_address %}
+                            <p>
+                                <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_shipping_address.land|lower }}"></span>&nbsp;
+                                <strong>Lieferadresse</strong>
+                            </p>
+                            {% include 'bridge/customer/_includes/address.html' %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bestellinfos -->
+                <div class="col-4">
+                    <h3>Bestellung</h3>
+                    {% with order_details=order.order_details %}
+                    {% include 'bridge/order/_includes/order_details.html' %}
+                    {% endwith %}
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col">
+                    {% include 'bridge/order/_includes/_change_adr_nr.html' %}
+                </div>
+            </div>
+
+            {% include 'bridge/order/_includes/_states_dropdown.html' %}
+
+        </div>
+    </div>
+</div>
