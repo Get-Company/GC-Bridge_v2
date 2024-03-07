@@ -1,0 +1,39 @@
+---
+#
+# Tab Adresse
+#
+Status: Webshop-Kunde
+# SuchBeg: "CL"
+SuchBeg: "GCT"
+#
+# Tab Bank / Zahlungsmodalität
+#
+VsdArt: 10 # Parameter Versand/Arten Nr
+VsdZWeise: 1
+ZahlHBk:  0 # Parameter Abrechnung/Zahlungsarten
+ZahlBed: "14 Tage 2% - 30 Tage rein netto"
+SktoTg1: 14
+SktoSz1: 2,00
+NettoTg: 30
+#
+# Tab Kennzeichen
+#
+VtrNr: 99
+#
+# Tab Gesperrt / Händler / Euro
+# Geändert am 28.08.2023 - Nicht mehr notwendig den Kunden zu sperren
+GspKz: 0
+#
+# Tab Rabatt
+#
+RabKz: 1
+#
+# Tab Artikelvorgabe
+#
+ArtPrGrp: 0
+TextKz1: 1
+TextKz2: 0
+TextKz3: 0
+TextKz4: 0
+TextKz5: 0
+HistKz: 1
