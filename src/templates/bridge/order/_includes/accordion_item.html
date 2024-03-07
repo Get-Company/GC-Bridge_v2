@@ -8,13 +8,22 @@
                 aria-controls="flush-collapse-{{ order.id }}">
 
             <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_billing_address.land|lower }}"></span>&nbsp;
+
             {{ order.order_number }}&nbsp;
+
+            {% if order.order_state == 'open' %}
+            &nbsp;
+            <span class="fa-regular fa-star fa-beat text-success"></span>
+            &nbsp;
+            {% endif %}
+
             {{ order.purchase_date.strftime('%d.%m.%Y %H:%M') }}
             {{ order.customer.standard_billing_address.name1 }}
             {{ order.customer.standard_billing_address.name2 }}
             {% if order.customer.standard_billing_address.name1 == "Firma" %}
             - {{ order.customer.standard_billing_address.get_title_firstname_lastname() }}
             {% endif %}
+            - {{ order.marketplace.name}}
 
 
         </button>
@@ -32,27 +41,40 @@
                     <div class="row">
                         <h3>Kunde: {{ order.customer.erp_nr }}</h3>
 
-                        <!-- Standard Billing Address -->
+                        {% if order.customer.standard_billing_address == order.customer.standard_shipping_address %}
+                        <!-- Standard Billing and Shipping Address -->
                         <div class="col">
                             {% with customer_address=order.customer.standard_billing_address %}
                             <p>
                                 <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_billing_address.land|lower }}"></span>&nbsp;
-                                <strong>Rechnungsadresse</strong>
+                                <strong>Rechnungs- und Lieferanschrift</strong>
                             </p>
                             {% include 'bridge/customer/_includes/address.html' %}
                             {% endwith %}
                         </div>
+                        {% else %}
+                            <!-- Standard Billing Address -->
+                            <div class="col">
+                                {% with customer_address=order.customer.standard_billing_address %}
+                                <p>
+                                    <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_billing_address.land|lower }}"></span>&nbsp;
+                                    <strong>Rechnungsadresse</strong>
+                                </p>
+                                {% include 'bridge/customer/_includes/address.html' %}
+                                {% endwith %}
+                            </div>
 
-                        <!-- Standard Shipping Address -->
-                        <div class="col">
-                            {% with customer_address=order.customer.standard_shipping_address %}
-                            <p>
-                                <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_shipping_address.land|lower }}"></span>&nbsp;
-                                <strong>Lieferadresse</strong>
-                            </p>
-                            {% include 'bridge/customer/_includes/address.html' %}
-                            {% endwith %}
-                        </div>
+                            <!-- Standard Shipping Address -->
+                            <div class="col">
+                                {% with customer_address=order.customer.standard_shipping_address %}
+                                <p>
+                                    <span class="opacity-75 flag-icon flag-icon-{{ order.customer.standard_shipping_address.land|lower }}"></span>&nbsp;
+                                    <strong>Lieferadresse</strong>
+                                </p>
+                                {% include 'bridge/customer/_includes/address.html' %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -60,7 +82,7 @@
                 <div class="col-4">
                     <h3>Bestellung</h3>
                     {% with order_details=order.order_details %}
-                    {% include 'bridge/order/_includes/order_details.html' %}
+                    {% include 'bridge/order/_includes/_order_details.html' %}
                     {% endwith %}
                 </div>
             </div>
@@ -68,6 +90,16 @@
             <div class="row">
                 <div class="col">
                     {% include 'bridge/order/_includes/_change_adr_nr.html' %}
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col">
+                    <strong>Bestellung anlegen</strong>
+                    <br/>
+                    <button type="button"
+                            class="btn btn-sm btn-outline-success"
+                            @click="create_order_in_erp_by_bridge_order_id('{{order.id}}')">Anlegen</button>
                 </div>
             </div>
 
