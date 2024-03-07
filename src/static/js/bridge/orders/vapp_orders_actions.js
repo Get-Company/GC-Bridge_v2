@@ -9,7 +9,7 @@ const app_orders_actions = Vue.createApp({
             orderStates: [],
             paymentStates: [],
             shippingStates: [],
-            orders: [],
+            orders: []
         }
     },
     methods: {
@@ -219,14 +219,11 @@ const app_orders_actions = Vue.createApp({
          * For each situation, it calls fetchStateMachineTransitions method with necessary details if a state exists.
          */
         async fetchOrderStateName() {
-            // Fetch all elements with the class '.order-states'
             const orderStatesElements = document.querySelectorAll('.order-states');
 
             for (const element of orderStatesElements) {
-                // Fetch order API id from data attribute
                 const orderApiId = element.dataset.orderApiId;
 
-                // Fetch state details from each child element
                 const orderState = element.querySelector('.order-state').dataset.orderState;
                 const orderStateMachineId = element.querySelector('.order-state').dataset.orderStateMachineId;
                 const paymentState = element.querySelector('.payment-state').dataset.paymentState;
@@ -234,99 +231,225 @@ const app_orders_actions = Vue.createApp({
                 const shippingState = element.querySelector('.shipping-state').dataset.shippingState;
                 const shippingStateMachineId = element.querySelector('.shipping-state').dataset.shippingStateMachineId;
 
-                // Make asynchronous calls for each state
+                const promises = []; // Array to store Promises
+
+                // Instead of awaiting each operation, add them to the promises array
                 if (orderState) {
-                    await this.fetchStateMachineTransitions(orderState, orderStateMachineId, element, 'order');
+                    promises.push(this.fetchStateMachineTransitions(orderState, orderStateMachineId, element, 'order'));
                 }
                 if (paymentState) {
-                    await this.fetchStateMachineTransitions(paymentState, paymentStateMachineId, element, 'payment');
+                    promises.push(this.fetchStateMachineTransitions(paymentState, paymentStateMachineId, element, 'payment'));
                 }
                 if (shippingState) {
-                    await this.fetchStateMachineTransitions(shippingState, shippingStateMachineId, element, 'shipping');
+                    promises.push(this.fetchStateMachineTransitions(shippingState, shippingStateMachineId, element, 'shipping'));
                 }
-            }
-        },
 
-        async fetchStateMachineTransitions(stateName, stateMachineId, parentElement, category) {
-            if (!stateName) return; // Vermeide API-Aufruf, falls kein Zustandsname gesetzt ist
-
-            try {
-                const response = await fetch(`/api/orders/sw6/get_to_state_machine_transition_by_name/${stateName}/${stateMachineId}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                if (data.status === 'success') {
-                    console.log(`Erfolg state details`, data.message);
-                    console.log(data.data)
-                    // Hier aktualisierst du das Select-Feld basierend auf der Kategorie
-                    this.updateSelectOptions(parentElement, category, data.data);
-                } else {
-                    console.error(`Fehler beim Abrufen der state details:`, data.message);
-                }
-            } catch (error) {
-                console.error(`Fehler bei der Anfrage für state:`, error);
+                // Now wait for all promises to complete.
+                // This will run all the promises in parallel and wait for all of them to complete
+                await Promise.allSettled(promises);
             }
         },
 
         /**
-         * Updates the options of a select element based on the given data.
+         * Asynchronously fetches the transitions of a specific state machine, based on a state name and state machine Id,
+         * and updates select options using the resulting data.
          *
-         * @param {HTMLElement} parentElement - The parent element containing the select element.
-         * @param {string} category - The category of the select element.
-         * @param {Array} options - An array of objects representing the options.
-         *                          Each object should have properties 'actionName' and 'toStateMachineState'.
+         * The function will avoid making an API call if no state name is provided,
+         * and will log any encountered errors during its execution.
+         * If the fetched data has its status as success,
+         * the function then updates select options on the front end.
+         *
+         * @param {string} stateName - The name of the state whose transitions are to be fetched.
+         * @param {string} stateMachineId - The Id of the state machine whose transitions are to be fetched.
+         * @param {HTMLElement} parentElement - The parent element containing the to be updated select component.
+         * @param {string} category - The category of the select field to be updated.
          * @return {void}
+         */
+        async fetchStateMachineTransitions(stateName, stateMachineId, parentElement, category) {
+            if (!stateName) return; // Avoid API call if no stateName provided
+
+            try {
+                const response = await fetch(`/api/orders/sw6/get_to_state_machine_transition_by_name/${stateName}/${stateMachineId}`);
+
+                if (!response.ok) {
+                    this.$showToast('error', `Status für ${parentElement} konnte nicht gesetzt werden`);
+                    // Throwing an error in case of non-success HTTP status
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    console.log(`Successfully fetched state details`, data.message);
+
+                    // Updating the select field based on the category in case of success
+                    this.updateSelectOptions(parentElement, category, data.data);
+                } else {
+                    console.error(`Error fetching state details:`, data.message); // Log error message in case of unsuccessful fetch
+                }
+            } catch (error) {
+                console.error(`Error in request for state:`, error); // Log error message in case of exception
+            }
+        },
+
+        /**
+         * Function to update the options of a select element with provided options.
+         *
+         * @param {HTMLElement} parentElement - The parent HTML element hosting the select element.
+         * @param {string} category - The category to which the select element belongs.
+         * @param {Array} options - An array of option objects, each containing 'actionName' and 'toStateMachineState' properties.
+         * @returns {void}
          */
         updateSelectOptions(parentElement, category, options) {
             const select = parentElement.querySelector(`.${category}-state select`);
-            select.innerHTML = '<option value="" selected disabled>' + options[0].fromStateMachineState.name + '</option>'; // Setze eine leere Option und leere bestehende Optionen
+            // Set first option as default and clear existing options using options[0].fromStateMachineState.name
+            select.innerHTML = '<option value="" selected disabled>' + options[0].fromStateMachineState.name + '</option>';
             options.forEach(option => {
                 const optionElement = document.createElement('option');
-                optionElement.value = option.actionName; // Angenommen, deine Optionen haben eine 'value' Eigenschaft
-                optionElement.textContent = option.toStateMachineState.name; // und eine 'text' Eigenschaft
+                // Assume your options have a 'value' property
+                optionElement.value = option.actionName;
+                // And a 'text' property
+                optionElement.textContent = option.toStateMachineState.name;
+                // Append the created option element to the select
                 select.appendChild(optionElement);
             });
-
-            // Entferne den Spinner
+            // Fetch the spinner element
             const spinner = parentElement.querySelector('.spinner-grow');
+            // If spinner exists, remove it from the DOM
             if (spinner) {
-                spinner.remove(); // Entferne den Spinner aus dem DOM
+                spinner.remove();
             }
-
-            // Aktiviere das Select-Feld wieder
+            // Enable the select field
             select.disabled = false;
         },
 
         /**
-         * Changes the state of an order based on the selected action.
+         * Responds to a UI event by changing the state of an order.
+         * Logs the order ID, action, and category, shows a confirmation toast,
+         * and triggers the order state change.
          *
-         * @param {Event} event - The event object that triggered the change.
-         * @param {number} sw6OrderId - The ID of the order in the SW6 system.
-         * @param {number} bridgeOrderId - The ID of the order in the bridge system.
-         * @param {string} category - The category of the order.
+         * @param {Event} event - The event triggered on the UI.
+         * @param {number} sw6OrderId - The order's ID in the SW6 system.
+         * @param {number} bridgeOrderId - The order's ID in the bridge system.
+         * @param {string} category - The order's category (could be 'order', 'payment', or 'shipping').
          * @return {void}
          */
-        onSelectChangeState(event, sw6OrderId, bridgeOrderId, category) {
-            const actionName = event.target.value; // Wert des ausgewählten <option>
-            console.log(`Order ID: ${orderId}, Action: ${actionName}, Category: ${category}`);
-            // Implementiere hier die Logik, um den Zustand zu ändern
-            this.changeOrderState(orderId, actionName, category);
+        async onSelectChangeState(event, sw6OrderId, bridgeOrderId, category) {
+            const actionName = event.target.value; // The chosen action.
+
+
+            // Log formatted order details.
+            console.log(`Order ID: ${sw6OrderId}, Action: ${actionName}, Category: ${category}`);
+
+            // Show a confirmation toast.
+            this.$showToast('success', `Status <strong>"${category}"</strong> wird auf <strong>"${actionName}"</strong> geändert`);
+
+            // Perform the state change.
+            event.target.disabled = true;
+            await this.changeOrderState(sw6OrderId, bridgeOrderId, actionName, category);
+            event.target.disabled = false;
         },
 
         /**
-         * Asynchronously changes the state of an order based on the action and category given.
+         * Changes the state of an order by sending a GET request to the proper API endpoint.
          *
-         * @param {string} orderId - The ID of the order.
-         * @param {string} actionName - The name of the action to be carried out on the order.
-         * @param {string} category - The category of the order.
+         * @param {number} sw6OrderId - The order's ID in the SW6 system.
+         * @param {number} bridgeOrderId - The order's ID in the bridge system.
+         * @param {string} actionName - The action name to set.
+         * @param {string} category - The order's category (could be 'order', 'payment', or 'shipping').
+         * @return {void}
          */
-        async changeOrderState(orderId, actionName, category) {
-            // Running asynchronous operation to change state such as an API request
-            console.log(`Changing state of ${category} for order ${orderId} to ${actionName}`);
+        async changeOrderState(sw6OrderId, bridgeOrderId, actionName, category) {
+            console.log(`Changing state of ${category} for order ${sw6OrderId} to ${actionName}`);
+            let endpoint;
+            switch(category) {
+                case 'order':
+                    endpoint = `/api/orders/sw6/order/${sw6OrderId}/state/${actionName}`;
+                    break;
+                case 'payment':
+                    endpoint = `/api/orders/sw6/order_transaction/${sw6OrderId}/state/${actionName}`;
+                    break;
+                case 'shipping':
+                    endpoint = `/api/orders/sw6/order_delivery/${sw6OrderId}/state/${actionName}`;
+                    break;
+                default:
+                    console.log(`Unknown category: ${category}`);
+                    return;
+            }
 
-            // Implement your asynchronous API call here
+            try {
+                const response = await fetch(endpoint, { method: 'PATCH' });
+                if(response.ok) {
+                    const data = await response.json();
+                    console.log(data.message);
+                    this.$showToast('success', `Status <strong>"${category}"</strong> for order ${sw6OrderId} changed to <strong>"${actionName}"</strong>`);
+                    await this.syncOrderToBridge(sw6OrderId);
+
+                } else {
+                    console.log(`Error with HTTP request: ${response.statusText}`);
+                    this.$showToast('error', `Failed to change status of <strong>"${category}"</strong> for order ${sw6OrderId}`);
+                }
+            } catch(error) {
+                console.error(`Fetch error: ${error}`);
+                this.$showToast('error', `Fetch error: ${error}`);
+            }
         },
+        /**
+         * Syncs an order to the bridge system by sending a PUT request to the proper API endpoint.
+         *
+         * @param {number} sw6OrderId - The order's ID in the SW6 system.
+         * @return {void}
+         */
+        async syncOrderToBridge(sw6OrderId) {
+            console.log(`Syncing SW6 Order ${sw6OrderId} to the bridge system.`);
+            let endpoint = `/api/orders/sw6/sync_one_to_bridge/${sw6OrderId}`;
+
+            try {
+                const response = await fetch(endpoint, { method: 'PATCH' });
+                if(response.ok) {
+                    const data = await response.json();
+                    console.log(data.message);
+                    this.$showToast('success', data.message);
+                } else {
+                    const data = await response.json();
+                    console.log(`Error with HTTP request: ${response.statusText}`);
+                    this.$showToast('error', data.message);
+                }
+            } catch(error) {
+                console.error(`Fetch error: ${error}`);
+                this.$showToast('error', `Fetch error: ${error}`);
+            }
+        },
+
+        async create_order_in_erp_by_bridge_order_id(order_id) {
+            // Call the Flask API endpoint
+            try {
+                const response = await fetch(
+                    `/api/orders/erp/create_order/${order_id}`,
+                    { method: "POST" }
+                );
+
+                // Get the result from the response to acquire the message
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Show error toast with message from the server
+                    this.$showToast('error', result.message);
+                    throw new Error(result.message);
+                }
+
+                // Show success toast with message from the server
+                this.$showToast('success', result.message);
+            } catch (error) {
+                console.error("There was a problem with the fetch operation:", error);
+                // If the error is not from the server, show a generic error message
+                if (!error.message.includes('No order found') || !error.message.includes('Bestellung')) {
+                    this.$showToast('error', `Fehler: ${error.message}`);
+                }
+            }
+        }
+
+
 
     },
     mounted() {
