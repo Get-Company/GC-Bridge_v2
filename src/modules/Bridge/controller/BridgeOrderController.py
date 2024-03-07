@@ -19,7 +19,7 @@ class BridgeOrderController(BridgeAbstractController):
             print("No orders found")
             return None
 
-    def get_orders_by_date(self, start_date=None, end_date=None):
+    def get_orders_by_date(self, start_date=None, end_date=None, all_orders=False):
         # Implementieren Sie Ihre Logik hier, um die Daten zu filtern
         # basierend auf start_date, end_date, oder beiden
         # Beispiel:
@@ -41,4 +41,11 @@ class BridgeOrderController(BridgeAbstractController):
         if end_date:
             query = query.filter(BridgeOrderEntity.purchase_date <= end_date)
 
-        return query.all(), start_date, end_date
+        if not all_orders:
+            query = query.filter(BridgeOrderEntity.order_state == "open")
+
+        return query.all(), start_date, end_date, all_orders
+
+    def delete_all_orders(self):
+        self.get_entity().query.delete()
+        self._commit_and_close()
