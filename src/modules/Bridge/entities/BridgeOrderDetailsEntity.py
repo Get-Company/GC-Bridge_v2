@@ -9,10 +9,12 @@ class BridgeOrderDetailsEntity(db.Model):
     api_id = db.Column(db.CHAR(36), nullable=False)
     api_order_id = db.Column(db.CHAR(36), nullable=False)
     erp_nr = db.Column(db.String(255), nullable=False)
-    price = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.String(255), nullable=True)
+    unit_price = db.Column(db.Float, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(255), nullable=False)
-    tax = db.Column(db.Float, nullable=False)
+    tax = db.Column(db.Float, nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.datetime.now)
     edited_at = db.Column(db.DateTime, nullable=False, default=datetime.datetime.now)
@@ -20,7 +22,7 @@ class BridgeOrderDetailsEntity(db.Model):
     # Relations
 
     order = db.relationship('BridgeOrderEntity', back_populates='order_details')
-    order_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id'))
+    order_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id', ondelete='CASCADE'))
     product = db.relationship('BridgeProductEntity', back_populates='order_details')
     product_id = db.Column(db.Integer, db.ForeignKey('bridge_product_entity.id'))
 
@@ -62,11 +64,23 @@ class BridgeOrderDetailsEntity(db.Model):
     def set_api_order_id(self, api_order_id):
         self.api_order_id=api_order_id
 
-    def get_price(self):
-        return self.price
+    def get_unit_price(self):
+        return self.unit_price
 
-    def set_price(self, value):
-        self.price = value
+    def set_unit_price(self, unit_price):
+        self.unit_price = unit_price
+
+    def get_unit(self):
+        return self.unit
+
+    def set_unit(self, unit):
+        self.unit = unit
+
+    def get_total_price(self):
+        return self.total_price
+
+    def set_total_price(self, total_price):
+        self.total_price = total_price
 
     def get_quantity(self):
         return self.quantity
@@ -118,7 +132,8 @@ class BridgeOrderDetailsEntity(db.Model):
             self.set_erp_nr(bridge_entity_new.get_erp_nr())
             self.set_api_id(bridge_entity_new.get_api_id())
             self.set_api_order_id(bridge_entity_new.get_api_order_id())
-            self.set_price(bridge_entity_new.get_price())
+            self.set_unit_price(bridge_entity_new.get_unit_price())
+            self.set_total_price(bridge_entity_new.get_total_price())
             self.set_quantity(bridge_entity_new.get_quantity())
             self.set_name(bridge_entity_new.get_name())
             self.set_tax(bridge_entity_new.get_tax())
