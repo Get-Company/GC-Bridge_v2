@@ -1,4 +1,4 @@
-import logging
+import logging, logging.handlers
 import re
 from datetime import datetime
 
@@ -20,31 +20,32 @@ class ModulesCoreController(ABC):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.setup_logging()
 
+    import logging.handlers
 
     def setup_logging(self):
         """
-        Sets up the logging for this class. Creates a time-based rotating log file in specified directory.
+        Sets up the logging for this class.
         """
+        self.logger.setLevel(logging.DEBUG)
+        self._ensure_log_directory_exists()
 
-        # Ensure log directory exists
+        file_handler = self._setup_file_handler('application')
+
+        self.logger.addHandler(file_handler)
+
+    def _ensure_log_directory_exists(self):
         if not os.path.exists('log'):
             os.makedirs('log')
 
-        # Create a timed rotating file handler
-        # USe the current date in the filename
-        date_str = datetime.now().strftime("%Y-%m-%d")
-        log_filename = os.path.join('log', f'application_{date_str}.log')
-        fh = logging.FileHandler(log_filename)
+    def _setup_file_handler(self, basename):
+        log_filename = os.path.join('log', f'{basename}.log')
+        fh = logging.handlers.TimedRotatingFileHandler(log_filename, when="midnight", interval=1)
         fh.setLevel(logging.DEBUG)
 
-        # Create a formatter
         formatter = logging.Formatter('%(asctime)s - %(name)s.%(funcName)s - %(levelname)s - %(message)s')
-
-        # Add formatter to the handler
         fh.setFormatter(formatter)
 
-        # Add the handler to the logger
-        self.logger.addHandler(fh)
+        return fh
 
     # SQL Alchemy Method
     def set_null(self):
