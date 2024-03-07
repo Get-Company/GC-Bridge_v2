@@ -31,9 +31,8 @@ class SW6CustomerEntity(SW6AbstractEntity):
                 f"SW6 {sw6_json_data['customerNumber']} Customer could not be mapped to BridgeCustomerEntity: {e}")
 
     def map_bridge_to_sw6(self, bridge_entity):
-        payload = {
-            'groupId': self.get_group_id(bridge_entity)
-        }
+        # Todo: Is it neccessary to upfate the customer to sw6?
+        pass
 
     def get_api_customer_address_details_by_customer_id(self, id):
         payload = Criteria()
@@ -96,8 +95,6 @@ class SW6CustomerEntity(SW6AbstractEntity):
             return endpoint
         else:
             self.logger.error(f"Customer with id: {customer_id} not found. Could not patch 'customerNumber' to {new_customer_nr}.")
-
-
 
 
 class SW6CustomerAddressEntity(SW6AbstractEntity):
