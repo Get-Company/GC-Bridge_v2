@@ -214,13 +214,34 @@ class BridgeCustomerAddressEntity(db.Model):
 
     # Getter and Setter for erp_combined_id
     def get_erp_combined_id(self):
-        return self.erp_combined_id
+        if self.erp_combined_id:
+            return self.erp_combined_id
+        else:
+            return None
 
-    def set_erp_combined_id(self, erp_combined_id):
+    def get_id_for_erp_adresse_from_combined_id(self):
+        if self.erp_combined_id:
+            return self.erp_combined_id.split(';')[0]
+        else:
+            return None
+
+    def get_id_for_erp_anschrift_from_combined_id(self):
+        if self.erp_combined_id:
+            return self.erp_combined_id.split(';')[1]
+        else:
+            return None
+
+    def get_id_for_erp_ansprechpartner_from_combined_id(self):
+        if self.erp_combined_id:
+            return self.erp_combined_id.split(';')[2]
+        else:
+            return None
+
+    def set_erp_combined_id(self, erp_adresse_id, erp_anschrift_id, erp_ansprechpartner_id):
         try:
-            if not erp_combined_id:
-                raise ValueError("ERP combined ID cannot be empty.")
-            self.erp_combined_id = erp_combined_id
+            if not all([erp_adresse_id, erp_anschrift_id, erp_ansprechpartner_id]):
+                raise ValueError("All ERP IDs (Adresse, Anschrift, Ansprechpartner) must be provided.")
+            self.erp_combined_id = f"{erp_adresse_id};{erp_anschrift_id};{erp_ansprechpartner_id}"
         except ValueError as e:
             print(f"Error setting erp_combined_id: {e}")
 
