@@ -60,6 +60,18 @@ class SW6OrderEntity(SW6AbstractEntity):
 
         return endpoint
 
+    def get_api_order_details_transactions_and_deliveries_by_order_id(self, id):
+        payload = Criteria()
+        payload.associations["transactions"] = Criteria()
+        payload.associations["deliveries"] = Criteria()
+
+        payload.includes["order"] = ['id', "transactions", "deliveries"]
+
+        payload.limit = 1
+
+        result = self.sw6_client.request_post(f"/search/{self._endpoint_name}", payload=payload)
+        return result
+
     def get_api_order_states_by_order_id(self, id):
         payload = Criteria()
         payload.filter.append(EqualsFilter(field='id', value=id))
@@ -98,9 +110,10 @@ class SW6OrderEntity(SW6AbstractEntity):
         payload.filter.append(EqualsFilter(field='stateMachineId', value=state_machine_id))
 
         payload.associations['fromStateMachineTransitions'] = Criteria()
-        payload.associations['toStateMachineTransitions'] = Criteria()
+        payload.associations['fromStateMachineTransitions'] = Criteria()
 
         result_list = self.sw6_client.request_post("search/state-machine-state", payload=payload)
+    
         return result_list
 
     def get_api_state_machine_transition_by_(self, state_machine_state_id, state_machine_id):
@@ -118,7 +131,22 @@ class SW6OrderEntity(SW6AbstractEntity):
         results = self.sw6_client.request_get("/state-machine")
         return results
 
+    def patch_api_change_order_state(self, order_id, action_name):
+        results = self.sw6_client.request_post(f"_action/order/{order_id}/state/{action_name}")
+        return results
 
+    def patch_api_change_order_transaction_state(self, order_id, action_name):
+        # Todo: On change to in progress, the address of the customer vanishes?!
+        result_states = self.get_api_order_details_transactions_and_deliveries_by_order_id(id=order_id)
+        order_transaction_id = result_states['data'][0]['transactions'][0]['id']
+        results = self.sw6_client.request_post(f"_action/order_transaction/{order_transaction_id}/state/{action_name}")
+        return results
+
+    def patch_api_change_order_delivery_state(self, order_id, action_name):
+        result_states = self.get_api_order_details_transactions_and_deliveries_by_order_id(id=order_id)
+        order_delivery_id = result_states['data'][0]['deliveries'][0]['id']
+        results = self.sw6_client.request_post(f"_action/order_delivery/{order_delivery_id}/state/{action_name}")
+        return results
 
 
     """ 
