@@ -72,7 +72,6 @@ class SW6CustomerController(SW6AbstractController):
 
         return customer_id
 
-
     def set_relations(self, bridge_entity, sw6_json_data):
         # 1. Marketplace
         bridge_entity = self._set_marketplace_relation(bridge_entity, sw6_json_data)
