@@ -124,9 +124,12 @@ class ERPArtikelEntity(ERPAbstractEntity):
             self.logger.error(f"Error on converting '{value}' into an Integer for stock quantity.")
             return None
 
-    def get_unit(self):
+    def get_unit(self, raw=False):
         """
-        Fetches the unit from the dataset, removes '% ' if present.
+        Fetches the unit from the dataset.
+        If raw is False, the '% ' will be removed if present.
+        In ERPVorgangEntity the unit forwarded to ERP, where we will need the '%'
+        :param raw: If True the unit will be returned with '%'
         :return: Unit or empty string if not found.
         """
         try:
@@ -134,7 +137,8 @@ class ERPArtikelEntity(ERPAbstractEntity):
             if einheit is None:
                 self.logger.warning("Unit is empty.")
                 return ""
-            einheit = einheit.replace("% ", "")
+            if not raw:
+                einheit = einheit.replace("% ", "")
             return einheit
         except Exception as e:
             self.logger.error(f"An error occurred while retrieving the unit: {str(e)}")
