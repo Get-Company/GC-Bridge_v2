@@ -4,6 +4,6 @@
             {% if order_detail.product.medias %}
                 <img class="img-fluid rounded" width="50px" src="https://assets.classei.de/img/{{ order_detail.product.medias[0].file_name }}.{{ order_detail.product.medias[0].file_type }}" />
             {% endif %}
-            {{ order_detail.erp_nr }} x {{ order_detail.quantity }}</li>
+            {{ order_detail.erp_nr }} x {{ order_detail.quantity }} = {{order_detail.total_price }}</li>
     {% endfor %}
 </ul>
