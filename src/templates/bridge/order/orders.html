@@ -26,7 +26,7 @@ GC-Bridge 2 - Bestellungen
 <div id="vapp_orders" class="row">
     <div class="col m-2 p-2 border border-success border-opacity-25 rounded">
         <h5>Holen</h5>
-        <button class="btn btn-sm btn-info" @click="api_orders_sw6_get_open_ids">Bestellungen abrufen</button>
+        <button class="btn btn-sm btn-outline-success" @click="api_orders_sw6_get_open_ids">Bestellungen abrufen</button>
 
         {% include '_includes/_toast.html' %}
 
@@ -38,19 +38,24 @@ GC-Bridge 2 - Bestellungen
         <h5>Anzeigen</h5>
         {% set url = '/orders' %} {% set button_text = 'Bestellungen filtern' %}
         {% set start_date=filter_start_date %} {% set end_date=filter_end_date %}
-        {% include '_includes/_start_end_date_form.html' %}
+        {% include 'bridge/order/_includes/_start_end_date_form.html' %}
+
     </div>
 </div>
 
 <div id="vapp_orders_actions" class="row mt-4">
     <div class="row">
         {% for order in orders %}
-        <!-- Start Accordion Order Wrapper -->
-        <div class="accordion accordion-flush">
-            <!-- Accordion Item Order No. {{ order.id }} -->
-            {% include 'bridge/order/_includes/accordion_item.html' with context %}
-        </div>
-        <!-- End Accordion Order Wrapper -->
+            {% if order.customer %}
+                <!-- Start Accordion Order Wrapper -->
+                <div class="accordion accordion-flush">
+                    <!-- Accordion Item Order No. {{ order.id }} -->
+                    {% include 'bridge/order/_includes/accordion_item.html' with context %}
+                </div>
+            <!-- End Accordion Order Wrapper -->
+            {% else %}
+                <p>Bestellung {{order.id}} | {{order.order_number}} hat keinen Kunden. Zuweisung fehlgeschlagen</p>
+            {% endif %}
         {% endfor %}
     </div>
 </div>
