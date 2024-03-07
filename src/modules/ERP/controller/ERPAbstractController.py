@@ -10,6 +10,7 @@ from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 
 class ERPAbstractController(ERPCoreController):
     """
+
     Abstract Controller class for ERP dataset operations.
 
     The Abstract Controller Class holds all general methods and attributes, which are needed for
@@ -75,7 +76,7 @@ class ERPAbstractController(ERPCoreController):
 
     """     
     Abstract Methods, defined in ModulesCoreController
-    These Methods must bes overwritten. If there is no use of it simply do a pass!
+    These Methods must be overwritten. If there is no use of it simply do a pass!
     """
 
     @abstractmethod
@@ -208,7 +209,7 @@ class ERPAbstractController(ERPCoreController):
 
     # Direction to ERP
     def downsert(self, bridge_entity):
-        pass
+        erp_entity = self.get_entity().map_bridge_to_erp(bridge_entity=bridge_entity)
 
     @abstractmethod
     def is_in_db(self, bridge_entity_new):
@@ -241,5 +242,4 @@ class ERPAbstractController(ERPCoreController):
                 bridge_entity.media.append(media)
 
         return bridge_entity
-
 
