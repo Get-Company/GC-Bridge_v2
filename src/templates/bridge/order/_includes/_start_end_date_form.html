@@ -5,6 +5,7 @@ value_start
 value_end
 #}
     <form class="row gx-3 align-items-center" action="{{ url }}" method="get">
+        <div class="form-check">
         <div class="col-auto">
             <label class="visually-hidden" for="start_date">Startdatum</label>
             <input
@@ -12,7 +13,9 @@ value_end
                     class="form-control-sm"
                     id="start_date"
                     name="start_date"
-                    value="{{ start_date.strftime('%Y-%m-%dT%H:%M') }}"
+                    {% if start_date %}
+                        value="{{ start_date.strftime('%Y-%m-%dT%H:%M') }}"
+                    {% endif %}
                     placeholder="Startdatum">
         </div>
         <div class="col-auto">
@@ -22,10 +25,19 @@ value_end
                     class="form-control-sm"
                     id="end_date"
                     name="end_date"
-                    value="{{ end_date.strftime('%Y-%m-%dT%H:%M') }}"
+                    {% if end_date %}
+                        value="{{ end_date.strftime('%Y-%m-%dT%H:%M') }}"
+                    {% endif %}
                     placeholder="Enddatum">
         </div>
         <div class="col-auto">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="all_orders" name="all_orders" value="true" {%if all_orders%}checked{%endif%}>
+                <label class="form-check-label" for="flexSwitchCheckDefault">Alle Bestellungen</label>
+            </div>
+        </div>
+        <div class="col-auto">
             <button type="submit" class="btn btn-outline-secondary btn-sm">{{ button_text }}</button>
+        </div>
         </div>
     </form>
