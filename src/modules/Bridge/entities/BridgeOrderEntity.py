@@ -34,11 +34,13 @@ class BridgeOrderEntity(db.Model):
     marketplace = db.relationship('BridgeMarketplaceEntity', back_populates='orders')
     marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_marketplace_entity.id'))
 
-    order_details = db.relationship('BridgeOrderDetailsEntity', back_populates='order')
-
+    order_details = db.relationship('BridgeOrderDetailsEntity', back_populates='order', cascade="all,delete-orphan")
 
     def __repr__(self):
-        return f"Order No: {self.order_number} with a total of {self.total_price}"
+        if self.order_number:
+            return f"Order No: {self.order_number} with a total of {self.total_price}."
+        else:
+            return "BridgeOrderEntity instantiated, data not filled yet."
 
     # id
     def get_id(self):
@@ -266,8 +268,8 @@ class BridgeOrderEntity(db.Model):
             self.set_erp_order_id(bridge_entity_new.get_erp_order_id())
             self.set_order_state(bridge_entity_new.get_order_state())
             self.set_shipping_state(bridge_entity_new.get_shipping_state())
-            self.set_payment_state(self.get_payment_state())
-            self.set_purchase_date(self.get_purchase_date())
+            self.set_payment_state(bridge_entity_new.get_payment_state())
+            self.set_purchase_date(bridge_entity_new.get_purchase_date())
             self.set_edited_at(datetime.datetime.now())
 
             return self
