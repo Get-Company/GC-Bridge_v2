@@ -22,6 +22,7 @@ from typing import List, Union, Tuple, Any, Dict
 import os
 from abc import abstractmethod
 import requests
+import yaml
 
 from ..ERPCoreController import ERPCoreController
 from ..controller.ERPConnectionController import ERPConnectionController
@@ -63,8 +64,46 @@ class ERPAbstractEntity(ERPCoreController):
             erp_co_ctrl = ERPConnectionController()
 
             self._erp = erp_co_ctrl.get_erp()
-            self._erp_special_objects = erp_co_ctrl.special_objects_dict
-            self._erp_app_var = erp_co_ctrl.app_variablen_dict
+            self._erp_special_objects = {
+                "soLager": 0,
+                "soVorgang": 1,
+                "soDokumente": 2,
+                "soKontenAnalyse": 3,
+                "soAppObject": 4,
+                "soWandeln": 5,
+                "soDoublette": 6,
+                "soEvents": 7,
+                "soNachricht": 8,
+                "soVariablen": 9,
+                "soDrucken": 10,
+                "soBanking": 11,
+                "soBuchungen": 12,
+                "soEBilanz": 13,
+                "soOffenePosten": 14,
+                "soZahlungsverkehr": 15,
+                "soAusgabeVerzeichnis": 16,
+                "soTableDefinition": 17,
+                "soAdrSpezPr": 18,
+                "soModificationMonitor": 19,
+                "soProjekte": 20
+            }
+            self._erp_app_var = {
+                "ArtikelVerkaufspreise": 0,
+                "ArtikelVarianten": 1,
+                "ArtikelRabattsaetze": 2,
+                "ArtikelBilder": 3,
+                "ArtikelBezeichnungen": 4,
+                "ArtikelKategorien": 5,
+                "FreieArtikelKategorien": 6,
+                "ArtikelGewicht": 7
+            }
+            self._edit_objects_dict = {
+                "etTreeChecker": 0,
+                "etStrings": 1,
+                "etBetragGrp": 2,
+                "etRichText": 3,
+                "etImage": 4
+            }
 
             #2 Fetch information about all datasets
             self._dataset_infos = None
@@ -85,7 +124,6 @@ class ERPAbstractEntity(ERPCoreController):
             # Set the filter
             if filter_expression:
                 self.set_filter(filter_expression=filter_expression)
-
 
             # initialize Search Value as Empty:
             self._search_value = None
@@ -165,7 +203,6 @@ class ERPAbstractEntity(ERPCoreController):
             dataset_infos = self._erp.DatasetInfos
             if dataset_infos:
                 self._dataset_infos = dataset_infos
-                self.logger.info(f"Dataset information is set.")
             else:
                 raise ValueError("Unable to fetch dataset information from ERP.")
         except ValueError as e:
@@ -199,7 +236,6 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             if dataset_name:
                 self._dataset_name = dataset_name
-                self.logger.info(f"Dataset Name is set to: '{dataset_name}'")
             else:
                 raise ValueError("Provided dataset name is None or empty.")
         except ValueError as e:
@@ -264,7 +300,6 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             if self.get_dataset_name():
                 self._created_dataset = self._dataset_infos.Item(self.get_dataset_name()).CreateDataSet()
-                self.logger.info(f"Set {self.get_dataset_name()} as created dataset")
             else:
                 raise ValueError("Dataset name is not set. Cannot create dataset.")
         except Exception as e:
@@ -301,7 +336,6 @@ class ERPAbstractEntity(ERPCoreController):
         """
         try:
             self._search_value = search_value
-            self.logger.info(f"Search Value is set to: {search_value}")
         except Exception as e:
             self.logger.error(f"Error setting search value: {str(e)}")
             raise
@@ -533,7 +567,7 @@ class ERPAbstractEntity(ERPCoreController):
             self.set_cursor()
             return False
 
-    def set_(self, field_name: str, value: Union[str, int, float, bool, datetime]) -> bool:
+    def set_(self, field_name: str, value: Union[str, int, float, bool, datetime], cast_type=None) -> bool:
         """
         Set the value of a specific field in the current record of the dataset.
 
@@ -545,44 +579,21 @@ class ERPAbstractEntity(ERPCoreController):
             bool: True if the value was set successfully, False otherwise.
         """
         # self.start_transaction()
-        self.edit_()
+        # self.edit_()
 
         try:
-            field = self._created_dataset.Fields(field_name)
-            if field:
-                result = self.field_writer(field, value)
-                if result:
-                    self.logger.info(f"Value '{value}' set in field '{field_name}' of DataSet '{self.get_dataset_name()}'.")
-                    self.post()
-                else:
-                    print(f"Couldn't write {value} to field {field}")
-                return True
+            if isinstance(value, datetime):
+                value = value.strftime("%d.%m.%Y %H:%M:%S.%f")
+
+            result = self.field_writer(field_name, value, cast_type)
+            if result:
+                self.logger.info(f"Value '{value}' set in field '{field_name}' of DataSet '{self.get_dataset_name()}'.")
+                # self.post()
+            else:
+                print(f"Couldn't write {value} to field {field_name}")
+            return True
         except Exception as e:
             self.logger.error(f"Error while setting value '{value}' to field '{field_name}' of DataSet '{self.get_dataset_name()}': {e}")
-
-        return False
-
-    # First start transaction. The datasets are blocked
-    def post(self) -> bool:
-        """
-        Commit changes made to the current record of the dataset.
-
-        Returns:
-            bool: True if changes were committed successfully, False otherwise.
-        """
-
-        try:
-            dataset_state = self.get_dataset_state()
-            if dataset_state in [2, 3]:  # 2 is Edit, 3 is Insert
-                self._created_dataset.Post()
-                self.set_dataset_state()
-                self.logger.info(f"Changes to DataSet '{self.get_dataset_name()}' have been successfully committed from '{dataset_state}' state.")
-                return True
-            else:
-                self.logger.info(f"DataSet '{self.get_dataset_name()}' is in '{dataset_state}' state, no changes to commit.")
-        except Exception as e:
-            self.logger.error(f"Error while committing changes to DataSet '{self.get_dataset_name()}': {e}")
-            self.rollback()  # If there's an error, rollback any changes
 
         return False
 
@@ -604,13 +615,15 @@ class ERPAbstractEntity(ERPCoreController):
             self.logger.error(f"An error occurred while checking the transaction status for dataset '{self._dataset_name}': {str(e)}")
             raise
 
+    # Starting a transaction with the dataset.
     def start_transaction(self):
         """
-        Begin a database transaction for the current dataset.
+        Begin a database transaction with the current dataset.
 
-        This function locks the current dataset for exclusive use, ensuring data integrity during
-        operations that involve multiple steps. The transaction continues until a 'post' method
-        (commit) is called or the transaction is explicitly rolled back.
+        This method locks the current dataset for exclusive use,
+        ensuring data integrity during operations that involve multiple steps.
+        The transaction continues until it's explicitly committed using 'commit' method,
+        or rolled back using 'rollback' method.
 
         Returns:
             None
@@ -631,12 +644,14 @@ class ERPAbstractEntity(ERPCoreController):
             self.logger.warning(message)
             raise Exception(message)
 
+    # Setting the dataset to edit mode.
     def edit_(self):
         """
         Set the current dataset to edit mode.
 
-        This function allows modifications to be made to the current dataset record.
-        After making changes, one would typically call a 'post' method to save the changes.
+        This method allows modifications to be made to the current dataset record.
+        After making changes, 'post' method should be called to save the changes.
+        In case of an error during posting, 'cancel' method should be called to undo the changes.
 
         Returns:
             None
@@ -650,6 +665,97 @@ class ERPAbstractEntity(ERPCoreController):
             self.logger.info(f"Dataset '{self._dataset_name}' has been set to edit mode. Mode: {self._created_dataset.State}")
         except Exception as e:
             self.logger.error(f"An error occurred while setting the dataset '{self._dataset_name}' to edit mode: {str(e)}")
+            raise
+
+    # Committing changes made to the current dataset.
+    def post(self) -> bool:
+        """
+        Commit changes made to the current record of the dataset.
+
+        This method saves all the insertions, edits, and deletions made since the start of the transaction.
+        If it encounters an error, the 'cancel' method is called to discard these changes.
+
+        Returns:
+            bool: True if changes were committed successfully, False otherwise.
+        """
+
+        try:
+            dataset_state = self.get_dataset_state()
+            if dataset_state in [2, 3]:
+                self._created_dataset.Post()
+                self.set_dataset_state()
+                self.logger.info(f"Changes to DataSet '{self.get_dataset_name()}' have been successfully posted from '{dataset_state}' state.")
+                return True
+            else:
+                self.logger.info(f"DataSet '{self.get_dataset_name()}' is in '{dataset_state}' state, no changes to post.")
+        except Exception as e:
+            self.logger.error(f"Error while posting changes to DataSet '{self.get_dataset_name()}': {e}")
+            self.cancel()
+
+        return False
+
+    # Cancelling changes made to the current dataset.
+    def cancel(self):
+        """
+        Cancel changes made to the current dataset during a transaction.
+
+        This method discards all the insertions, edits, and deletions made since the start of the transaction.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If there's an issue cancelling changes to the dataset.
+        """
+        try:
+            self._created_dataset.Cancel()
+            self.set_dataset_state()
+            self.logger.info(f"Changes cancelled for dataset '{self._dataset_name}'. Lock released.")
+        except Exception as e:
+            self.logger.error(f"An error occurred while cancelling changes to the dataset '{self._dataset_name}': {str(e)}")
+            raise
+
+    # Committing the transaction.
+    def commit(self):
+        """
+        Commit changes made to the current dataset during a transaction.
+
+        This method makes all changes since the start of the transaction permanent.
+        If it encounters an error, it calls the 'rollback' method to discard these changes and terminate the transaction.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If there's an issue committing changes to the dataset.
+        """
+        try:
+            self._created_dataset.Commit()
+            self.set_dataset_state()
+            self.logger.info(f"Transaction committed and changes saved for dataset '{self._dataset_name}'. Lock released.")
+        except Exception as e:
+            self.logger.error(f"An error occurred while committing changes to the dataset '{self._dataset_name}': {str(e)}. Initiating rollback...")
+            self.rollback()
+
+    # Rolling back changes made to the current dataset.
+    def rollback(self):
+        """
+        Roll back changes made to the current dataset during a transaction.
+
+        This method discards all changes made to the dataset since the start of the transaction and terminates the transaction.
+
+        Returns:
+            None
+
+        Raises:
+            Exception: If there's an issue rolling back changes to the dataset.
+        """
+        try:
+            self._created_dataset.Rollback()
+            self.set_dataset_state()
+            self.logger.info(f"Changes rolled back for dataset '{self._dataset_name}'. Lock released.")
+        except Exception as e:
+            self.logger.error(f"An error occurred while rolling back changes to the dataset '{self._dataset_name}': {str(e)}")
             raise
 
     def append(self):
@@ -673,47 +779,33 @@ class ERPAbstractEntity(ERPCoreController):
             self.logger.error(f"An error occurred while preparing to add a new record to the dataset '{self._dataset_name}': {str(e)}")
             raise
 
-    def commit(self):
-        """
-        Commit changes made to the current dataset during a transaction.
+    def delete(self):
+        try:
+            self._created_dataset.Delete()
+        except Exception as e:
+            self.logger.error(f"Deleting of {self._dataset_name} with {self._dataset_index}:{self._search_value} not possible.")
+            raise
 
-        This function saves all changes made to the dataset since the start of the transaction
-        and releases the lock, allowing other operations to access the dataset. Does a rollback
-        if the commit raised an error
+    def insert(self):
+        """
+        Insert a new record into the current dataset. Tries to get to the first entry
+
+        This function prepares the dataset to accept a new record. After inserting the
+        desired data, one would typically call a 'post' method to save the new record.
 
         Returns:
             None
 
         Raises:
-            Exception: If there's an issue committing changes to the dataset.
+            Exception: If there's an issue while inserting a new record to the dataset.
         """
         try:
-            self._created_dataset.Commit()
+            self._created_dataset.First()
+            self._created_dataset.Insert()
             self.set_dataset_state()
-            self.logger.info(f"Transaction committed and changes saved for dataset '{self._dataset_name}'. Lock released.")
+            self.logger.info(f"Prepared to insert a new record to the dataset '{self._dataset_name}'.")
         except Exception as e:
-            self.logger.error(f"An error occurred while committing changes to the dataset '{self._dataset_name}': {str(e)}. Initiating rollback...")
-            self.rollback()
-
-    def rollback(self):
-        """
-        Roll back changes made to the current dataset during a transaction.
-
-        This function undoes all changes made to the dataset since the start of the transaction
-        and releases the lock, allowing other operations to access the dataset.
-
-        Returns:
-            None
-
-        Raises:
-            Exception: If there's an issue rolling back changes to the dataset.
-        """
-        try:
-            self._created_dataset.Rollback()
-            self.set_dataset_state()
-            self.logger.info(f"Changes rolled back for dataset '{self._dataset_name}'. Lock released.")
-        except Exception as e:
-            self.logger.error(f"An error occurred while rolling back changes to the dataset '{self._dataset_name}': {str(e)}")
+            self.logger.error(f"An error occurred while preparing to insert a new record to the dataset '{self._dataset_name}': {str(e)}")
             raise
 
     def set_cursor(self) -> bool:
@@ -865,7 +957,7 @@ class ERPAbstractEntity(ERPCoreController):
             return None
 
     """ Utility Methods """
-    def find_one(self, search_value, dataset_index):
+    def find_one(self, search_value, dataset_index=None):
         if not search_value:
             self.logger.warning("Search Value is needed!")
         else:
@@ -873,9 +965,25 @@ class ERPAbstractEntity(ERPCoreController):
 
         if dataset_index:
             self.set_dataset_index(dataset_index=dataset_index)
+        else:
+            self.set_dataset_index(dataset_index=self.get_dataset_index())
 
         found = self.set_cursor()
         return found
+
+    def find_wildcard(self, search_value, dataset_index=None):
+        if not search_value:
+            self.logger.warning("Search Value is needed!")
+        else:
+            self.set_search_value(search_value)
+
+        if dataset_index:
+            self.set_dataset_index(dataset_index=dataset_index)
+        else:
+            self.set_dataset_index(dataset_index=self.get_dataset_index())
+
+        self._created_dataset.Indices(dataset_index).Select()
+        self._created_dataset.WildcardRange(search_value)
 
     def print_all_datasets(self):
         """Print the names and descriptions of all datasets."""
@@ -956,7 +1064,7 @@ class ERPAbstractEntity(ERPCoreController):
             print(f"Error while casting field: {e}")
             return None
 
-    def field_writer(self, field, value):
+    def field_writer(self, field_name, value, cast_type):
         """
         Set the value of a field using the appropriate cast type.
 
@@ -967,16 +1075,24 @@ class ERPAbstractEntity(ERPCoreController):
         Returns:
             bool: True if the field's value is set successfully, False otherwise.
         """
+        field_type = self._created_dataset.Fields.Item(field_name).FieldType
 
-        cast_type = self.field_types_to_write.get(field.FieldType)
+        # Get the cast_type from the parameter
+        if not cast_type:
+            cast_type = self.field_types_to_write.get(field_type)
+
+        # print(f"try to write {value} into {field_name} by method {cast_type}")
 
         if not cast_type:
-            self.logger.warning(f"Unknown FieldType: {field.FieldType}")
+            self.logger.warning(f"Unknown FieldType: {field_name.FieldType}")
             return False
 
         try:
             # Using the setattr function to dynamically set the attribute or method's value
-            setattr(field, cast_type, value)
+            # field_object = self._created_dataset.Fields(str(field_name))
+            # setattr(field_object, cast_type, str(value))
+            exec(f'self._created_dataset.Fields("{field_name}").{cast_type} = "{value}"')
+
             self.logger.info(f"Value '{value}' set to field using cast type '{cast_type}'.")
             return True
         except AttributeError:
@@ -1162,7 +1278,7 @@ class ERPAbstractEntity(ERPCoreController):
                     else:
                         continue
 
-                filepath = self._created_dataset.Fields.Item(f"{image_index}").GetEditObject(4).LinkFileName
+                filepath = self._created_dataset.Fields.Item(f"{image_index}").GetEditObject(self._edit_objects_dict["etImage"]).LinkFileName
                 self.logger.info(f"Bild String: {filepath}")
                 # Check if filepath is valid
                 if filepath:
@@ -1193,7 +1309,7 @@ class ERPAbstractEntity(ERPCoreController):
             return False
 
     @abstractmethod
-    def map_erp_to_bridge(self):
+    def map_erp_to_bridge(self, **kwargs):
         pass
 
     def map_erp_media_to_bridge(self, media):
@@ -1209,5 +1325,49 @@ class ERPAbstractEntity(ERPCoreController):
         return bridge_media_entity
 
     @abstractmethod
-    def map_bridge_to_erp(self, bridge_entity):
+    def map_bridge_to_erp(self, **kwargs):
         pass
+
+    def set_values_from_file(self, erp_dataset, entity, country):
+        """
+        This method reads a given YAML file and populates the provided ERP dataset.
+
+        :param erp_dataset: ERP dataset that needs to be populated with values
+        :param entity: Type of the ERP entity like 'customer', 'order', etc.
+        :param country: Country for which the preset values need to be set. This is mandatory.
+
+        :return: False in case of any errors, otherwise returns the populated ERP dataset.
+        """
+
+        if country is None:
+            self.logger.error("Country value is mandatory")
+            return False
+
+        country = country.lower()
+        file = f"src/yaml/{entity}_{country}.yaml"
+
+        if not os.path.isfile(file):
+            print(f"Country specific file not found: {file}, trying without country")
+            file = f"src/yaml/{entity}.yaml"
+
+            if not os.path.isfile(file):
+                self.logger.error(f"File not found: {file}")
+                return False
+
+        try:
+            with open(file, 'r') as f:
+                try:
+                    data = yaml.safe_load(f)
+                    for key, value in data.items():
+                        # print(f"Prefill {key} with {value}")
+                        erp_dataset.set_(field_name=key, value=value)
+
+                    return erp_dataset
+                except yaml.YAMLError as yaml_e:
+                    self.logger.error(f"Could not fill YAML File: {file} | {yaml_e}")
+                    print(f"Could not fill YAML File: {file}")
+                    return False
+        except Exception as e:
+            self.logger.error(f"Could not open YAML File: {file}")
+            return False
+
