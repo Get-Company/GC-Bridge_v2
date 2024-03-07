@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from ..entities.ERPAnschriftenEntity import ERPAnschriftenEntity
 from ..entities.ERPAnsprechpartnerEntity import ERPAnsprechpartnerEntity
@@ -14,6 +16,8 @@ class ERPAdressenEntity(ERPAbstractEntity):
             search_value=search_value,
             range_end=range_end
         )
+        # This comes after the parent.
+        self.set_created_dataset_ex()
 
     def map_erp_to_bridge(self):
         try:
@@ -34,52 +38,80 @@ class ERPAdressenEntity(ERPAbstractEntity):
 
     def map_bridge_to_erp(self, bridge_entity):
         # 1. Find the dataset in the
-        self.set_("Branche", "Murketing")
-
-    def map_erp_customer_address_to_bridge(self, erp_anschrift_entity: ERPAnschriftenEntity,
-                                           erp_ansprechpartner_entity: ERPAnsprechpartnerEntity):
+        new_address = ERPAdressenEntity()
+        new_address.append()
+        erp_adrnr_new = new_address.get_created_dataset().SetupNr("")
+        print("AdrNr new:", erp_adrnr_new)
+        new_address.set_adrnr(erp_adrnr_new)
+        new_address.set_suchbeg("GCB")
+        new_address.set_status('Kunde aus Internet')
+        new_address = self.set_values_from_file(
+            erp_dataset=new_address,
+            entity='customer',
+            country=bridge_entity.standard_billing_address.get_land()
+        )
+        new_address.post()
         try:
-            customer_address_entity = BridgeCustomerAddressEntity(
-                id=erp_ansprechpartner_entity.get_id(),
-                erp_combined_id=f"{self.get_id()};{erp_anschrift_entity.get_id()};{erp_ansprechpartner_entity.get_id()}",
-                erp_nr=self.get_adrnr(),
-                erp_ans_nr=erp_ansprechpartner_entity.get_ansnr(),
-                erp_asp_nr=erp_ansprechpartner_entity.get_aspnr(),
-                name1=erp_anschrift_entity.get_na1(),
-                name2=erp_anschrift_entity.get_na2(),
-                name3=erp_anschrift_entity.get_na3(),
-                department=erp_anschrift_entity.get_department(),
-                street=erp_anschrift_entity.get_street(),
-                postal_code=erp_anschrift_entity.get_postal_code(),
-                city=erp_anschrift_entity.get_city(),
-                land=erp_anschrift_entity.get_land_iso2(),
-                email=erp_anschrift_entity.get_email(),
-                title=erp_ansprechpartner_entity.get_title(),
-                first_name=erp_ansprechpartner_entity.get_first_name(),
-                last_name=erp_ansprechpartner_entity.get_last_name(),
-                created_at=erp_ansprechpartner_entity.get_erstdat(),
-                edited_at=erp_ansprechpartner_entity.get_aenddat()
-            )
-            return customer_address_entity
-
+            # Fetch the adresse again and return it
+            new_address_in_erp = ERPAdressenEntity()
+            new_address_in_erp.find_one(search_value=erp_adrnr_new)
+            return new_address_in_erp
         except Exception as e:
-            # Log the error and return None
-            self.logger.error(f"Error mapping ERPCustomerAdress to Bridge: {str(e)}")
-            return None
+            print("Error mapping BridgeCustomerEntity to ERPAdressenEntity", e)
+            raise
+
+    def update(self, bridge_entity):
+        updated_id = self.get_id()
+        self.edit_()
+        self.set_suchbeg("GCU")
+        self.set_status("GCB Kunde - Update")
+        self.post()
+
+        erp_adress_entity_updated = ERPAdressenEntity()
+        erp_adress_entity_updated.find_one(search_value=updated_id, dataset_index='ID')
+
+        return erp_adress_entity_updated
+
+    def set_created_dataset_ex(self):
+        """
+        Create and set the dataset EX using the dataset name.
+        Overwrites the _created_dataset
+        """
+        try:
+            if self.get_dataset_name():
+                self._created_dataset = self._dataset_infos.Item(self.get_dataset_name()).CreateDataSetEx()
+                self.logger.info(f"Set {self.get_dataset_name()} as created dataset Ex")
+            else:
+                raise ValueError("Dataset name is not set. Cannot create dataset Ex.")
+        except Exception as e:
+            self.logger.error(f"Error creating dataset Ex for {self.get_dataset_name()}: {str(e)}")
+            raise
 
     def get_adrnr(self):
         return self.get_("AdrNr")
 
+    def set_adrnr(self, value):
+        self.set_("AdrNr", value)
+
     def get_reansnr(self):
         return self.get_("ReAnsNr")
+
+    def set_reansnr(self, value):
+        self.set_("ReAnsNr", value)
 
     def get_email(self):
         billing_ansprechpartner = self.get_billing_ansprechpartner_entity()
         email = billing_ansprechpartner.get_("EMail1")
         return email
 
+    def set_email(self, value):
+        self.set_("EMail1", value)
+
     def get_vat_id(self):
         return self.get_("UStId")
+
+    def set_vat_id(self, value):
+        self.set_("UStId", value)
 
     def get_erp_combined_id(self):
         # Todo: Create the combined erp_id_string separated by ;
@@ -91,12 +123,23 @@ class ERPAdressenEntity(ERPAbstractEntity):
     def get_liansnr(self):
         return self.get_("LiAnsNr")
 
+    def set_liansnr(self, value):
+        self.set_("LiAnsNr", value)
+
     def get_billing_address_entity(self):
         self.logger.info(f"Get the billing address from ERPAnschriftenEntity")
         return ERPAnschriftenEntity([self.get_adrnr(), self.get_reansnr()])
 
+    def set_billing_address(self):
+        # Todo: Set the billing address
+        pass
+
     def get_shipping_address_entity(self):
         return ERPAnschriftenEntity([self.get_adrnr(), self.get_liansnr()])
+
+    def set_shipping_address(self):
+        # Todo: Set the shipping address
+        pass
 
     def get_billing_ansprechpartner_entity(self):
 
@@ -144,8 +187,40 @@ class ERPAdressenEntity(ERPAbstractEntity):
     def get_webshop_id(self):
         return self.get_("WShopID")
 
+    def set_webshop_id(self, value):
+        self.set_("WShopID", value)
+
     def get_webshop_id_kz(self):
         return self.get_("WShopAdrKz")
+
+    def set_webshop_id_kz(self, value):
+        self.set_("WShopAdrKz", value)
+
+    def get_suchbeg(self):
+        return self.get_("SuchBeg")
+
+    def set_suchbeg(self, value):
+        self.set_("SuchBeg", value)
+
+    def get_status(self):
+        return self.get_("Status")
+
+    def set_status(self, value):
+        self.set_("Status", value)
+
+    def print_all_anschriften_and_ansprechparter(self):
+
+        anschriften_entity_ds = self.get_anschriften()
+
+        while not anschriften_entity_ds.range_eof():
+            ansprechpartner_ds = anschriften_entity_ds.get_ansprechpartner()
+
+            while not ansprechpartner_ds.range_eof():
+                print(f"Adrnr: {anschriften_entity_ds.get_adrnr()} Anschrift Ansnr: {anschriften_entity_ds.get_ansnr()} Ansprechpartner AspNr: {ansprechpartner_ds.get_aspnr()}")
+
+                ansprechpartner_ds.range_next()
+
+            anschriften_entity_ds.range_next()
 
     def __repr__(self):
         return f'Adresse {self.get_adrnr()}'
