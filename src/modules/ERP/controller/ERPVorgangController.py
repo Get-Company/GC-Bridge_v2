@@ -31,7 +31,10 @@ class ERPVorgangController(ERPAbstractController):
         """ Timer Start """
 
         # 1 downsert customer
-        bridge_customer_entity = ERPAdressenController().sync_order_addresses_from_bridge(bridge_entity=bridge_entity.customer)
+        bridge_customer_entity = ERPAdressenController().sync_order_addresses_from_bridge(
+            bridge_entity=bridge_entity.customer,
+            bridge_marketplace_entity=bridge_entity.marketplace
+        )
         #
         # print(f"Customer {bridge_customer_entity.get_erp_nr()} ready. Now to the orders:")
 
