@@ -49,7 +49,7 @@ GC-Bridge 2 - Dashboard
     <div class="col">
         <div class="card">
             <div class="card-header">
-                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_views.products') }}">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_product_views.products') }}">
                     <h5 class="card-title"><i class="fas fa-box-open"></i> Produkte</h5>
                 </a>
             </div>
@@ -57,14 +57,16 @@ GC-Bridge 2 - Dashboard
                 <p class="card-text">Details und Verwaltung Ihres Produktkatalogs.</p>
             </div>
             <div class="card-footer">
-                <button class="btn btn-sm btn-outline-primary">Bearbeiten</button>
+                    <a href="{{ url_for('bridge_product_views.products') }}" class="btn btn-sm btn-outline-primary">
+                        Bearbeiten
+                    </a>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="card">
             <div class="card-header">
-                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_views.categories') }}">
+                <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_category_views.categories') }}">
                     <h5 class="card-title"><i class="fas fa-tags"></i> Kategorien</h5>
                 </a>
             </div>
@@ -72,7 +74,9 @@ GC-Bridge 2 - Dashboard
                 <p class="card-text">Organisieren Sie Ihre Produkte in Kategorien für eine bessere Übersicht.</p>
             </div>
             <div class="card-footer">
-                <button class="btn btn-sm btn-outline-primary">Bearbeiten</button>
+                <a href="{{ url_for('bridge_category_views.categories') }}" class="btn btn-sm btn-outline-primary">
+                    Bearbeiten
+                </a>
             </div>
         </div>
 
