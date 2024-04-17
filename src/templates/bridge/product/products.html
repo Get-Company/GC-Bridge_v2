@@ -34,7 +34,7 @@
                     <tr>
                         <td>{{ loop.index }}</td>
                         {% for language_code in ['DE_de'] %} <!-- Add more language codes as needed -->
-                            <td><a href="{{ url_for('bridge_views.product', id=product.id) }}">
+                            <td><a href="{{ url_for('bridge_product_views.product', id=product.id) }}">
                                 {{ product.get_translation(language_code).name }}
                             </a>
                             </td>
