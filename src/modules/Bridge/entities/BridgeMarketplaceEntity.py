@@ -1,5 +1,6 @@
 from src import db
 import datetime
+import uuid
 from .BridgePriceEntity import BridgePriceEntity
 from .BridgeProductEntity import BridgeProductEntity
 """
@@ -21,6 +22,10 @@ class BridgeProductMarketplacePriceAssoc(db.Model):
     marketplace = db.relationship('BridgeMarketplaceEntity', back_populates='product_prices_assoc')
     price = db.relationship('BridgePriceEntity', backref=db.backref('marketplace_products', uselist=False))
     use_fixed_price = db.Column(db.Boolean, nullable=False, default=False)
+    sw6_visibility_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
+    sw6_price_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
+    sw6_rebate_price_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
+    sw6_special_price_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
 
     def __repr__(self):
         return f'BridgeProductMarketplace Assoc. {self.product_id}-{self.marketplace_id}-{self.price_id}'
