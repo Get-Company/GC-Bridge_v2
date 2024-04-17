@@ -36,6 +36,9 @@ class SW6OrderEntity(SW6AbstractEntity):
         except Exception as e:
             self.logger.error(f"SW6 Order could not be mapped to BridgeOrderEntity: {e}")
 
+    def map_bridge_to_sw6(self, bridge_entity):
+        pass
+
     """
     API
     """
@@ -129,6 +132,14 @@ class SW6OrderEntity(SW6AbstractEntity):
 
     def get_api_state_machine_list(self):
         results = self.sw6_client.request_get("/state-machine")
+        return results
+
+    def search_api_state_machine_by_(self, index_field, search_value):
+        payload = Criteria()
+
+        payload.filter.append(EqualsFilter(field=index_field, value=search_value))
+        results = self.sw6_client.request_post("search/state-machine", payload=payload)
+
         return results
 
     def patch_api_change_order_state(self, order_id, action_name):
