@@ -130,9 +130,7 @@ class ERPAbstractEntity(ERPCoreController):
             # When the cursor is set, this attributes changes to True
             self._found = None
             if search_value:
-                self.logger.info(f"Search Value provided: {search_value}. Call self.set_search_value.")
                 self.set_search_value(search_value=search_value)
-                self.logger.info(f"Search Value is set. Call self.set_cursor.")
 
             # Set range if range_end
             self._range_end = None
@@ -189,7 +187,7 @@ class ERPAbstractEntity(ERPCoreController):
             # by the self.get_dataset_fields
             self._dataset_fields = None
 
-            self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, dataset_name)
+            # self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, dataset_name)
 
         except Exception as e:
             self.logger.error("Error initializing %s for dataset: %s. Error: %s", self.__class__.__name__, dataset_name, str(e))
@@ -269,7 +267,6 @@ class ERPAbstractEntity(ERPCoreController):
         try:
             if dataset_index:
                 self._dataset_index = dataset_index
-                self.logger.info(f"Dataset Index is set to: '{dataset_index}'")
             else:
                 raise ValueError("Provided dataset index is None or empty.")
         except ValueError as e:
@@ -363,7 +360,7 @@ class ERPAbstractEntity(ERPCoreController):
         Returns:
             None
         """
-        self.logger.info(f"Range End is set to: {range_end}")
+        # self.logger.info(f"Range End is set to: {range_end}")
         self._range_end = range_end
 
     def get_range_end(self) -> Union[str, int, List[str], List[int], bool]:
@@ -392,10 +389,10 @@ class ERPAbstractEntity(ERPCoreController):
         ranged = self._created_dataset.IsRanged()
         count = self._created_dataset.RecordCount
         if ranged and count > 0:
-            self.logger.info(f"Is Dataset ranged: {ranged}")
+            # self.logger.info(f"Is Dataset ranged: {ranged}")
             self._is_ranged = ranged
         else:
-            self.logger.warning(f"Ranged: {ranged} and Count: {count}. Dataset is not really ranged!")
+            # self.logger.warning(f"Ranged: {ranged} and Count: {count}. Dataset is not really ranged!")
             self._is_ranged = False
 
     def get_is_ranged(self) -> bool:
@@ -459,7 +456,7 @@ class ERPAbstractEntity(ERPCoreController):
                 self._dataset_state = state
             else:
                 self._dataset_state = self._created_dataset.State
-            self.logger.info(f"Dataset state is set to: {self._dataset_state}")
+            # self.logger.info(f"Dataset state is set to: {self._dataset_state}")
         except Exception as e:
             self.logger.error(f"Error setting dataset state: {str(e)}. ERP Dataset state: {self._created_dataset.State}")
             raise
@@ -559,7 +556,6 @@ class ERPAbstractEntity(ERPCoreController):
         # Check if the cursor is set and something was found
         if self._found:
             field_read = self.field_reader(self._created_dataset.Fields(return_field))
-            self.logger.info(f"Get Field {return_field}: {field_read}")
             return field_read
         else:
             self.logger.error(f"Value {self.get_search_value()} NOT found in field {self.get_dataset_index()} of DataSet {self.get_dataset_name()}.")
@@ -821,8 +817,8 @@ class ERPAbstractEntity(ERPCoreController):
         self._found = self._created_dataset.FindKey(self.get_dataset_index(), self.get_search_value())
 
         if self._found:
-            self.logger.info(f"Cursor successfully set to Index: {self.get_dataset_index()} with value "
-                             f"{self.get_search_value()}. Type of search_value is: {type(self.get_search_value())}.")
+            # self.logger.info(f"Cursor successfully set to Index: {self.get_dataset_index()} with value "
+            #                  f"{self.get_search_value()}. Type of search_value is: {type(self.get_search_value())}.")
             return True
         else:
             self.logger.warning(f"Failed to set cursor for Index: {self.get_dataset_index()} with value "
@@ -897,9 +893,6 @@ class ERPAbstractEntity(ERPCoreController):
             return False
 
         try:
-            self.logger.info(
-                f"Try set_range for Index: {self.get_dataset_index()}:{type(self.get_dataset_index())} with start value {self.get_search_value()}:{type(self.get_search_value())} and end value {self.get_range_end()}:{type(self.get_range_end())}."
-            )
             # Attempt to set the range on the dataset
             self._created_dataset.SetRange(
                 self.get_dataset_index(),
@@ -913,9 +906,6 @@ class ERPAbstractEntity(ERPCoreController):
             if self._created_dataset.RecordCount >= 1:
                 self._is_ranged = True
 
-                self.logger.info(
-                    f"Range successfully set for Index: {self.get_dataset_index()} with start value {self.get_search_value()} and end value {self.get_range_end()}."
-                )
                 self._found = True
                 self.range_first()
             else:
@@ -930,7 +920,7 @@ class ERPAbstractEntity(ERPCoreController):
             return False
 
     def range_first(self):
-        self.logger.info("Try to set the cursor to the first element.")
+        # self.logger.info("Try to set the cursor to the first element.")
         self._created_dataset.First()
 
     def range_nested_first(self):
@@ -1312,13 +1302,13 @@ class ERPAbstractEntity(ERPCoreController):
     def map_erp_to_bridge(self, **kwargs):
         pass
 
-    def map_erp_media_to_bridge(self, media):
+    def map_erp_media_to_bridge(self, media, index):
         bridge_media_entity = BridgeMediaEntity(
             file_name=self.get_med_file_name(media),
             file_type=self.get_med_file_type(media),
             file_size=self.get_med_file_size(media),
-            # title should be configered elsewhere
-            # description should be configered elsewhere
+            # title should be configured elsewhere
+            # description should be configured elsewhere
             created_at=self.get_erstdat(),
             edited_at=self.get_aenddat()
         )
@@ -1347,7 +1337,7 @@ class ERPAbstractEntity(ERPCoreController):
         file = f"src/yaml/{entity}_{country}.yaml"
 
         if not os.path.isfile(file):
-            print(f"Country specific file not found: {file}, trying without country")
+            print(f"Country specific file not found: {file}, trying fallback without country.")
             file = f"src/yaml/{entity}.yaml"
 
             if not os.path.isfile(file):
