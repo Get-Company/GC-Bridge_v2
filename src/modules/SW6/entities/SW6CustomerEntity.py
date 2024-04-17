@@ -31,7 +31,7 @@ class SW6CustomerEntity(SW6AbstractEntity):
                 f"SW6 {sw6_json_data['customerNumber']} Customer could not be mapped to BridgeCustomerEntity: {e}")
 
     def map_bridge_to_sw6(self, bridge_entity):
-        # Todo: Is it neccessary to upfate the customer to sw6?
+        # Todo: Is it neccessary to update the customer to sw6?
         pass
 
     def get_api_customer_address_details_by_customer_id(self, id):
@@ -84,6 +84,7 @@ class SW6CustomerEntity(SW6AbstractEntity):
         return self.config_sw6.CUSTOMER_GROUPS.get(())
 
     def patch_api_change_customer_nr(self, customer_id, new_customer_nr):
+        print("Patching")
         if not new_customer_nr and not customer_id:
             self.logger.error("Ein 'customer_id' oder 'customer_nr' muss angegeben werden.")
             return
@@ -91,10 +92,15 @@ class SW6CustomerEntity(SW6AbstractEntity):
         customer_in_sw6 = self.get_api_(id=customer_id)
         if customer_in_sw6:
             payload = {'customerNumber': new_customer_nr}
-            endpoint = self.sw6_client.request_patch(f"/{self._endpoint_name}", payload=payload)
+            endpoint = self.sw6_client.request_patch(f"/{self._endpoint_name}/{customer_id}", payload=payload)
             return endpoint
         else:
             self.logger.error(f"Customer with id: {customer_id} not found. Could not patch 'customerNumber' to {new_customer_nr}.")
+
+    def patch_customer_number_by_customer_id(self, customer_id, new_customer_nr):
+        payload = {'customerNumber': new_customer_nr}
+        result = self.sw6_client.request_patch(f"/{self._endpoint_name}/{customer_id}", payload=payload)
+        return result
 
 
 class SW6CustomerAddressEntity(SW6AbstractEntity):
@@ -119,6 +125,7 @@ class SW6CustomerAddressEntity(SW6AbstractEntity):
                 title=self.get_title(sw6_json_data),
                 first_name=self.get_first_name(sw6_json_data),
                 last_name=self.get_last_name(sw6_json_data),
+                phone=self.get_phone(sw6_json_data),
                 created_at=datetime.now(),
                 edited_at=datetime.now()
             )
@@ -233,3 +240,9 @@ class SW6CustomerAddressEntity(SW6AbstractEntity):
         except Exception as e:
             self.logger.error(f"Error retrieving last name: {e}")
             return None
+
+    def get_phone(self, sw6_json_data):
+        try:
+            return sw6_json_data['phoneNumber']
+        except Exception as e:
+            self.logger.error(f"Error retrieving phone number: {e}")
