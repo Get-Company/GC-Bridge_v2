@@ -32,7 +32,7 @@ class ERPAnsprechpartnerEntity(ERPAbstractEntity):
             new_ansprechpartner.set_email(bridge_entity.get_email())
             new_ansprechpartner.set_anrede(bridge_entity.get_title())
             new_ansprechpartner.set_first_name(bridge_entity.get_first_name())
-            new_ansprechpartner.set_last_name(bridge_entity.get_last_name() + "Updated")
+            new_ansprechpartner.set_last_name(bridge_entity.get_last_name())
             new_ansprechpartner.set_("AnspAufbau", 6)  # 6 Pos in Dropdown - means: Title Vorname Zusatz Vorsatz Nachname)
             new_ansprechpartner.set_ansprechpartner(f"{bridge_entity.get_title()} {bridge_entity.get_first_name()} {bridge_entity.get_last_name()}")
             new_ansprechpartner.post()
@@ -48,7 +48,9 @@ class ERPAnsprechpartnerEntity(ERPAbstractEntity):
         updated_id = self.get_id()
         try:
             self.edit_()
-            self.set_last_name(bridge_entity.get_last_name() + "Updated")
+            self.set_title(bridge_entity.get_title())
+            self.set_first_name(bridge_entity.get)
+            self.set_last_name(bridge_entity.get_last_name())
             self.post()
 
             erp_ansprechpartner_entity_updated = ERPAnsprechpartnerEntity()
