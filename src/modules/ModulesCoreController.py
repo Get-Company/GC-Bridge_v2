@@ -127,7 +127,7 @@ class ModulesCoreController(ABC):
         tokens = re.findall(pattern, text)
         return len(tokens)
 
-    def ai_translate_to(self,text:str, language="GB_en"):
+    def ai_translate_to(self,text:str, language="es-ES"):
         """
         Sends a prompt to GPT-3.5 and returns the generated response.
 
@@ -165,7 +165,7 @@ class ModulesCoreController(ABC):
             print(f"An error occurred: {str(e)}")
             return None
 
-    """ Abstract MEthods """
+    """ Abstract Methods """
 
     @abstractmethod
     def sync_all_to_bridge(self):
