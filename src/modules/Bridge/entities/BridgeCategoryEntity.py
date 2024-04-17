@@ -8,6 +8,7 @@ BridgeProductsCategoriesAssoc = db.Table('bridge_product_categories_assoc',
                                           db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'), primary_key=True)
                                           )
 
+
 class TranslationWrapper:
     def __init__(self, translation):
         self.translation = translation
@@ -24,7 +25,11 @@ class BridgeCategoryEntity(db.Model):
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
     erp_nr = db.Column(db.Integer(), nullable=False, unique=True)
     erp_nr_parent = db.Column(db.Integer(), nullable=True)
-    tree_path = db.Column(db.JSON, nullable=True)
+    erp_tree_path = db.Column(db.JSON, nullable=True)
+    cat_nr = db.Column(db.Integer(), nullable=True, unique=True)
+    cat_parent_nr = db.Column(db.Integer(), nullable=True)
+    cat_tree_path = db.Column(db.JSON, nullable=True)
+    sw6_id = db.Column(db.CHAR(36), nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
@@ -37,6 +42,9 @@ class BridgeCategoryEntity(db.Model):
 
     products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
                                backref=db.backref('categories', lazy=True))
+
+    def get_id(self):
+        return self.id
 
     def get_translation(self, language_code="DE_de"):
         # Find the translation with the given language code using list comprehension
@@ -57,12 +65,45 @@ class BridgeCategoryEntity(db.Model):
     def set_erp_nr_parent(self, value):
         self.erp_nr_parent = value
 
-    # Getter and Setter for tree_path
-    def get_tree_path(self):
-        return self.tree_path
+    # Getter and Setter for erp_tree_path
+    def get_erp_tree_path(self):
+        return self.erp_tree_path
 
-    def set_tree_path(self, value):
-        self.tree_path = value
+    def set_erp_tree_path(self, value):
+        self.erp_tree_path = value
+
+    # Getter and Setter for cat_nr
+    def get_cat_nr(self):
+        return self.cat_nr
+
+    def set_cat_nr(self, value):
+        self.cat_nr = value
+
+    # Getter and Setter for cat_parent_nr
+    def get_cat_parent_nr(self):
+        if self.cat_parent_nr and self.cat_parent_nr > 0:
+            return self.cat_parent_nr
+        else:
+            return None
+
+    def set_cat_parent_nr(self, value):
+        self.cat_parent_nr = value
+
+    # Getter and Setter for cat_tree_path
+    def get_cat_tree_path(self):
+        return self.cat_tree_path
+
+    def set_cat_tree_path(self, value):
+        self.cat_tree_path = value
+
+    def get_sw6_id(self):
+        if self.sw6_id:
+            return self.sw6_id
+        else:
+            return None
+
+    def set_sw6_id(self, sw6_id):
+        self.sw6_id = sw6_id
 
     # Getter and Setter for created_at
     def get_created_at(self):
@@ -93,11 +134,12 @@ class BridgeCategoryEntity(db.Model):
 
         return self
 
+
     """
     Special Getter and Setter
     """
     def get_main(self):
-        tree_path_list = json.loads(self.get_tree_path())
+        tree_path_list = json.loads(self.get_erp_tree_path())
         main_category_id = tree_path_list[0]
         main_category = self.query.filter_by(erp_nr=main_category_id).one_or_none()
         if main_category:
@@ -106,18 +148,18 @@ class BridgeCategoryEntity(db.Model):
             return None
 
     def get_tree_path_names_as_list(self):
-        tree_path_list = json.loads(self.get_tree_path())
+        tree_path_list = json.loads(self.get_erp_erp_tree_path())
         if tree_path_list:
             names_list = []
             tree_path_list.pop(0)  # Entfernt das erste Element, falls die Liste nicht leer ist
             for item in tree_path_list:
-                names_list.add = self.query.filter_by(erp_nr=item).one_or_none()
+                names_list.append(self.query.filter_by(erp_nr=item).one_or_none())
             return tree_path_list
         else:
             return None
 
     def __repr__(self):
-        return f'Bridge Category Entity ID: {self.erp_nr}'
+        return f'Bridge Category Entity ID: {self.id} - ERPNr: {self.erp_nr} - CatNr: {self.cat_nr}'
 
 
 class BridgeCategoryTranslation(db.Model):
@@ -128,6 +170,7 @@ class BridgeCategoryTranslation(db.Model):
     name = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text(), nullable=True)
     description_short = db.Column(db.Text(), nullable=True)
+    sw6_id = db.Column(db.CHAR(36), nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
@@ -162,6 +205,12 @@ class BridgeCategoryTranslation(db.Model):
 
     def set_description_short(self, value):
         self.description_short = value
+
+    def get_sw6_id(self):
+        return self.sw6_id
+
+    def set_sw6_id(self, sw6_id):
+        self.sw6_id = sw6_id
 
     # Getter and Setter for created_at
     def get_created_at(self):
