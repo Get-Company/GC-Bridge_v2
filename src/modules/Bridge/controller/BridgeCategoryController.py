@@ -1,6 +1,7 @@
 from .BridgeAbstractController import BridgeAbstractController
 from ..entities.BridgeCategoryEntity import BridgeCategoryEntity
 import json
+import pandas as pd
 
 
 class BridgeCategoryController(BridgeAbstractController):
@@ -19,3 +20,27 @@ class BridgeCategoryController(BridgeAbstractController):
             return main_category
         else:
             return None
+
+    def import_new_erp_ids(self):
+        df = pd.read_excel("D:\\htdocs\\python\\GC-Bridge_v2\\categories_mix.xlsx")
+        df = df.astype(int)
+        for index, row in df.iterrows():
+            try:
+
+                nr = row['nr']
+                nr_new = row['nr_new']
+                nr_new_parent = row['nr_new_parent']
+
+                print(f"Nr: {nr} wird zu {nr_new}")
+
+                bridge_row = BridgeCategoryEntity().query.filter_by(erp_nr=nr).one_or_none()
+                if bridge_row:
+                    bridge_row.set_cat_nr(value=nr_new)
+                    bridge_row.set_cat_parent_nr(value=nr_new_parent)
+                    self.db.session.add(bridge_row)
+                    self.db.session.commit()
+            except Exception as e:
+                print(f"Fehler beim Import: {e}")
+
+        return True
+
