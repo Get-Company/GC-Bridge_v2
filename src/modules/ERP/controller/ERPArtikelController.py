@@ -12,7 +12,7 @@ from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity
 from src.modules.Bridge.controller.BridgeProductController import BridgeProductController
 from src.modules.Bridge.entities.BridgeTaxEntity import BridgeTaxEntity
 from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
-from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
+from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity, BridgeProductsMediaAssoc
 from src.modules.Bridge.controller.BridgePriceController import BridgePriceController
 
 
@@ -81,8 +81,11 @@ class ERPArtikelController(ERPAbstractController):
 
         bridge_entity = self._set_translation_relation(bridge_entity)
         bridge_entity = self._set_price_relation(bridge_entity)
-        bridge_entity = self._set_tax_relation(bridge_entity)
-        bridge_entity = self._set_category_relation(bridge_entity)
+        # bridge_entity = self._set_tax_relation(bridge_entity)
+
+        # Categories are no longer available since V 24 microtech Büro+
+        # bridge_entity = self._set_category_relation(bridge_entity)
+
         bridge_entity = self._set_media_relation(bridge_entity)
         return bridge_entity
 
@@ -145,7 +148,6 @@ class ERPArtikelController(ERPAbstractController):
         try:
             stschl = self.get_entity().get_stschl()
             tax_in_db = BridgeTaxEntity.query.filter_by(erp_nr=stschl).one_or_none()
-
             # Wenn die Steuer nicht in der Datenbank gefunden wird, erfolgt ein Sync-Versuch
             if tax_in_db is None:
                 self.logger.warning(f"Tax with ERP number: {stschl} not found in database. Attempting to sync.")
@@ -154,6 +156,8 @@ class ERPArtikelController(ERPAbstractController):
                 tax_ctrl = ERPMandantSteuerController(config.ERPConfig.MANDANT)
                 bridge_tax_entity_new = tax_ctrl.get_entity().map_erp_to_bridge(stschl=stschl)
                 bridge_entity.tax = bridge_tax_entity_new
+            else:
+                bridge_entity.tax = tax_in_db
 
         except Exception as e:
             self.logger.error(f"An error occurred while setting tax relation: {str(e)}")
@@ -191,25 +195,29 @@ class ERPArtikelController(ERPAbstractController):
         return bridge_entity
 
     def _set_media_relation(self, bridge_entity):
-        # 1. Get the list of medias
-        bridge_entity.medias.clear()
+        for media_assoc in bridge_entity.media_assocs:
+            self.db.session.delete(media_assoc)
+        self.db.session.commit()
+
         images = self._dataset_entity.get_images_file_list()
-        for image in images:
 
-            # 2. Map new object
-            bridge_media_entity_new = self._dataset_entity.map_erp_media_to_bridge(media=image)
+        for index, image in enumerate(images):
+            bridge_media_entity_new = self._dataset_entity.map_erp_media_to_bridge(media=image, index=index)
 
-            # 3 Chek if media is already in db
             media_in_db = BridgeMediaEntity.query.filter_by(file_name=bridge_media_entity_new.get_file_name()).one_or_none()
 
             if media_in_db:
-                self.logger.info(f"Updating Media {bridge_media_entity_new.get_file_name()}")
                 bridge_media_entity_for_db = media_in_db.update(bridge_media_entity_new)
             else:
                 bridge_media_entity_for_db = bridge_media_entity_new
 
-            # 4 Append to the bridge_entity
-            bridge_entity.medias.append(bridge_media_entity_for_db)
+            # create a new association object
+            assoc = BridgeProductsMediaAssoc(sort=index,
+                                             media=bridge_media_entity_for_db,  # add other required fields
+                                             product=bridge_entity)
+
+            # append to the bridge_entity's media association collection
+            bridge_entity.media_assocs.append(assoc)
 
         return bridge_entity
 
