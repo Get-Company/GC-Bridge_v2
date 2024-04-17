@@ -11,6 +11,8 @@ from src.modules.Bridge.controller.BridgeCustomerController import BridgeCustome
 from src.modules.Bridge.entities.BridgeCustomerEntity import BridgeCustomerAddressEntity
 from datetime import datetime
 
+from ...SW6.controller.SW6CustomerController import SW6CustomerController
+
 
 class ERPAdressenController(ERPAbstractController):
     """
@@ -161,7 +163,7 @@ class ERPAdressenController(ERPAbstractController):
     def downsert(self, bridge_entity):
         pass
 
-    def sync_order_addresses_from_bridge(self, bridge_entity):
+    def sync_order_addresses_from_bridge(self, bridge_entity, bridge_marketplace_entity):
         """
         Synchronizes customer's order addresses between a given bridge entity and the ERP system.
 
@@ -190,7 +192,24 @@ class ERPAdressenController(ERPAbstractController):
             print(f"Could not update db with erp_adresse_entity: {erp_adresse_entity.get_adrnr()}: {e}")
             raise
 
-        # Step 4: Set standard billing and shipping address for the adresse.
+        # Step 4: Update the processed bridge entity in SW6
+        try:
+            # Get the marketplace_customer_id
+            sw6_customer_entity = SW6CustomerController().get_entity()
+            bridge_marketplace_id = bridge_marketplace_entity.get_id()
+            print("Marketplace ID:", bridge_marketplace_id)
+            sw6_customer_id = bridge_entity.get_customer_marketplace_id(bridge_marketplace_id)
+
+            pprint(f"Update SW6 Customer {sw6_customer_id} from marketplace {bridge_marketplace_id} to new AdrNr {erp_adresse_entity.get_adrnr()}")
+            response = sw6_customer_entity.patch_api_change_customer_nr(
+                customer_id=sw6_customer_id,
+                new_customer_nr=erp_adresse_entity.get_adrnr()
+            )
+            pprint(response)
+        except Exception as e:
+            print(f"Could not find BridgeCustomerID: {bridge_entity.get_id()} in BridgeMarketplaceID:{bridge_marketplace_entity.get_id()}, error: {e}")
+
+        # Step 5: Set standard billing and shipping address for the adresse.
         try:
             erp_adresse_entity.edit_()
             erp_adresse_entity.append()
@@ -201,7 +220,7 @@ class ERPAdressenController(ERPAbstractController):
         except Exception as e:
             print("Error on setting ReAnsNr and LiAnsNr:", e)
 
-        # Step 5: Remove all default settings and apply the correct ones.
+        # Step 6: Remove all default settings and apply the correct ones.
         self._cleanup_std_kz(bridge_entity=bridge_entity)
 
         # Get the customer record back from the bridge entity after synchronization.
