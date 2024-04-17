@@ -1,15 +1,25 @@
+import uuid
+
+from config import GCBridgeConfig
 from src import db
 import datetime
 
-BridgeProductsMediaAssoc = db.Table('media_product_association',
-                                    db.Column('media_id', db.Integer, db.ForeignKey('bridge_media_entity.id', ondelete="CASCADE")),
-                                    db.Column('product_id', db.Integer, db.ForeignKey('bridge_product_entity.id', ondelete="CASCADE"))
-                                    )
 
-BridgeCategoryMediaAssoc = db.Table('media_category_association',
-                                    db.Column('media_id', db.Integer, db.ForeignKey('bridge_media_entity.id', ondelete="CASCADE")),
-                                    db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id', ondelete="CASCADE"))
-                                    )
+class BridgeProductsMediaAssoc(db.Model):
+    __tablename__ = 'media_product_association'
+    media_id = db.Column(db.Integer, db.ForeignKey('bridge_media_entity.id', ondelete="CASCADE"), primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('bridge_product_entity.id', ondelete="CASCADE"), primary_key=True)
+    sort = db.Column(db.Integer)
+    product = db.relationship("BridgeProductEntity", backref=db.backref("media_assocs", cascade="all, delete"))
+
+
+class BridgeCategoryMediaAssoc(db.Model):
+    __tablename__ = 'media_category_association'
+    media_id = db.Column(db.Integer, db.ForeignKey('bridge_media_entity.id', ondelete="CASCADE"), primary_key=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('bridge_category_entity.id', ondelete="CASCADE"),
+                            primary_key=True)
+    sort = db.Column(db.Integer)
+    category = db.relationship("BridgeCategoryEntity", backref=db.backref("media_assocs", cascade="all, delete"))
 
 
 class MediaTranslationWrapper:
@@ -31,19 +41,19 @@ class BridgeMediaEntity(db.Model):
     file_size = db.Column(db.Integer, nullable=True)  # Can be null, when the file was not found and calculating the size was not possible
     title = db.Column(db.Text(), nullable=True)
     description = db.Column(db.Text(), nullable=True)
+    sw6_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
-    # Relationships
-    products = db.relationship("BridgeProductEntity",
-                               secondary=BridgeProductsMediaAssoc,
-                               backref=db.backref("medias", cascade="all, delete"),
-                               passive_deletes=True)
+    # New relationships
+    product_assocs = db.relationship("BridgeProductsMediaAssoc", backref=db.backref("media"), cascade="all, delete",
+                                     passive_deletes=True)
+    category_assocs = db.relationship("BridgeCategoryMediaAssoc", backref=db.backref("media"), cascade="all, delete",
+                                      passive_deletes=True)
 
-    categories = db.relationship("BridgeCategoryEntity",
-                                 secondary=BridgeCategoryMediaAssoc,
-                                 backref=db.backref("medias", cascade="all, delete"),
-                                 passive_deletes=True)
+    def get_id(self):
+        if self.id:
+            return self.id
 
     def get_translation_(self, language_code):
         translation = next((t for t in self.translations if t.language == language_code), None)
@@ -91,6 +101,15 @@ class BridgeMediaEntity(db.Model):
     def set_created_at(self, value):
         self.created_at = value
 
+    def get_sw6_id(self):
+        if self.sw6_id:
+            return self.sw6_id
+        else:
+            return None
+
+    def set_sw6_id(self, sw6_id):
+        self.sw6_id = sw6_id
+
     # Getter und Setter für edited_at
     def get_edited_at(self):
         return self.edited_at
@@ -114,6 +133,9 @@ class BridgeMediaEntity(db.Model):
         self.set_edited_at(bridge_media_entity_new.get_edited_at())
 
         return self
+
+    def get_media_url(self):
+        return f"{GCBridgeConfig.ASSETS_PATH}{GCBridgeConfig.IMG_PATH}/{self.get_file_name()}.{self.get_file_type()}"
 
     def __repr__(self):
         return f"<BridgeMediaEntity(id={self.id}, file_name={self.file_name}, file_type={self.file_type})>"
