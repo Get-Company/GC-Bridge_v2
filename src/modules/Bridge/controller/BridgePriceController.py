@@ -32,7 +32,7 @@ class BridgePriceController(BridgeAbstractController):
                     ).one_or_none()
 
                     if existing_association:
-                        self.logger.info(f"Updating price for product {bridge_product_entity.id} and marketplace {marketplace.id}")
+                        # self.logger.info(f"Updating price for product {bridge_product_entity.id} and marketplace {marketplace.id}")
 
                         if not existing_association.use_fixed_price:
                             # Calculate the price based on the marketplace factor
@@ -42,7 +42,8 @@ class BridgePriceController(BridgeAbstractController):
 
                             self.db.session.flush()
                         else:
-                            self.logger.info("Using fixed price, no update needed")
+                            print(f"Using fixed price for product {bridge_product_entity.get_name()}")
+                            # self.logger.info("Using fixed price, no update needed")
 
                     else:
                         # If no existing association is found, create a new one
