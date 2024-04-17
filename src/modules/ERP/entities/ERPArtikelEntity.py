@@ -3,6 +3,8 @@ import os
 from pprint import pprint
 import requests
 
+import uuid
+
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from src.modules.Bridge.entities.BridgeProductEntity import (
     BridgeProductEntity, BridgeProductTranslation)
@@ -36,6 +38,7 @@ class ERPArtikelEntity(ERPAbstractEntity):
             filter_expression="WShopKz='1'"
         )
 
+
     def map_erp_to_bridge(self):
         """
         Maps the current ERP article entity to a BridgeProductEntity.
@@ -55,6 +58,8 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 shipping_cost_per_bundle=self.get_shipping_cost_per_bundle(),
                 shipping_bundle_size=self.get_shipping_bundle_size(),
                 active=self.get_active(),
+                factor=self.get_factor(),
+                sw6_id=self.set_sw6_id(),
                 created_at=self.get_erstdat(),
                 edited_at=self.get_aenddat()
             )
@@ -228,6 +233,9 @@ class ERPArtikelEntity(ERPAbstractEntity):
             self.logger.error(f"Error on converting '{value}' into an Integer for active status.")
             return None
 
+    def set_sw6_id(self):
+        return str(uuid.uuid4().hex)
+
     def get_name(self) -> str:
         """
         Retrieves the name of the product from the ERP dataset.
@@ -391,6 +399,25 @@ class ERPArtikelEntity(ERPAbstractEntity):
                 return None
         except (ValueError, IndexError, TypeError) as e:
             self.logger.error(f"An error occurred while processing the special end date string: {str(e)}")
+            return None
+
+    def get_factor(self):
+        """
+        Fetches the special factor from the dataset based on the given factor parameter.
+        :param factor: The factor parameter to fetch the factor.
+        :return: Factor as an integer or None if the value is None or missing.
+        """
+        try:
+            factor = self.get_(f"Sel6")
+            if factor:
+                # Ensure the value is an integer
+                factor = int(factor)
+                return factor
+            else:
+                self.logger.warning("No factor found in the provided string.")
+                return None
+        except (ValueError, IndexError, TypeError) as e:
+            self.logger.error(f"An error occurred while processing the factor string: {str(e)}")
             return None
 
     def get_nested_ums(self, jahr, return_field):
