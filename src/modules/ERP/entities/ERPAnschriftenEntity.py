@@ -55,7 +55,7 @@ class ERPAnschriftenEntity(ERPAbstractEntity):
             self.set_na1(bridge_entity.get_name1() + " Updated")
             self.set_na2(bridge_entity.get_name2())
             self.set_na3(bridge_entity.get_name3())
-            # Set E-Mail of Anschrift only on new customers
+            # Set E-Mail of Anschrift only on new customers !
             # self.set_email(bridge_entity.get_email())
             self.set_street(bridge_entity.get_street())
             self.set_postal_code(bridge_entity.get_postal_code())
