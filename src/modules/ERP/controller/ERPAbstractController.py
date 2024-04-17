@@ -24,7 +24,7 @@ class ERPAbstractController(ERPCoreController):
         super().__init__()
         """Initialize the ERPAbstractController."""
         self._dataset_entity = dataset_entity
-        self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, self._dataset_entity.get_dataset_name())
+        # self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, self._dataset_entity.get_dataset_name())
         self.token_counter = 0
         self.db = db
         self.db.session.autoflush = False
@@ -200,8 +200,9 @@ class ERPAbstractController(ERPCoreController):
             self.logger.error(f"Failed to merge entity with its relations into the session: {e}")
             return
         try:
-            self.db.session.commit()
             entity_id = bridge_entity_for_db_with_relations.get_id()
+            print("Upserting", bridge_entity_for_db_with_relations)
+            self.db.session.commit()
             self.logger.info(f"Entity successfully upserted with ID: {entity_id}")
             return entity_id
         except Exception as e:
@@ -228,7 +229,6 @@ class ERPAbstractController(ERPCoreController):
         :return: BridgeProductEntity with media relation set.
         :rtype: BridgeProductEntity
         """
-        bridge_entity.map_erp
         medias_list = bridge_entity.media
         for media in medias_list:
             media_in_db = BridgeMediaEntity.query.filter_by(file_name=media.file_name).one_or_none()
