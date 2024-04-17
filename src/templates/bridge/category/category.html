@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Category {{ product.get_translation().get_name() }} {% endblock %}
+{% block h1 %} {{ product.get_translation().name }} {% endblock %}
+
+{% block js %}
+    {{ super() }}
+{% endblock %}
+
+{% block body %}
+    <div id="vue_bridge_categories_category">
+        <div class="row">
+
+            <div class="col">
+                <h1>{{ category.get_translation().get_name() }}</h1>
+            </div>
+
+        </div>
+    </div> <!-- Vue App -->
+{% endblock %}
+
+{% block body_close %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/bridge/products/vapp_product.js') }}"></script>
+    <script>
+        const mountedApp = app.mount('#vue_bridge_categories_category');
+    </script>
+{% endblock %}
