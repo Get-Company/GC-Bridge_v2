@@ -28,6 +28,12 @@ class BridgeAbstractController(BridgeCoreController):
             self.logger.error(f"Error deleting entities: {str(e)}")
             self.db.session.rollback()
 
+    def get_all(self):
+        try:
+            self._bridge_entity.query().all()
+        except Exception as e:
+            self.logger.error(f"Error getting all:{e}")
+
     def _commit_and_close(self):
         """
         Commits the changes to the database and closes the session.
@@ -40,3 +46,4 @@ class BridgeAbstractController(BridgeCoreController):
             raise
         finally:
             self.db.session.close()
+
