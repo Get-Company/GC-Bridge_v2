@@ -24,7 +24,7 @@ class ERPArtikelKategorienController(ERPAbstractController):
         )
 
     def set_relations(self, bridge_entity):
-        bridge_entity = self._set_translation_relation(bridge_entity)
+        # bridge_entity = self._set_translation_relation(bridge_entity)
         # bridge_entity = self._set_media_relation(bridge_entity)
         return bridge_entity
 
