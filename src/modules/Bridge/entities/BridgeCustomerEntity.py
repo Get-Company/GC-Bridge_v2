@@ -107,13 +107,16 @@ class BridgeCustomerEntity(db.Model):
         return self.updated_at
 
     def get_customer_marketplace_id(self, marketplace_id):
-        customer_marketplace_assoc = (BridgeCustomerMarketplaceAssoc.query
-                                   .filter(BridgeCustomerMarketplaceAssoc.marketplace_id == marketplace_id,
-                                           BridgeCustomerMarketplaceAssoc.customer_id == self.get_id()
-                                   ).one_or_none())
-        if customer_marketplace_assoc:
-            pprint(customer_marketplace_assoc.customer_marketplace_id)
-            return customer_marketplace_assoc.customer_marketplace_id
+        try:
+            customer_marketplace_assoc = (BridgeCustomerMarketplaceAssoc.query
+                                       .filter(BridgeCustomerMarketplaceAssoc.marketplace_id == marketplace_id,
+                                               BridgeCustomerMarketplaceAssoc.customer_id == self.get_id()
+                                       ).one_or_none())
+            if customer_marketplace_assoc:
+                pprint(customer_marketplace_assoc.customer_marketplace_id)
+                return customer_marketplace_assoc.customer_marketplace_id
+        except Exception as e:
+            print("get Customer Marketplace id:", e)
 
     def update(self, bridge_entity_new):
         """
@@ -178,6 +181,7 @@ class BridgeCustomerAddressEntity(db.Model):
     title = db.Column(db.String(255), nullable=False)
     first_name = db.Column(db.String(255), nullable=False)
     last_name = db.Column(db.String(255), nullable=False)
+    phone = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now)
     edited_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -421,6 +425,13 @@ class BridgeCustomerAddressEntity(db.Model):
             self.last_name = last_name
         except ValueError as e:
             print(f"Error setting last_name: {e}")
+
+    # Getter and Setter for phone
+    def get_phone(self):
+        return self.phone
+
+    def set_phone(self, phone):
+        self.phone = phone
 
     # Getter for created_at
     def get_created_at(self):
