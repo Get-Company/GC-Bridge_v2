@@ -1,4 +1,5 @@
 from ..BridgeCoreController import BridgeCoreController
+import uuid
 
 
 class BridgeAbstractEntity(BridgeCoreController):
@@ -20,3 +21,6 @@ class BridgeAbstractEntity(BridgeCoreController):
             self.id = id
         except ValueError as e:
             print(f"Error setting id: {e}")
+
+    def set_sw6_id(self):
+        return str(uuid.uuid4().hex)
