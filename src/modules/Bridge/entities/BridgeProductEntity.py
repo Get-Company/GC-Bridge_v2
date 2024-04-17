@@ -1,5 +1,9 @@
+import uuid
+
 from src import db
 import datetime
+
+from src.modules.Bridge.entities.BridgeMediaEntity import BridgeProductsMediaAssoc, BridgeMediaEntity
 
 
 class TranslationWrapper:
@@ -25,6 +29,9 @@ class BridgeProductEntity(db.Model):
     shipping_cost_per_bundle = db.Column(db.Float(), nullable=True)
     shipping_bundle_size = db.Column(db.Integer(), nullable=True)
     active = db.Column(db.Integer(), nullable=True)
+    factor = db.Column(db.Integer(), nullable=True)
+    sw6_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
+    sw6_media_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
@@ -165,6 +172,43 @@ class BridgeProductEntity(db.Model):
         except Exception as e:
             raise ValueError(f"Error setting active status: {e}")
 
+    def get_factor(self):
+        """Gets the active status of the product."""
+        if hasattr(self, 'factor') and self.factor:
+            return self.factor
+        return False
+
+    def set_factor(self, factor):
+        """
+        Shoud not be set in the Bridge
+
+        Sets the active status of the product.
+        """
+        try:
+            if factor is not None and not isinstance(factor, int):
+                raise ValueError("Active status must be an integer.")
+            self.factor = factor
+        except Exception as e:
+            raise ValueError(f"Error setting factor: {e}")
+
+    def get_sw6_id(self):
+        if self.sw6_id:
+            return self.sw6_id
+        else:
+            return None
+
+    def set_sw6_id(self, sw6_id):
+        self.sw6_id = sw6_id
+
+    def get_sw6_media_id(self):
+        if self.sw6_media_id:
+            return self.sw6_media_id
+        else:
+            return None
+
+    def set_sw6_media_id(self, sw6_media_id):
+        self.sw6_media_id = sw6_media_id
+
     # Getter and Setter for created_at
     def get_created_at(self):
         """Gets the creation date and time of the product."""
@@ -182,6 +226,28 @@ class BridgeProductEntity(db.Model):
     def set_edited_at(self, edited_at):
         """Sets the last edited date and time of the product."""
         self.edited_at = edited_at
+
+    def get_cover_image(self):
+        """
+        Method to fetch the cover image for the product
+
+        :return: BridgeMediaEntity object
+        """
+        try:
+            # Get the association entry with the smallest 'sort' value
+            media_assoc = BridgeProductsMediaAssoc.query.filter_by(product_id=self.id) \
+                .order_by(BridgeProductsMediaAssoc.sort.asc()).first()
+
+            if media_assoc:
+                # Get the corresponding BridgeMediaEntity entry
+                cover_image = BridgeMediaEntity.query.get(media_assoc.media_id)
+                return cover_image
+            else:
+                return None
+
+        except Exception as e:
+            print(f"Error occurred while retrieving cover image: {str(e)}")
+            return None
 
     def update(self, bridge_entity_new):
         """
@@ -214,6 +280,9 @@ class BridgeProductEntity(db.Model):
         # Update active
         self.set_active(bridge_entity_new.get_active())
 
+        # Update factor
+        self.set_factor(bridge_entity_new.get_factor())
+
         # Update shipping bundle size
         self.set_shipping_bundle_size(bridge_entity_new.get_shipping_bundle_size())
 
@@ -221,6 +290,17 @@ class BridgeProductEntity(db.Model):
         self.set_edited_at(bridge_entity_new.get_edited_at())
 
         self.translations = bridge_entity_new.translations
+
+        """
+        Do not update SW6 ids
+        """
+
+        # Update sw6_id
+        # self.set_sw6_id(bridge_entity_new.get_sw6_id())
+
+        # Update sw6 media id
+        # self.set_sw6_media_id(bridge_entity_new.get_sw6_media_id())
+
 
         return self
 
