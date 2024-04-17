@@ -1,3 +1,4 @@
+import time
 from abc import abstractmethod
 from pprint import pprint
 
@@ -17,10 +18,11 @@ class SW6AbstractController(SW6CoreController):
         pass
 
     def sync_all_from_bridge(self):
-        # sw6_json_list = self.get_entity().get_api_list()
-        # for sw6_json_data in sw6_json_list["data"]:
-        #     self.downsert(sw6_json_data=sw6_json_data)
-        pass
+        bridge_entities = self._bridge_controller.get_entity().query.filter_by(active=True).all()
+
+        for bridge_entity in bridge_entities:
+            time.sleep(1)
+            self.sync_one_from_bridge(bridge_entity=bridge_entity)
 
     def sync_one_to_bridge(self, sw6_json_data=None, sw6_entity_id=None):
         if sw6_json_data:
@@ -38,10 +40,10 @@ class SW6AbstractController(SW6CoreController):
             self.logger.error("Neither sw6_json_data nor sw6_entity_id are set. Set at least 1 of them")
             return
 
-    def sync_one_from_bridge(self, bridge_id):
-        bridge_entity =self._bridge_controller.get_entity().query.get(bridge_id)
-        if bridge_entity:
-            self.downsert(bridge_entity)
+    def sync_one_from_bridge(self, bridge_entity):
+        print(f"Entity: {bridge_entity.get_translation().get_name()}")
+        result = self.downsert(bridge_entity=bridge_entity)
+        return result
 
     def sync_changed_to_bridge(self):
         pass
@@ -112,18 +114,83 @@ class SW6AbstractController(SW6CoreController):
             self.logger.error(f"Failed to commit changes to DB: {e}")
 
     def downsert(self, bridge_entity):
+        """Performs an upsert operation on the bridge entity. Update entity if it exists, else create a new one.
 
-        sw6_json_data = self.get_entity().map_bridge_to_sw6(bridge_entity)
-        pprint(sw6_json_data)
-        return True
+        Args:
+            bridge_entity: The entity to be updated or created.
 
+        Returns:
+            Result of the patch operation if the entity exists; result of the post operation otherwise.
+        """
+
+        try:
+            sw6_payload_json = self.get_entity().map_bridge_to_sw6(bridge_entity)  # Map bridge entity to SW6 format
+            is_in_sw6 = self.is_in_sw6(bridge_entity=bridge_entity)  # Check if entity exists in SW6
+
+            if is_in_sw6:  # If entity exists in SW6 data
+                sw6_json_data = self.get_entity().update(
+                    sw6_json_data=is_in_sw6['data'],
+                    bridge_entity=bridge_entity
+                )  # Update entity data
+                result = self.get_entity().patch_(sw6_json_data=sw6_json_data)  # Perform patch operation
+                print(f"Updated Bridge Entity: {bridge_entity.get_sw6_id()}")
+                return result
+
+            else:  # If entity doesn't exist in SW6 data
+                sw6_json_data = self.get_entity().map_bridge_to_sw6(
+                    bridge_entity=bridge_entity)  # Map bridge entity to SW6 format
+                result = self.get_entity().post_(sw6_json_data=sw6_json_data)  # Perform post operation
+                print(f"Created Bridge Entity: {bridge_entity.get_sw6_id()}")
+                return result
+        except Exception as e:
+            self.logger.error(f"Error while performing upsert operation: {e}")  # Log error
 
     @abstractmethod
     def is_in_db(self, bridge_entity_new, sw6_json_data):
         pass
 
     def is_in_sw6(self, bridge_entity):
-        pass
+        """
+        Function to check if the entity is present in SW6 system.
+
+        Args:
+            self: An instance of the class.
+            bridge_entity: An instance of the object.
+
+        Returns:
+            On success, it returns the response received from SW6 system.
+            On failure, it returns None.
+        """
+
+        # Check if the provided bridge_entity has a sw6_id
+        if not bridge_entity.get_sw6_id():
+            # Log the missed sw6_id
+            self.logger.warning("No sw6_id found")
+            # Return None as there's no sw6_id provided
+            return None
+
+        try:
+            # Attempt to get the entity with the given sw6_id
+            response = self.get_entity().search_api_by_(index_field="id",
+                                                        search_value=bridge_entity.get_sw6_id())
+            if response:
+                # Check if 'total' in response is 0 or 1
+                total = response.get('total', 0)
+                if total == 0:
+                    return None  # if 'total' is 0, return response
+                elif total == 1:
+                    # Log the successful search
+                    self.logger.info(f"Found {bridge_entity.get_sw6_id()} in SW6: {response}")
+                    return response
+                else:
+                    raise ValueError(
+                        f"Invalid 'total' value, expected either 0 or 1 on {self.get_entity()._endpoint_name} with id: {bridge_entity.get_sw6_id()}")  # raise error if 'total' is not 0 or 1
+        except Exception as e:
+            # Exception handling, logging the error message
+            self.logger.error(f"Error on category search in sw6 by id: {bridge_entity.get_sw6_id()}, {str(e)}")
+
+        # Return None in case of error or no response
+        return None
 
     @abstractmethod
     def set_relations(self, bridge_entity, sw6_json_data):
