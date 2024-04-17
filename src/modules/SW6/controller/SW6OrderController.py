@@ -101,5 +101,18 @@ class SW6OrderController(SW6AbstractController):
             bridge_entity.customer = bridge_customer
         return bridge_entity
 
+    def get_api_state_machines_list_for_config(self):
+        search_values = ["order.state", "order_transaction.state", "order_transaction.state"]
+        states = []
+        for search_value in search_values:
+            results = self.get_entity().search_api_state_machine_by_(
+                index_field="technicalName",
+                search_value=search_value
+            )
+            if results['total'] >= 0:
+                states.append(results['data'][0])
+
+        pprint(states)
+
     def sync_all_open_orders_to_bridge(self):
         pass
