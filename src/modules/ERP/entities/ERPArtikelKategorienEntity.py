@@ -49,6 +49,7 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
             return None
 
     def map_bridge_to_erp(self, bridge_entity):
+
         pass
 
     def map_erp_translation_to_bridge(self):
@@ -130,7 +131,7 @@ class ERPArtikelKategorienEntity(ERPAbstractEntity):
                 return False
 
             # Log the successful retrieval of available categories
-            self.logger.info(f"Successfully retrieved {available_categories} available article categories from the ERP.")
+            # self.logger.info(f"Successfully retrieved {available_categories} available article categories from the ERP.")
 
             return int(available_categories)
 
