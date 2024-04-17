@@ -45,6 +45,7 @@ class ERPAdressenEntity(ERPAbstractEntity):
         new_address.set_adrnr(erp_adrnr_new)
         new_address.set_suchbeg("GCB")
         new_address.set_status('Kunde aus Internet')
+
         new_address = self.set_values_from_file(
             erp_dataset=new_address,
             entity='customer',
