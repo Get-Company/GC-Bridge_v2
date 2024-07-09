@@ -5,3 +5,15 @@
   background-color: #ababab;
   color: #000000;
 }
+
+.form-check {
+  &.form-switch {
+    .form-check-input {
+      background-color: $danger;
+
+      &:checked {
+        background-color: $success;
+      }
+    }
+  }
+}
