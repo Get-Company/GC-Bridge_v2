@@ -13,33 +13,49 @@
             </a>
             <div id="verwaltungMenu" class="collapse">
                 <a class="list-group-item" href="{{ url_for('bridge_order_views.orders') }}">
-                    <span class="fa-solid fa-truck"></span> Bestellungen
+                    <span class="fa-regular fa-rectangle-list"></span> Bestellungen
                 </a>
                 <a class="list-group-item" href="{{ url_for('bridge_customer_views.customers') }}">
-                    <span class="fa-regular fa-user"></span> Kunden
+                    <span class="fa-regular fa-id-badge"></span> Kunden
                 </a>
                 <a class="list-group-item" href="{{ url_for('bridge_product_views.products') }}">
-                    <span class="fa-regular fa-box-open"></span> Produkte
+                    <span class="fa-regular fa-lemon"></span> Produkte
                 </a>
-                <a class="list-group-item" href="{{ url_for('bridge_views.categories') }}">
-                    <span class="fa-regular fa-tags"></span> Kategorien
+                <a class="list-group-item" href="{{ url_for('bridge_category_views.categories') }}">
+                    <span class="fa-regular fa-window-restore"></span> Kategorien
+                </a>
+                <a class="list-group-item" href="{{ url_for('bridge_category_views.categories_tree') }}">
+                    <span class="fa-regular fa-window-restore"></span> Kategorienbaum
                 </a>
                 <a class="list-group-item" href="{{ url_for('bridge_views.marketplaces') }}">
-                    <span class="fa-regular fa-store"></span> Marktplätze
+                    <span class="fa-regular fa-handshake"></span> Marktplätze
                 </a>
             </div>
         </div>
 
         <!-- Einzelner Menüpunkt für Regeln -->
         <div class="list-group-item list-group-item-action">
-            <a href="{{ url_for('bridge_views.rules') }}">
+            <a aria-expanded="false" data-bs-target="#rulesMenu" data-bs-toggle="collapse" href="#">
                 Regeln
             </a>
+            <div id="rulesMenu" class="collapse">
+                <a class="list-group-item" href="{{ url_for('bridge_rule_views.rules') }}">
+                    <span class="fa-regular fa-chess-rook"></span> Regeln
+                </a>
+                <a class="list-group-item" href="{{ url_for('bridge_rule_views.rule_new') }}">
+                    <span class="fa-regular fa-square-plus"></span> Neu
+                </a>
+            </div>
         </div>
 
         <!-- Einzelner Menüpunkt für Einstellungen -->
         <div class="list-group-item list-group-item-action">
             <a href="#">Einstellungen</a>
+        </div>
+
+        <!-- Einzelner Menüpunkt für Mails -->
+        <div class="list-group-item list-group-item-action">
+            <a href="{{url_for('mail_views.new')}}">Neue E-Mail</a>
         </div>
 
     </div>
