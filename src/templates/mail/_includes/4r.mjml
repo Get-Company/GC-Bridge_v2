@@ -1,0 +1,46 @@
+<mj-section padding="0px">
+    <mj-column padding="0">
+        <mj-text>
+            <h2 align="center" style="color: #4F9A11; font-weight:700; line-height:40px">
+                refuse
+                <br/>
+                <small style="color: #8a8a8a; font-weight:400; line-height:36px; font-size:18px">
+                    vermeiden
+                </small>
+            </h2>
+        </mj-text>
+    </mj-column>
+    <mj-column>
+        <mj-text>
+            <h2 align="center" style="color: #4F9A11; font-weight:700; line-height:40px">
+                recycle
+                <br/>
+                <small style="color: #8a8a8a; font-weight:400; line-height:36px; font-size:18px">
+                    wiederverwerten
+                </small>
+            </h2>
+        </mj-text>
+    </mj-column>
+    <mj-column>
+        <mj-text>
+            <h2 align="center" style="color: #4F9A11; font-weight:700; line-height:40px">
+                reduce
+                <br/>
+                <small style="color: #8a8a8a; font-weight:400; line-height:36px; font-size:18px">
+                    reduzieren
+                </small>
+            </h2>
+        </mj-text>
+    </mj-column>
+    <mj-column>
+        <mj-text>
+            <h2 align="center" style="color: #4F9A11; font-weight:700; line-height:40px">
+                reuse
+                <br/>
+                <small style="color: #8a8a8a; font-weight:400; line-height:36px; font-size:18px">
+                    weiterverwenden
+                </small>
+            </h2>
+        </mj-text>
+    </mj-column>
+</mj-section>
