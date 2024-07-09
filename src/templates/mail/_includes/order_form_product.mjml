@@ -1,0 +1,50 @@
+<tr style="border-bottom: 1px dotted #ff9933; margin: 10px 0 10px 0">
+    <td width="10%">__x</td>
+    <td width="35%" style="color: #ff9933; font-weight: bold; font-size: 12px; line-height:1">
+        {{product.name}}
+    </td>
+    <td width="55%" align="right">
+        <mj-text align="right" font-size="14px">
+
+            {% if product.get_special_price() %}
+            Listenpreis:
+            <span style="text-decoration: line-through">
+                {{ "%.2f"|format(product.get_list_price())|replace('.', ',') }} €
+            </span>
+            netto
+            <br/>
+            <span style="color: #ff9933;">
+                Aktionspreis: {{ "%.2f"|format(product.get_special_price())|replace('.', ',') }} €
+            </span>
+            netto
+            {% else %}
+            Listenpreis: {{ "%.2f"|format(product.get_list_price())|replace('.', ',') }} € netto
+            {% endif %}
+            <br/>
+            <!-- Verkaufseinheit -->
+            pro
+            {% if product.factor and product.factor > 0 %}
+            {{ product.factor }} St.
+            {% else %}
+            {{ product.unit|default('St.') }}
+            {% endif %}
+
+            <br/>
+            {% if product.min_purchase > 1 and product.purchase_unit > 1 %}
+            <!-- Mindestbestellwert und Bestellschritte ? -->
+            <span style="font-size: 12px;">
+                | Mind. Best. Menge: {{ product.min_purchase }} | Best. Schritt: {{
+                    product.purchase_unit }}
+            </span>
+            <br/>
+            {% endif %}
+            <!-- Versandkosten True/False -->
+            {% if product.get_shipping_cost() == 0 %}
+            <span style="font-size:14px; color: #ff9933">- kostenloser Versand - zuzgl. Mwst. -</span>
+            {% else %}
+            <span style="font-size: 12px">- * zuzgl. Versandkosten - zuzgl. Mwst. -</span>
+            {% endif %}
+
+        </mj-text>
+    </td>
+</tr>

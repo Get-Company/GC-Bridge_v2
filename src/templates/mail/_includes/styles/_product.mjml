@@ -1,0 +1,5 @@
+<mj-style inline="inline">
+    .product {
+        padding: 0px 20px 0px 20px !important;
+    }
+</mj-style>

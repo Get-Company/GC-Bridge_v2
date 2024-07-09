@@ -1,0 +1,11 @@
+<mj-style inline="inline">
+    .nav_items_shop {
+        background-color: #ff9933;
+    }
+
+    .mj-link.menu-item {
+        color: #ffffff !important;
+        font-weight: bold !important;
+        font-size: 18px !important;
+    }
+</mj-style>

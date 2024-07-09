@@ -1,0 +1,131 @@
+<mj-wrapper>
+    <!-- Product Head -->
+    <mj-section background-color="#ffffff">
+        <mj-column>
+            <mj-text>
+                <a style="text-decoration: None; color:#000000" target="_blank"
+                   href="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}">
+                    <h4>
+                        <span style="font-size:30px; font-weight:bold; line-height: 45px; display: block">
+                            {% if product.name|length > 30 %}
+                            {% set short_name = product.name[:30]|replace(' ', ' ') ~ ' [...]' %}
+                            {{ short_name }}
+                            {% else %}
+                            {{ product.name }}
+                            {% endif %}
+                        </span>
+                    </h4>
+                </a>
+            </mj-text>
+        </mj-column>
+    </mj-section>
+    <!-- Product Body -->
+    <mj-section background-color="#ffffff">
+        <mj-column>
+            <mj-text line-height="26px">
+                {{product.description_short}}
+            </mj-text>
+            <mj-button padding="20px 0 0 0"
+                       href="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}">
+                - Mehr Infos zum Artikel -
+            </mj-button>
+
+            {% if not product.get_special_price() %}
+            <mj-text align="center" padding-top="20px">
+                <h4 style="color: #4F9A11; font-size: 24px; line-height: 40px">
+                    <strong>Preis</strong>
+                    {{ "%.2f"|format(product.get_current_price())|replace('.', ',') }} €
+                </h4>
+            </mj-text>
+            {% endif %}
+
+            <mj-text align="center" padding="0px">
+                <p style="font-size: 14px;">
+                    <!-- Verkaufseinheit -->
+                    pro
+                    {% if product.factor and product.factor > 0 %}
+                    {{ product.factor }} St.
+                    {% else %}
+                    {{ product.unit|default('St.') }}
+                    {% endif %}
+                    <br/>
+                    {% if product.min_purchase > 1 and product.purchase_unit > 1 %}
+                    <!-- Mindestbestellwert und Bestellschritte ? -->
+                    <span style="font-size: 12px;">
+                        | Mind. Best. Menge: {{ product.min_purchase }} | Best. Schritt: {{
+                            product.purchase_unit }}
+                    </span>
+                    <br/>
+                    {% endif %}
+                    <!-- Versandkosten True/False -->
+                    {% if product.get_shipping_cost() == 0 %}
+                    <span style="font-size:14px; color: #4F9A11">- kostenloser Versand -</span>
+                    {% else %}
+                    <span style="font-size: 12px">- * zuzgl. Versandkosten -</span>
+                    {% endif %}
+                    <br/>
+                    zuzgl. Mwst.
+                </p>
+            </mj-text>
+        </mj-column>
+        <mj-column>
+            {% if product.images|length > 1 %}
+            {% for imgs in product.images %}
+
+            {% endfor %}
+            <mj-carousel>
+                {% for img in product.images %}
+                {% if offset_img != loop.index0 %}
+                <mj-carousel-image target="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}"
+                                   src="https://assets.classei.de/img/{{img.name}}.{{img.type}}"
+                                   alt="{{product.description|striptags}}"/>
+                {% endif %}
+                {% endfor %}
+            </mj-carousel>
+            {% else %}
+            {% set img = product.images[0] %}
+            <mj-image href="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}"
+                      src="https://assets.classei.de/img/{{img.name}}.{{img.type}}"
+                      alt="{{product.description|striptags}}l"/>
+            {% endif %}
+        </mj-column>
+    </mj-section>
+
+    <!-- Product Footer - only fpr special prices-->
+    {% if product.get_special_price() %}
+    <mj-section background-color="#ffffff">
+        <!-- Listenpreis -->
+        <mj-column padding="0" width="25%">
+            <mj-text align="left" padding="0" line-height="40px">
+                Listenpreis:
+                <br/>
+                <span style="text-decoration: line-through">
+                    {{ "%.2f"|format(product.get_list_price())|replace('.', ',') }} €
+                </span>
+            </mj-text>
+        </mj-column>
+        <!-- Angebotspreis -->
+        <mj-column padding="0" width="40%">
+            <mj-text align="center" padding="0" font-size="30px" line-height="40px" font-weight="bold">
+                Aktionspreis:
+                <br/>
+                <span style="color:#4F9A11">
+                    {{ "%.2f"|format(product.get_special_price())|replace('.', ',') }} €
+                </span>
+            </mj-text>
+        </mj-column>
+        <!-- Nachlass in Prozent -->
+        <mj-column padding="0" width="35%">
+            <mj-text align="right" padding="0" font-size="30px" line-height="40px" font-weight="bold"
+                     color="#4F9A11">
+                - {{ "%.0f"|format(
+            (
+                    product.get_list_price() - product.get_special_price()) / product.get_list_price() * 100
+                    )
+                    |replace('.', ',')
+                }} %
+            </mj-text>
+        </mj-column>
+    </mj-section>
+    {% endif %}
+</mj-wrapper>

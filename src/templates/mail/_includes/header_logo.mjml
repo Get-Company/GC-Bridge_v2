@@ -1,0 +1,12 @@
+<mj-section padding="0">
+    <mj-column padding="0">
+        <mj-image
+                width="600px"
+                src="https://www.classei.de/index.php?option=com_joomgallery&amp;view=image&amp;format=raw&amp;id=355&amp;type=orig"
+                href="https://www.classei-shop.com"
+                padding="0"
+                alt="Logo der Büroorganisation Classei"
+        />
+    </mj-column>
+</mj-section>
+

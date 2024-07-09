@@ -1,0 +1,7 @@
+<mj-section>
+    <mj-column>
+        <mj-text align="center" line-height="40px">
+            <h2 style="font-size: 30px; color: #ff9933">{{ subheader }}</h2>
+        </mj-text>
+    </mj-column>
+</mj-section>

@@ -1,0 +1,5 @@
+<mj-style inline="inline">
+    .view_online td {
+        padding: 5px 0 !important;
+    }
+</mj-style>

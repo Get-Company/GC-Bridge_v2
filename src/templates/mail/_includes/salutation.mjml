@@ -1,0 +1,19 @@
+<
+<mj-section>
+    <mj-column>
+        <mj-text>
+            Hallo
+
+            {if:anrede~Herr} Herr {/if}
+            {if:anrede~Frau} Frau {/if}
+            {subtag:name},
+        </mj-text>
+    </mj-column>
+    <mj-column>
+        <mj-text align="right">
+            <p>
+                Ihre Kunden-Nr.: {subtag:adrnr}
+            </p>
+        </mj-text>
+    </mj-column>
+</mj-section>

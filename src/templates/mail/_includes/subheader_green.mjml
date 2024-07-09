@@ -1,0 +1,9 @@
+<mj-wrapper padding="0px">
+    <mj-section css-class="section_white" padding="20px" background-color="#ffffff">
+        <mj-column>
+            <mj-text align="center" line-height="40px">
+                <h2 style="font-size: 30px; color: #4F9A11">{{ subheader }}</h2>
+            </mj-text>
+        </mj-column>
+    </mj-section>
+</mj-wrapper>

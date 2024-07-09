@@ -1,0 +1,12 @@
+<mj-section>
+    <mj-column>
+        <mj-raw>
+            {autocontent:25-| max:1|
+            order:created,DESC|
+            type:intro|link|author| pict:resized|
+            maxwidth:150|
+            maxheight:150| invert| format:TOP_LEFT|
+            template:tagcontent.php}
+        </mj-raw>
+    </mj-column>
+</mj-section>

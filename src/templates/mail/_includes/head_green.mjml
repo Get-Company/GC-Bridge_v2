@@ -1,0 +1,56 @@
+<mj-font name="Roboto Black" href="https://assets.classei.de/fonts/Roboto-Black.ttf"/>
+<mj-font name="Roboto Black Italic" href="https://assets.classei.de/fonts/Roboto-BlackItalic.ttf"/>
+<mj-font name="Roboto Bold" href="https://assets.classei.de/fonts/Roboto-Bold.ttf"/>
+<mj-font name="Roboto Bold Italic" href="https://assets.classei.de/fonts/Roboto-BoldItalic.ttf"/>
+<mj-font name="Roboto Italic" href="https://assets.classei.de/fonts/Roboto-Italic.ttf"/>
+<mj-font name="Roboto Light" href="https://assets.classei.de/fonts/Roboto-Light.ttf"/>
+<mj-font name="Roboto Light Italic" href="https://assets.classei.de/fonts/Roboto-LightItalic.ttf"/>
+<mj-font name="Roboto Medium" href="https://assets.classei.de/fonts/Roboto-Medium.ttf"/>
+<mj-font name="Roboto Medium Italic" href="https://assets.classei.de/fonts/Roboto-MediumItalic.ttf"/>
+<mj-font name="Roboto" href="https://assets.classei.de/fonts/Roboto-Regular.ttf"/>
+<mj-font name="Roboto Thin" href="https://assets.classei.de/fonts/Roboto-Thin.ttf"/>
+<mj-font name="Roboto Thin Italic" href="https://assets.classei.de/fonts/Roboto-ThinItalic.ttf"/>
+
+<mj-style>
+    @font-face {
+        font-family: 'Roboto';
+        src: url('https://assets.classei.de/fonts/Roboto-Regular.ttf');
+        font-weight: normal;
+        font-style: normal;
+    }
+
+    body {
+        font-family: 'Roboto', sans-serif !important;
+    }
+</mj-style>
+<mj-attributes>
+    <mj-all
+            font-family="Roboto, Arial, sans-serif"
+            font-size="16px"
+            line-height="20px"
+    />
+    <mj-body
+            background-color="#f3f3f3"
+    />
+    <mj-section
+            padding="20px"
+            background-color="#ffffff"
+    />
+    <mj-text
+            font-family="Roboto, Arial, sans-serif"
+            font-size="16px"
+            line-height="20px"
+            padding="0"
+    />
+    <mj-button
+            font-family="Roboto, Arial"
+            background-color="#4F9A11"
+            color="white"
+            font-weight="bold"
+            padding="0"
+    />
+
+</mj-attributes>
+<mj-preview>
+    <!-- TODO Add mail preview -->
+</mj-preview>

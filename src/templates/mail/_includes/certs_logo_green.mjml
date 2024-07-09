@@ -1,0 +1,11 @@
+<mj-section padding="0">
+    <mj-column padding="0">
+        <mj-image
+                width="600px"
+                src="https://www.classei.de/index.php?option=com_joomgallery&view=image&format=raw&id=454&type=img"
+                href="https://www.classei-shop.com"
+                padding="0"
+        />
+    </mj-column>
+
+</mj-section>

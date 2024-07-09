@@ -1,0 +1,13 @@
+<mj-style inline="inline">
+    .header_logo td {
+        padding: 2px 0px 0px 0px !important;
+    }
+
+    .header_logo_img {
+        padding: 0px 0px 0px 0px !important;
+    }
+
+    .header_logo td {
+        width: 100% !important;
+    }
+</mj-style>

@@ -1,0 +1,14 @@
+<mj-section padding="20px" background-color="#ffffff">
+    <mj-column>
+        <mj-text>
+            <h1 align="center" style="color: #ff9933; font-weight:400; line-height:40px">
+                {{ h1 }}
+            </h1>
+            <h1 align="right" style="color: #8a8a8a; font-weight:400; line-height:36px">
+                <small>
+                    {{ h1_small }}
+                </small>
+            </h1>
+        </mj-text>
+    </mj-column>
+</mj-section>

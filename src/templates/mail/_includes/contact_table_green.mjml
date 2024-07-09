@@ -1,0 +1,64 @@
+<mj-wrapper>
+    <!-- Head Order Form -->
+    <mj-section>
+        <mj-column>
+            <mj-text align="left" color="#000000" line-height="44px">
+                <h2 style="font-size: 34px; color: #4F9A11">Bestellformular</h2>
+            </mj-text>
+            <mj-text align="center">
+                <p style="font-size: 24px">Einfach Antworten und Anzahl eingeben</p>
+            </mj-text>
+            <mj-text align="right" color="#4F9A11" font-size="24px" line-height="34px">
+                <p>oder schnell anrufen:<br/>+49 (0)8641 97 59 0
+                </p>
+            </mj-text>
+        </mj-column>
+    </mj-section>
+
+    <!-- Kontaktdaten -->
+    <mj-section>
+        <mj-column padding="0">
+            <mj-text>
+                <p style="font-weight: bold;">Stimmen ihre Daten noch? Bitte berichtigen Sie:</p>
+            </mj-text>
+            <mj-table css-class="contact_table" line-height="40px" padding="10px">
+                <tr>
+                    <td width="20%" class="ct_text">Vorname:</td>
+                    <td width="40%" class="ct_value">{subtag:vorname}</td>
+                    <td width="40%" style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="ct_text">Nachname:</td>
+                    <td class="ct_value">{subtag:name}</td>
+                    <td style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="ct_text">Firma:</td>
+                    <td class="ct_value">{subtag:firma}</td>
+                    <td style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="ct_text">Strasse:</td>
+                    <td class="ct_value">{subtag:strasse}</td>
+                    <td style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="ct_text">PLZ/Ort:</td>
+                    <td class="ct_value">{subtag:plzort}</td>
+                    <td style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="ct_text">Fon:</td>
+                    <td class="ct_value">{subtag:fon}</td>
+                    <td style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="ct_text">E-Mail:</td>
+                    <td class="ct_value">{subtag:email}</td>
+                    <td style="border-bottom: 1px dotted #000000" class="ct_user">&nbsp;</td>
+                </tr>
+            </mj-table>
+        </mj-column>
+    </mj-section>
+
+</mj-wrapper>

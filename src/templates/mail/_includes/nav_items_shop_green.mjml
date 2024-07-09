@@ -1,0 +1,18 @@
+<mj-section background-color="#4F9A11" padding="5px 0">
+    <mj-column>
+        <mj-navbar base-url="https://www.classei-shop.com/" hamburger="hamburger" ico-color="#ffffff">
+            <mj-navbar-link padding="0px 10px" color="#ffffff" font-weight="bold" href="Orga-Mappen?sPartner=email">
+                ORGA-MAPPEN
+            </mj-navbar-link>
+            <mj-navbar-link padding="0px 10px" color="#ffffff" font-weight="bold" href="Orga-Tabs?sPartner=email">
+                ORGA-TABS
+            </mj-navbar-link>
+            <mj-navbar-link padding="0px 10px" color="#ffffff" font-weight="bold" href="Orga-Boxen?sPartner=email">
+                ORGA-BOXEN
+            </mj-navbar-link>
+            <mj-navbar-link padding="0px 10px" color="#ffffff" font-weight="bold" href="Fertig-Sets?sPartner=email">
+                FERTIG-SETS
+            </mj-navbar-link>
+        </mj-navbar>
+    </mj-column>
+</mj-section>

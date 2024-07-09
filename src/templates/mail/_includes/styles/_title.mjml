@@ -1,0 +1,9 @@
+<mj-style inline="inline">
+    .title table td {
+        padding: 0px 0px 0px 0px !important;
+    }
+
+    .title_text h1 {
+        text-align: center !important;
+    }
+</mj-style>

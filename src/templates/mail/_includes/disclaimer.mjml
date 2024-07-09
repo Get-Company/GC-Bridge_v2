@@ -1,0 +1,53 @@
+<mj-section>
+    <mj-column>
+        <mj-text font-size="10px" line-height="16px">
+            <!-- Terms -->
+            <p>
+
+                *
+                <a style="text-decoration: None; color: #ff9933"
+                   href="https://www.classei-shop.com/Versandinformationen?sPartner=email"
+                   target="_blank">Nähere Infos zu
+                    Versandkosten&nbsp;hier
+                </a>
+                {% if special_end_date %}
+                Angebot gültig bis {{ special_end_date.strftime('%d.%m.%Y') }}
+                {% endif %}
+
+
+            </p>
+
+
+            <!-- Impressum -->
+            <p>
+                Classei-Organisation - Egon Heimann
+                GmbH | Staudacher Str. 7e | 83250
+                Marquartstein | Deutschland<br>Fon:
+                +49
+                (0)8641 97 59 0 |
+                Fax +49 (0)8641 97 59 20 | E-Mail:
+                <a style="text-decoration: None; color: #ff9933" href="mailto:info@classei.de">
+                    Info
+                </a>
+                // Internet:
+                <a href="https://www.classei.de">Classei.de</a>
+            </p>
+
+
+            <!-- Unsubscribe -->
+            <p>
+                Sie erhalten diese E-Mail, weil Sie
+                unser Kunde/Interessent sind oder
+                wir schon Kontakt hatten. Wenn Sie
+                keine
+                Informationen mehr erhalten möchten,
+                welche wir relativ selten
+                verschicken, tragen Sie sich bitte
+                <span>
+                    {modify}hier{/modify}
+                </span>
+                aus.
+            </p>
+        </mj-text>
+    </mj-column>
+</mj-section>

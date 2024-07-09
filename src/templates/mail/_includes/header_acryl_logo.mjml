@@ -1,0 +1,19 @@
+<mj-section padding="0">
+    <mj-column width="100px" padding="0">
+        <mj-image
+                width="100px"
+                src="https://www.classei-shop.com/media/image/65/8b/53/classei_logo_neu.jpg"
+                href="https://www.classei-shop.com"
+                padding="0"
+
+        />
+    </mj-column>
+    <mj-column width="500px" padding="0">
+        <mj-image
+                width="500px"
+                src="https://www.classei.de/index.php?option=com_joomgallery&amp;view=image&amp;format=raw&amp;id=349&amp;type=orig"
+                href="https://www.classei-shop.com"
+                padding="0"
+        />
+    </mj-column>
+</mj-section>
