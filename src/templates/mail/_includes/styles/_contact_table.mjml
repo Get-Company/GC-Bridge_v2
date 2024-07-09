@@ -1,0 +1,13 @@
+<mj-style inline="inline">
+    .contact_table tr {
+        line-height: 3;
+    }
+
+    .contact_table td.ct_text, td.ct_value {
+        font-size: 12px;
+    }
+
+    .contact_table .ct_user {
+        border-bottom: 1px dotted #000000;
+    }
+</mj-style>
