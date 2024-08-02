@@ -1,12 +1,29 @@
+from pprint import pprint
+
+from sqlalchemy import update, Text
+
 from src import db
 import datetime
 import json
 
-# Assoziationstabelle für die Many-to-Many Beziehung
-BridgeProductsCategoriesAssoc = db.Table('bridge_product_categories_assoc',
-                                          db.Column('product_id', db.Integer, db.ForeignKey('bridge_product_entity.id', ondelete='CASCADE'), primary_key=True),
-                                          db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id', ondelete='CASCADE'), primary_key=True)
-                                          )
+
+class BridgeProductsCategoriesAssoc(db.Model):
+    __tablename__ = 'bridge_product_categories_assoc'
+
+    product_id = db.Column('product_id', db.Integer, db.ForeignKey('bridge_product_entity.id'), primary_key=True)
+    category_id = db.Column('category_id', db.Integer, db.ForeignKey('bridge_category_entity.id'), primary_key=True)
+    sort = db.Column('sort', db.Integer, nullable=False, default=0)
+
+    # Relationen zu den verbundenen Tabellen
+    product = db.relationship("BridgeProductEntity", back_populates="categories_assoc")
+    category = db.relationship("BridgeCategoryEntity", back_populates="products_assoc")
+
+    def get_sort(self):
+        if self.sort:
+            return self.sort
+
+    def set_sort(self, sort):
+        self.sort = sort
 
 
 class TranslationWrapper:
@@ -20,15 +37,24 @@ class TranslationWrapper:
 
 
 class BridgeCategoryEntity(db.Model):
+    """
+    Only use after_category_id and parent_category_id for building the tree and working with paths
+    Fields like:
+    cat_nr, cat_parent_nr, cat_tree_path, erp_nr, erp_nr_parent, erp_tree_path
+    are deprecated
+    """
     __tablename__ = 'bridge_category_entity'
 
     id = db.Column(db.Integer(), primary_key=True, nullable=False, autoincrement=True)
-    erp_nr = db.Column(db.Integer(), nullable=False, unique=True)
-    erp_nr_parent = db.Column(db.Integer(), nullable=True)
-    erp_tree_path = db.Column(db.JSON, nullable=True)
-    cat_nr = db.Column(db.Integer(), nullable=True, unique=True)
-    cat_parent_nr = db.Column(db.Integer(), nullable=True)
-    cat_tree_path = db.Column(db.JSON, nullable=True)
+    after_category_id = db.Column(db.Integer(), db.ForeignKey('bridge_category_entity.id'), nullable=True)
+    parent_category_id = db.Column(db.Integer(), db.ForeignKey('bridge_category_entity.id'), nullable=True)
+    path = db.Column(Text, nullable=True)
+    erp_nr = db.Column(db.Integer(), nullable=False, unique=True, comment='Deprecated: use another field instead')
+    erp_nr_parent = db.Column(db.Integer(), nullable=True, comment='Deprecated: use another field instead')
+    erp_tree_path = db.Column(db.JSON, nullable=True, comment='Deprecated: use another field instead')
+    cat_nr = db.Column(db.Integer(), nullable=True, unique=True, comment='Deprecated: use another field instead')
+    cat_parent_nr = db.Column(db.Integer(), nullable=True, comment='Deprecated: use another field instead')
+    cat_tree_path = db.Column(db.JSON, nullable=True, comment='Deprecated: use another field instead')
     sw6_id = db.Column(db.CHAR(36), nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
@@ -40,11 +66,48 @@ class BridgeCategoryEntity(db.Model):
         lazy='subquery',
         cascade='all, delete-orphan')
 
-    products = db.relationship('BridgeProductEntity', secondary=BridgeProductsCategoriesAssoc, lazy='subquery',
-                               backref=db.backref('categories', lazy=True))
+    products_assoc = db.relationship("BridgeProductsCategoriesAssoc", back_populates="category")
+
+    @property
+    def products(self):
+        """
+        Returns a list of products associated with the category.
+
+        This property navigates through the relationship with the
+        "BridgeProductsCategoriesAssoc" entity,
+        collecting all the associated "BridgeProductEntity" objects,
+        effectively giving us all the products related to this category.
+
+        :return: List of "BridgeProductEntity" objects associated with the category.
+        """
+        return [assoc.product for assoc in self.products_assoc]
+
+    def get_prod_cat_assoc(self, product):
+        assoc = BridgeProductsCategoriesAssoc.query.filter(
+            BridgeProductsCategoriesAssoc.category_id == self.get_id(),
+            BridgeProductsCategoriesAssoc.product_id == product.get_id()
+        ).one_or_none()
+        if assoc:
+            return assoc
 
     def get_id(self):
         return self.id
+
+    def get_after_category_id(self):
+        if self.after_category_id:
+            return self.after_category_id
+
+    def set_after_category_id(self, after_category_id):
+        if after_category_id:
+            self.after_category_id = after_category_id
+
+    def get_parent_category_id(self):
+        if self.parent_category_id:
+            return self.parent_category_id
+
+    def set_parent_category_id(self, parent_category_id):
+        if parent_category_id:
+            self.after_category_id = parent_category_id
 
     def get_translation(self, language_code="DE_de"):
         # Find the translation with the given language code using list comprehension
@@ -53,6 +116,7 @@ class BridgeCategoryEntity(db.Model):
 
     # Getter and Setter for erp_nr
     def get_erp_nr(self):
+        print("Warning: 'erp_nr' is deprecated.")
         return self.erp_nr
 
     def set_erp_nr(self, value):
@@ -60,6 +124,7 @@ class BridgeCategoryEntity(db.Model):
 
     # Getter and Setter for erp_nr_parent
     def get_erp_nr_parent(self):
+        print("Warning: 'erp_nr_parent' is deprecated.")
         return self.erp_nr_parent
 
     def set_erp_nr_parent(self, value):
@@ -67,6 +132,7 @@ class BridgeCategoryEntity(db.Model):
 
     # Getter and Setter for erp_tree_path
     def get_erp_tree_path(self):
+        print("Warning: 'erp_tree_path' is deprecated.")
         return self.erp_tree_path
 
     def set_erp_tree_path(self, value):
@@ -74,6 +140,7 @@ class BridgeCategoryEntity(db.Model):
 
     # Getter and Setter for cat_nr
     def get_cat_nr(self):
+        print("Warning: 'cat_nr' is deprecated.")
         return self.cat_nr
 
     def set_cat_nr(self, value):
@@ -81,6 +148,7 @@ class BridgeCategoryEntity(db.Model):
 
     # Getter and Setter for cat_parent_nr
     def get_cat_parent_nr(self):
+        print("Warning: 'cat_parent_nr' is deprecated.")
         if self.cat_parent_nr and self.cat_parent_nr > 0:
             return self.cat_parent_nr
         else:
@@ -91,6 +159,7 @@ class BridgeCategoryEntity(db.Model):
 
     # Getter and Setter for cat_tree_path
     def get_cat_tree_path(self):
+        print("Warning: 'cat_tree_path' is deprecated.")
         return self.cat_tree_path
 
     def set_cat_tree_path(self, value):
@@ -134,6 +203,8 @@ class BridgeCategoryEntity(db.Model):
 
         return self
 
+    def __repr__(self):
+        return f'<BridgeCategoryEntity ID: {self.id} {self.get_translation().get_name()}'
 
     """
     Special Getter and Setter
@@ -147,6 +218,13 @@ class BridgeCategoryEntity(db.Model):
         else:
             return None
 
+    def get_parent(self):
+        if self.get_parent_category_id():
+            return BridgeCategoryEntity().query.get(self.get_parent_category_id())
+        else:
+            print("No parent available!")
+            return False
+
     def get_tree_path_names_as_list(self):
         tree_path_list = json.loads(self.get_erp_erp_tree_path())
         if tree_path_list:
@@ -158,8 +236,24 @@ class BridgeCategoryEntity(db.Model):
         else:
             return None
 
-    def __repr__(self):
-        return f'Bridge Category Entity ID: {self.id} - ERPNr: {self.erp_nr} - CatNr: {self.cat_nr}'
+    def get_current_tree_level(self):
+        tree_path_list = json.loads(self.get_erp_tree_path())
+        return len(tree_path_list)
+
+    def calculate_path(self, return_json=True):
+        path = [self.cat_nr]
+        current_category = self
+        while current_category.cat_parent_nr != 0:  # assuming 0 indicates no parent
+            current_category = BridgeCategoryEntity().query.filter_by(cat_nr=current_category.cat_parent_nr).first()
+            path.append(current_category.cat_nr)
+        path.reverse()
+        if return_json:
+            return json.dumps(path)  # Converts list to JSON string
+        else:
+            return path
+
+    def update_path(self):
+        self.cat_tree_path = self.calculate_path()
 
 
 class BridgeCategoryTranslation(db.Model):
