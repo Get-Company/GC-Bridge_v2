@@ -3,10 +3,27 @@
         Beschreibung
     </div>
     <div class="card-body">
-        <div class="row">
-            <div class="card-body">
-                {{ product.get_translation('DE_de').description | safe }}
+        <!--Generate tabs for each translation-->
+        <ul id="myTab" class="nav nav-tabs" role="tablist">
+            {% for translation in product.translations %}
+            <li class="nav-item" role="presentation">
+                <button id="{{translation.language}}-tab" aria-controls="{{translation.language}}-tab-pane"
+                        aria-selected="{{ 'true' if loop.first else 'false' }}" class="nav-link {{ 'active' if loop.first }} btn-outline-info" data-bs-target="#{{translation.language}}-tab-pane"
+                        data-bs-toggle="tab" role="tab"
+                        type="button">
+                    {{ translation.language }}
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+        <!--Generate tab content for each translation-->
+        <div id="myTabContent" class="tab-content">
+            {% for translation in product.translations %}
+            <div id="{{translation.language}}-tab-pane" aria-labelledby="{{translation.language}}-tab"
+                 class="tab-pane fade {{ 'show active' if loop.first }}" role="tabpanel" tabindex="0">
+                {{ translation.description | safe }}
             </div>
+            {% endfor %}
         </div>
     </div>
 </div>
