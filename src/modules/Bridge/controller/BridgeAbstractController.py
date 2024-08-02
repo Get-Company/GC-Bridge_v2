@@ -12,6 +12,9 @@ class BridgeAbstractController(BridgeCoreController):
         self.logger.info(f"Calling for Bridge Entity: {self._bridge_entity}")
         return self._bridge_entity
 
+    def get_current_tree_level(self):
+        self.get_entity().json
+
     def delete_all(self, buffer_size=100):
         """
         Deletes all entries associated with the bridge entity from the database.
