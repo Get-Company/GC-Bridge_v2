@@ -49,3 +49,16 @@ class BridgeOrderController(BridgeAbstractController):
     def delete_all_orders(self):
         self.get_entity().query.delete()
         self._commit_and_close()
+
+    def delete_order(self, bridge_order_id):
+        order = self.get_entity().query.get(bridge_order_id)
+        if order:
+            try:
+                self.db.session.delete(order)
+                self._commit_and_close()
+                return True
+            except Exception as e:
+                self.logger.error(f"Could not delete bridge_order_id{bridge_order_id}: e")
+                return False
+        else:
+            return False
