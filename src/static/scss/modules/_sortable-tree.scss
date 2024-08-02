@@ -1,0 +1,62 @@
+$hover-background: #23272b;
+$accent-color: #00b2ff;
+$grid-line-color: #ffffff;
+$grid-size: 2px;
+
+.tree {
+  display: flex;
+  flex-direction: column;
+  margin: 2rem 0;
+
+  &__label {
+    display: flex;
+    padding: 4px;
+    font-size: 1rem;
+    font-weight: 480;
+    cursor: move;
+
+    &:hover {
+      z-index: 2;
+      background: $hover-background;
+    }
+
+    span {
+      &::before,
+      &::after {
+        content: "";
+        display: block;
+        width: 100px;
+      }
+    }
+  }
+
+  .tree__node--drop-before {
+    > .tree__label {
+      span::before {
+        border-top: 2px solid $accent-color;
+      }
+    }
+  }
+
+  .tree__node--drop-after {
+    > .tree__label {
+      span::after {
+        border-bottom: 2px solid $accent-color;
+      }
+    }
+  }
+
+  .tree__node--drop-inside {
+    > .tree__label {
+      padding: 5px;
+
+      span {
+        background: linear-gradient(0deg, $accent-color 24px, $grid-line-color 25px, $accent-color 26px) repeat-y,
+        linear-gradient(90deg, $accent-color 24px, $grid-line-color 25px, $accent-color 26px) repeat-x,
+        $accent-color;
+        background-size: $grid-size $grid-size;
+        color: #1b1e22;
+      }
+    }
+  }
+}

@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from src import create_app
-from pprint import pprint
 
 """ Timer Start """
 before = datetime.now()
