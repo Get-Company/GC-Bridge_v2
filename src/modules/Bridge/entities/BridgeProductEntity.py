@@ -1,9 +1,15 @@
 import uuid
+from pprint import pprint
+from typing import Union
+
+from sqlalchemy import update
 
 from src import db
 import datetime
 
+from src.modules.ModulesCoreController import generate_uuid
 from src.modules.Bridge.entities.BridgeMediaEntity import BridgeProductsMediaAssoc, BridgeMediaEntity
+from .BridgeCategoryEntity import BridgeProductsCategoriesAssoc
 
 
 class TranslationWrapper:
@@ -28,10 +34,10 @@ class BridgeProductEntity(db.Model):
     purchase_unit = db.Column(db.Integer(), nullable=True)
     shipping_cost_per_bundle = db.Column(db.Float(), nullable=True)
     shipping_bundle_size = db.Column(db.Integer(), nullable=True)
-    active = db.Column(db.Integer(), nullable=True)
+    is_active = db.Column(db.Boolean(), nullable=False, default=True)
     factor = db.Column(db.Integer(), nullable=True)
-    sw6_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
-    sw6_media_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
+    sw6_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
+    sw6_media_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
     edited_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
 
@@ -48,6 +54,39 @@ class BridgeProductEntity(db.Model):
     marketplace_prices_assoc = db.relationship('BridgeProductMarketplacePriceAssoc', back_populates='product')
 
     order_details = db.relationship('BridgeOrderDetailsEntity', back_populates='product')
+
+    categories_assoc = db.relationship("BridgeProductsCategoriesAssoc", back_populates="product")
+
+    @property
+    def categories(self):
+        """
+        Returns a list of categories associated with the product.
+
+        This property navigates through the relationship with the
+        "BridgeProductsCategoriesAssoc" entity,
+        collecting all the associated "BridgeCategoryEntity" objects,
+        effectively giving us all the categories related to this product.
+
+        :return: List of "BridgeCategoryEntity" objects associated with the product.
+        """
+        return [assoc.category for assoc in self.categories_assoc]
+
+    def get_images(self):
+        """
+        Returns the media associated with this product.
+
+        Returns:
+            list[BridgeMediaEntity]: A list of media entities associated with this product.
+        """
+        return [assoc.media for assoc in self.media_assocs]
+
+    def get_prod_cat_assoc(self, category):
+        assoc = BridgeProductsCategoriesAssoc.query.filter(
+            BridgeProductsCategoriesAssoc.product_id == self.get_id(),
+            BridgeProductsCategoriesAssoc.category_id == category.id
+        ).one_or_none()
+        if assoc:
+            return assoc
 
     def get_id(self):
         """Gets the id of the product.
@@ -155,25 +194,18 @@ class BridgeProductEntity(db.Model):
         except Exception as e:
             raise ValueError(f"Error setting shipping bundle size: {e}")
 
-    def get_active(self):
+    def get_is_active(self):
         """Gets the active status of the product."""
-        return self.active
+        return self.is_active
 
-    def set_active(self, active):
-        """
-        Shoud not be set in the Bridge
-
-        Sets the active status of the product.
-        """
-        try:
-            if active is not None and not isinstance(active, int):
-                raise ValueError("Active status must be an integer.")
-            self.active = active
-        except Exception as e:
-            raise ValueError(f"Error setting active status: {e}")
+    def set_is_active(self, is_active: bool):
+        """Sets the active status of the product."""
+        if isinstance(is_active, bool):
+            self.is_active = is_active
+        else:
+            raise TypeError(f"Expected boolean value, got {type(is_active).__name__}")
 
     def get_factor(self):
-        """Gets the active status of the product."""
         if hasattr(self, 'factor') and self.factor:
             return self.factor
         return False
@@ -197,7 +229,9 @@ class BridgeProductEntity(db.Model):
         else:
             return None
 
-    def set_sw6_id(self, sw6_id):
+    def set_sw6_id(self, sw6_id=None):
+        if not sw6_id:
+            sw6_id = uuid.uuid4().hex
         self.sw6_id = sw6_id
 
     def get_sw6_media_id(self):
@@ -301,13 +335,97 @@ class BridgeProductEntity(db.Model):
         # Update sw6 media id
         # self.set_sw6_media_id(bridge_entity_new.get_sw6_media_id())
 
-
         return self
 
+    """
+    Special getter and setter
+    """
+
     def get_translation(self, language_code="DE_de"):
-        # Find the translation with the given language code using list comprehension
-        translation = next((t for t in self.translations if t.language == language_code), None)
-        return TranslationWrapper(translation)
+        """
+        Gets the translation of the product based on the provided language code.
+
+        Args:
+            language_code (str): The language code to get the translation for. Defaults to 'DE_de'.
+
+        Returns:
+            TranslationWrapper: The translation wrapper of the product for the provided language code.
+        """
+        try:
+            # Finds the translation with the given language code using list comprehension
+            translation = next((t for t in self.translations if t.language == language_code), None)
+
+            return TranslationWrapper(translation)
+
+        except Exception as e:
+            # Logs any encountered error
+            print(f"An error occurred while getting translation for Product: {str(e)}")
+
+            return None
+
+    def get_price_entity_for_marketplace(self, marketplace_id=1):
+        """
+        Fetches the `BridgePriceEntity` instance associated with the specified marketplace
+        from `bridge_price_entity` associated with the `BridgeProductEntity` instance.
+        The default marketplace_id is 1.
+
+        :param marketplace_id: The ID of the marketplace to get the price entity from. Defaults to 1.
+        :return: The associated `BridgePriceEntity` instance or None if the value is None or if a related price entity doesn't exist.
+        """
+        try:
+            # Traverse through the marketplace_prices_assoc of the product entity,
+            # looking for assoc with the provided marketplace_id
+            assoc = next((assoc for assoc in self.marketplace_prices_assoc
+                          if assoc.marketplace_id == marketplace_id), None)
+
+            # If assoc with provided marketplace_id and associated price entity is found,
+            # return the price entity.
+            if assoc and assoc.price:
+                return assoc.price
+        except Exception as e:
+            # Log any potential error and return None in case of any exception.
+            print(f"An error occurred while fetching the price entity: {str(e)}")
+
+        # Return None if no matching assoc or associated price entity is found.
+        return None
+
+    def get_shipping_cost(self, shipping: Union[str, float] = '5,95', no_shipping_from: float = 99.0) -> Union[
+        str, float]:
+        """
+        Returns the shipping cost for this BridgeProductEntity object.
+        If the product has a fixed shipping cost per bundle, it returns that value.
+        Otherwise, it checks the current price of the product and returns the shipping cost
+        if the price is below the threshold for free shipping.
+
+        Args:
+            shipping (str or float, optional): The shipping cost to return if applicable.
+                If a string, should be in the format "x,yz" with the decimal separator as a comma.
+                If a float, should be the shipping cost in EUR.
+                Defaults to '5,95'.
+            no_shipping_from (float, optional): The price threshold for free shipping.
+                Defaults to 99.0.
+
+        Returns:
+            str or float: The shipping cost if applicable, or 0 if the price is above the threshold for free shipping.
+                If the shipping cost is returned as a float, it will be rounded to two decimal places.
+        """
+        if self.shipping_cost_per_bundle is not None:
+            # If the product has a fixed shipping cost per bundle, return that value.
+            return self.shipping_cost_per_bundle
+
+        elif self.prices is not None:
+            # If the product has at least one price, check the current price and return the shipping cost if applicable.
+            current_price = self.get_price_entity_for_marketplace().get_current_best_price()
+            if self.factor is not None:
+                current_price = current_price / self.factor
+            if current_price <= no_shipping_from:
+                # If the current price is below the threshold for free shipping, return the shipping cost.
+                if isinstance(shipping, str):
+                    # If the shipping cost is given as a string, convert it to a float with comma as decimal separator.
+                    shipping = float(shipping.replace(',', '.'))
+                return round(shipping, 2)  # Round to two decimal places.
+        # If the product has no fixed shipping cost per bundle and no prices, return 0.
+        return 0
 
     def __repr__(self):
         """
@@ -444,5 +562,3 @@ class BridgeProductTranslation(db.Model):
             # Depending on your error handling strategy, you might want to re-raise the exception
             # raise
             return False
-
-
