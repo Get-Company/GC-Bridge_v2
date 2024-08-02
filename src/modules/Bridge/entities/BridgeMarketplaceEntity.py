@@ -1,8 +1,10 @@
 from src import db
 import datetime
+from src.modules.ModulesCoreController import generate_uuid
 import uuid
 from .BridgePriceEntity import BridgePriceEntity
 from .BridgeProductEntity import BridgeProductEntity
+
 """
 # CH 01.03.21: 1.4 -> 1.35
 # CH 01.03.22: 1.35 -> 1.3
@@ -22,10 +24,79 @@ class BridgeProductMarketplacePriceAssoc(db.Model):
     marketplace = db.relationship('BridgeMarketplaceEntity', back_populates='product_prices_assoc')
     price = db.relationship('BridgePriceEntity', backref=db.backref('marketplace_products', uselist=False))
     use_fixed_price = db.Column(db.Boolean, nullable=False, default=False)
-    sw6_visibility_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
-    sw6_price_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
-    sw6_rebate_price_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
-    sw6_special_price_id = db.Column(db.CHAR(36), default=uuid.uuid4().hex, nullable=False)
+    sw6_visibility_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
+    sw6_price_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
+    sw6_rebate_price_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
+    sw6_special_price_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+    def get_product(self):
+        return self.product
+
+    def get_marketplace(self):
+        return self.marketplace
+
+    def get_sw6_visibility_id(self):
+        return self.sw6_visibility_id
+
+    def set_sw6_visibility_id(self, uuid_val=None):
+        self.sw6_visibility_id = uuid_val or generate_uuid()
+
+    def get_sw6_price_id(self):
+        return self.sw6_price_id
+
+    def set_sw6_price_id(self, uuid_val=None):
+        self.sw6_price_id = uuid_val or generate_uuid()
+
+    def get_sw6_rebate_price_id(self):
+        return self.sw6_rebate_price_id
+
+    def set_sw6_rebate_price_id(self, uuid_val=None):
+        self.sw6_rebate_price_id = uuid_val or generate_uuid()
+
+    def get_sw6_special_price_id(self):
+        return self.sw6_special_price_id
+
+    def set_sw6_special_price_id(self, uuid_val=None):
+        self.sw6_special_price_id = uuid_val or generate_uuid()
+
+    def get_is_active(self):
+        """Gets the active status of the product on the marketplace."""
+        return self.is_active
+
+    def set_is_active(self, is_active: bool):
+        """Sets the active status of the product on the marketplace."""
+        if isinstance(is_active, bool):
+            self.is_active = is_active
+        else:
+            raise TypeError(f"Expected boolean value, got {type(is_active).__name__}")
+
+    def get_product_id(self):
+        return self.product_id
+
+    def set_product_id(self, product_id):
+        self.product_id = product_id
+
+    def get_marketplace_id(self):
+        return self.marketplace_id
+
+    def set_marketplace_id(self, marketplace_id):
+        self.marketplace_id = marketplace_id
+
+    def get_price_id(self):
+        return self.price_id
+
+    def set_price_id(self, price_id):
+        self.price_id = price_id
+
+    def get_use_fixed_price(self):
+        return self.use_fixed_price
+
+    def set_use_fixed_price(self, use_fixed_price):
+        if isinstance(use_fixed_price, bool):
+            self.use_fixed_price = use_fixed_price
+        else:
+            raise TypeError(f"Expected boolean value, got {type(use_fixed_price).__name__}")
 
     def __repr__(self):
         return f'BridgeProductMarketplace Assoc. {self.product_id}-{self.marketplace_id}-{self.price_id}'
@@ -33,8 +104,10 @@ class BridgeProductMarketplacePriceAssoc(db.Model):
 
 class BridgeCustomerMarketplaceAssoc(db.Model):
     __tablename__ = 'bridge_customer_marketplace_assoc'
-    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id', ondelete="CASCADE"), primary_key=True)
-    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_marketplace_entity.id', ondelete="CASCADE"), primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('bridge_customer_entity.id', ondelete="CASCADE"),
+                            primary_key=True)
+    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_marketplace_entity.id', ondelete="CASCADE"),
+                               primary_key=True)
 
     customer_marketplace_id = db.Column(db.String(255), nullable=True, unique=True)
 
@@ -55,7 +128,8 @@ class BridgeCustomerMarketplaceAssoc(db.Model):
 class BridgeOrderMarketplaceAssoc(db.Model):
     __tablename__ = 'bridge_order_marketplace_assoc'
     order_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id', ondelete="CASCADE"), primary_key=True)
-    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id', ondelete="CASCADE"), primary_key=True)
+    marketplace_id = db.Column(db.Integer, db.ForeignKey('bridge_order_entity.id', ondelete="CASCADE"),
+                               primary_key=True)
 
     def __repr__(self):
         return f'BridgeOrderMarketplace Assoc. {self.order_id}-{self.marketplace_id}'
@@ -179,6 +253,7 @@ class BridgeMarketplaceEntity(db.Model):
 
     def __repr__(self):
         return f" Marketplace {self.name} id:{self.id}"
+
 
 """ 
 Example Queries from AI
