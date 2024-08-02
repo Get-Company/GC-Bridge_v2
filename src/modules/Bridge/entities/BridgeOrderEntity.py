@@ -1,6 +1,7 @@
 from src import db
 import datetime
 
+
 class BridgeOrderEntity(db.Model):
     __tablename__ = "bridge_order_entity"
 
