@@ -5,9 +5,10 @@
     <div class="card-body">
         <div id="productImagesCarousel" class="carousel slide" data-bs-ride="carousel">
             <div class="carousel-inner">
-                {% for img in product.medias %}
+                {% for assoc in product.media_assocs %}
                     <div class="carousel-item {{ 'active' if loop.first }}">
-                        <img class="d-block w-100" src="{{ assets_img_path }}/{{ img.file_name }}.{{ img.file_type }}"
+                        <img class="d-block w-100"
+                             src="{{ assets_img_path }}/{{ assoc.media.file_name }}.{{ assoc.media.file_type }}"
                              alt="Bild {{ loop.index }}">
                     </div>
                 {% endfor %}
