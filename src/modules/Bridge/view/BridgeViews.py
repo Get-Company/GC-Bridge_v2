@@ -11,12 +11,6 @@ from sqlalchemy import or_, desc, asc
 
 BridgeViews = Blueprint('bridge_views', __name__)
 
-
-@BridgeViews.route('/rules', endpoint='rules')
-def bridge_rules_view():
-    return render_template('bridge/rules/rules.html')
-
-
 @BridgeViews.route('/categories', endpoint='categories')
 def bridge_categories():
     cat_ntt = BridgeCategoryEntity()
