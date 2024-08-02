@@ -45,6 +45,8 @@ def bridge_show_orders():
 API
 """
 
+
+# ERP create order
 @BridgeOrderViews.route('/api/orders/erp/create_order/<bridge_order_id>', methods=["GET", "POST"])
 def api_orders_erp_create_order(bridge_order_id):
     bridge_order = BridgeOrderController().get_entity().query.get(bridge_order_id)
@@ -55,6 +57,8 @@ def api_orders_erp_create_order(bridge_order_id):
     else:
         return jsonify({'status': 'error', 'message': f'No order found in bridge by ID:{bridge_order_id}'})
 
+
+# SW6 Get open orders
 @BridgeOrderViews.route('/api/orders/sw6/get_open_order_ids', endpoint='api_orders_sw6_get_open_order_ids')
 def api_orders_sw6_get_open_order_ids():
     try:
@@ -69,6 +73,7 @@ def api_orders_sw6_get_open_order_ids():
         return jsonify({'status': 'error', 'message': f'Fehler beim Abrufen offener Bestell-IDs: {e}'}), 500
 
 
+# SW6->Bridge Create order
 @BridgeOrderViews.route('/api/orders/sw6/sync_one_to_bridge/<sw6_order_id>',
                         endpoint="api_orders_sw6_sync_one_to_bridge", methods=["PATCH"])
 def api_orders_sw6_sync_one_to_bridge(sw6_order_id):
@@ -90,6 +95,7 @@ def api_orders_sw6_sync_one_to_bridge(sw6_order_id):
                         'status': 'error'}), 500
 
 
+# SW6 Get state by name
 @BridgeOrderViews.route('/api/orders/sw6/get_to_state_machine_transition_by_name/<name>/<state_machine_id>',
                         methods=["GET"])
 def api_orders_get_state_machine_state_by_name(name, state_machine_id):
@@ -108,6 +114,7 @@ def api_orders_get_state_machine_state_by_name(name, state_machine_id):
         })
 
 
+# SW6 Set order state
 @BridgeOrderViews.route('/api/orders/sw6/order/<sw6_order_id>/state/<action_name>', methods=["PATCH"])
 def api_orders_change_order_state(sw6_order_id, action_name):
     try:
@@ -119,6 +126,7 @@ def api_orders_change_order_state(sw6_order_id, action_name):
         return jsonify({'message': f'Error changing order state for order ID: {sw6_order_id}: {e}', 'status': 'error'}), 500
 
 
+# SW6 Set order_transaction state
 @BridgeOrderViews.route('/api/orders/sw6/order_transaction/<sw6_order_id>/state/<action_name>', methods=["PATCH"])
 def api_orders_change_order_transaction_state(sw6_order_id, action_name):
     try:
@@ -133,6 +141,7 @@ def api_orders_change_order_transaction_state(sw6_order_id, action_name):
                         'status': 'error'}), 500
 
 
+# SW6 Set order_delivery state
 @BridgeOrderViews.route('/api/orders/sw6/order_delivery/<sw6_order_id>/state/<action_name>', methods=["PATCH"])
 def api_orders_change_order_delivery_state(sw6_order_id, action_name):
     try:
@@ -145,3 +154,18 @@ def api_orders_change_order_delivery_state(sw6_order_id, action_name):
         # Log the exception here
         return jsonify({'message': f'Error changing order delivery state for order ID: {sw6_order_id}: {e}',
                         'status': 'error'}), 500
+
+
+# Bridge Delete order
+@BridgeOrderViews.route('/api/orders/bridge/order_delete/<bridge_order_id>/', methods=["DELETE"])
+def api_orders_delete_order(bridge_order_id):
+    try:
+        result = BridgeOrderController().delete_order(bridge_order_id)
+        if result:
+            return jsonify({'message': f"Order {bridge_order_id} deleted successfully", 'status': 'success'})
+        else:
+            return jsonify(
+                {'message': f"Failed to delete order {bridge_order_id}. Read the log.", 'status': 'error'}), 404
+    except Exception as e:
+        # Log the exception here
+        return jsonify({'message': f'Error deleting order {bridge_order_id}: {e}', 'status': 'error'}), 500
