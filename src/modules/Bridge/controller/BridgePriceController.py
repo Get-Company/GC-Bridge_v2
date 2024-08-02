@@ -1,3 +1,5 @@
+import uuid
+
 from .BridgeAbstractController import BridgeAbstractController
 from ..entities.BridgePriceEntity import BridgePriceEntity
 from ..entities.BridgeMarketplaceEntity import (BridgeMarketplaceEntity,
@@ -9,6 +11,29 @@ class BridgePriceController(BridgeAbstractController):
     def __init__(self):
         self._bridge_entity = BridgePriceEntity()
         super().__init__(bridge_entity=self._bridge_entity)
+
+    def set_price_with_percentage(self, price_id, percentage, special_start_date, special_end_date):
+        bridge_price_entity = BridgePriceEntity.query.get(price_id)
+        if bridge_price_entity:
+            bridge_price_entity.set_special_price(percentage=percentage)
+            bridge_price_entity.set_special_start_date(special_start_date)
+            bridge_price_entity.set_special_end_date(special_end_date)
+            self.db.session.add(bridge_price_entity)
+            self.db.session.commit()
+        return bridge_price_entity
+
+    def apply_marketplace_price_change(self, product_id, percentage, special_start_date, special_end_date):
+        assocs_product_marketplace_price = BridgeProductMarketplacePriceAssoc.query.filter_by(
+            product_id=product_id).all()
+        for assoc in assocs_product_marketplace_price:
+            bridge_price_entity = BridgePriceEntity.query.get(assoc.price_id)
+            if bridge_price_entity:
+                bridge_price_entity.set_special_price(percentage=percentage)
+                bridge_price_entity.set_special_start_date(special_start_date)
+                bridge_price_entity.set_special_end_date(special_end_date)
+                self.db.session.add(bridge_price_entity)
+                self.db.session.commit()
+        return assocs_product_marketplace_price
 
     def upsert_price_for_all_marketplaces(self, bridge_price_entity, bridge_product_entity):
         """
@@ -32,13 +57,15 @@ class BridgePriceController(BridgeAbstractController):
                     ).one_or_none()
 
                     if existing_association:
-                        # self.logger.info(f"Updating price for product {bridge_product_entity.id} and marketplace {marketplace.id}")
+                        self.logger.info(
+                            f"Updating price for product {bridge_product_entity.id} and marketplace {marketplace.id}")
 
                         if not existing_association.use_fixed_price:
                             # Calculate the price based on the marketplace factor
                             existing_association.price.price = self.calculate_price_by_factor(bridge_price_entity.price,factor)
                             existing_association.price.rebate_price = self.calculate_price_by_factor(bridge_price_entity.rebate_price, factor)
                             existing_association.price.special_price = self.calculate_price_by_factor(bridge_price_entity.special_price, factor)
+
 
                             self.db.session.flush()
                         else:
@@ -68,7 +95,6 @@ class BridgePriceController(BridgeAbstractController):
                             )
                             self.db.session.add(new_association)
                             self.db.session.flush()  # Flush to save the new association
-                            bridge_price_entity_new = None
 
                         except Exception as inner_e:
                             self.logger.error(f"An error occurred while creating a new association: {inner_e}")
@@ -103,3 +129,7 @@ class BridgePriceController(BridgeAbstractController):
         rounded_price = math.ceil(calculated_price * 20) / 20
 
         return rounded_price
+
+    """
+    Special getter and setter
+    """
