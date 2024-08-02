@@ -1,0 +1,64 @@
+<div class="card mb-3
+{% if assoc.is_active %}
+    border-secondary
+{% else %}
+    opacity-50
+    border-danger
+{% endif %}
+">
+    <div class="card-header">
+        {{ assoc.marketplace.name }} | ID:{{ assoc.price.id }} | Faktor: {{ assoc.marketplace.factor }}
+        {% if assoc.marketplace.id != 1 %}
+        <div class="form-check form-switch float-end">
+            <input
+                    id="active_switch_{{assoc.marketplace.id}}"
+                    %}
+                    %}
+                    1
+                    assoc.is_active==
+                    checked
+                    class="form-check-input" data-is-active="{{assoc.is_active}}" data-marketplace-id="{{assoc.marketplace.id}}" data-product-id="{{product.id}}" endif
+                    if
+                    type="checkbox" {% {%
+                    @change="syncProductMarketplaceStatus"
+            >
+            <label class="form-check-label" for="active_switch_{{assoc.marketplace.id}}">Aktiv</label>
+        </div>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="card-body">
+                <table class="table table-responsive table-striped mb-3">
+                    <thead>
+                    <tr>
+                        <th>Einheit pro {{ assoc.product.unit }}</th>
+                        <th>Preis</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% if assoc.price.rebate_quantity %}
+                    <tr>
+                        <td>Bis {{ assoc.price.rebate_quantity }}</td>
+                        <td>{{ assoc.price.price | currency_format(2, ',', '.') }} €</td>
+                    </tr>
+                    <tr>
+                        <td>Ab {{ assoc.price.rebate_quantity }}</td>
+                        <td>{{ assoc.price.rebate_price | currency_format }} €</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2">{{ assoc.price.price | currency_format }} €</td>
+                    </tr>
+                    {% endif %}
+                    </tbody>
+
+                </table>
+                <hr/>
+                {% include 'bridge/product/_includes/form_sync_special_price.html' with context %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
