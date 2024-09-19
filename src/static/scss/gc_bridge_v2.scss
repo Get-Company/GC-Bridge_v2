@@ -1,6 +1,6 @@
-@import "../../../node_modules/bootswatch/dist/slate/variables";
+@import "../../../node_modules/bootswatch/dist/darkly/variables";
 @import "../../../node_modules/bootstrap/scss/bootstrap";
-@import "../../../node_modules/bootswatch/dist/slate/bootswatch";
+@import "../../../node_modules/bootswatch/dist/darkly/bootswatch";
 
 $gray-base:              #000 !default;
 $gray-darker:            #272B30 !default; // #222
@@ -13,3 +13,4 @@ $gray-lighter:           #999 !default; // #eee
 @import "modules/_accordion";
 @import "modules/_list";
 @import "modules/_toast";
+@import "modules/_sortable-tree";

@@ -1,0 +1,35 @@
+html, body {
+    background-color: #f3f3f3;
+    font-family: "Roboto", Arial, sans-serif;
+    font-size: 16px;
+}
+
+html .section, body .section {
+    background-color: #ffffff;
+}
+
+html .view_online a, body .view_online a {
+    text-decoration: None;
+    font-size: 12.8px;
+    color: #000000;
+}
+
+html .view_online .view_online_link, body .view_online .view_online_link {
+    font-family: "Roboto Thin", Arial, sans-serif;
+    color: #000000;
+    text-decoration: None;
+}
+
+html .nav_items_shop, body .nav_items_shop {
+    background-color: #ff9933;
+    padding: 10px 0;
+}
+
+html .nav_items_shop .menu-item, body .nav_items_shop .menu-item {
+    padding: 0 10px !important;
+    font-family: "Roboto Bold", Arial, sans-serif !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/*# sourceMappingURL=email.css.map */
