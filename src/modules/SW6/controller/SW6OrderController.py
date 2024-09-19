@@ -70,15 +70,36 @@ class SW6OrderController(SW6AbstractController):
         return bridge_entity
 
     def _set_marketplace_relation(self, bridge_entity, sw6_json_data):
-        # Upsert
-        SW6MarketplaceController().sync_one_to_bridge(sw6_entity_id=sw6_json_data['salesChannel']['id'])
-        # Relate
-        bridge_marketplace_entity = BridgeMarketplaceController().get_entity().query.filter_by(api_id=sw6_json_data['salesChannel']['id']).one_or_none()
+        """
+        This function establishes a marketplace relation between the bridge entity and the given sw6_json_data
 
-        if bridge_marketplace_entity:
-            bridge_entity.marketplace = bridge_marketplace_entity
-        # Return
-        return bridge_entity
+        Args:
+            bridge_entity : The bridge_entity object to which the relation is being set
+            sw6_json_data : The Salesway 6 data in JSON format
+
+        Returns:
+            The updated bridge_entity object with established marketplace relation
+        """
+
+        try:
+
+            # Upserting the marketplace
+            SW6MarketplaceController().sync_one_to_bridge(sw6_entity_id=sw6_json_data['salesChannel']['id'])
+
+            # Getting the bridge_marketplace_entity
+            bridge_marketplace_entity = BridgeMarketplaceController().get_entity().query \
+                .filter_by(api_id=sw6_json_data['salesChannel']['id']) \
+                .one_or_none()
+
+            if bridge_marketplace_entity:
+                # Relating the bridge_marketplace_entity to the bridge_entity
+                bridge_entity.marketplace = bridge_marketplace_entity
+
+            return bridge_entity
+
+        except Exception as e:
+            self.logger.error(f"Error in _set_marketplace_relation: {e}")
+            raise
 
     def _set_order_details_relation(self, bridge_entity, sw6_json_data):
         # Upsert
@@ -115,4 +136,11 @@ class SW6OrderController(SW6AbstractController):
         pprint(states)
 
     def sync_all_open_orders_to_bridge(self):
+        pass
+
+    """
+    SW5
+    """
+
+    def sw5_sync_one_to_sw6(self, sw5_json_order_data):
         pass
