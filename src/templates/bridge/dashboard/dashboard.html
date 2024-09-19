@@ -14,6 +14,8 @@ GC-Bridge 2 - Dashboard
 
 {% block body %}
 <div class="row row-cols-2 row-cols-xxl-3 g-4">
+    {% include '_includes/_toast.html' %}
+    <!-- Orders -->
     <div class="col">
         <div class="card">
             <div class="card-header">
@@ -31,6 +33,7 @@ GC-Bridge 2 - Dashboard
             </div>
         </div>
     </div>
+    <!-- Customers -->
     <div class="col">
         <div class="card">
             <div class="card-header">
@@ -46,6 +49,7 @@ GC-Bridge 2 - Dashboard
             </div>
         </div>
     </div>
+    <!-- Products -->
     <div class="col">
         <div class="card">
             <div class="card-header">
@@ -63,6 +67,7 @@ GC-Bridge 2 - Dashboard
             </div>
         </div>
     </div>
+    <!-- Categories -->
     <div class="col">
         <div class="card">
             <div class="card-header">
@@ -81,11 +86,12 @@ GC-Bridge 2 - Dashboard
         </div>
 
     </div>
+    <!-- Marketplaces -->
     <div class="col">
         <div class="card">
             <div class="card-header">
                 <a class="text-decoration-none text-success text-opacity-75" href="{{ url_for('bridge_views.marketplaces') }}">
-                    <h5 class="card-title"><i class="fas fa-store fa-bounce"></i> Marktplätze</h5>
+                    <h5 class="card-title"><i class="fas fa-store"></i> Marktplätze</h5>
                 </a>
             </div>
             <div class="card-body">
@@ -96,16 +102,46 @@ GC-Bridge 2 - Dashboard
             </div>
         </div>
     </div>
+    <!-- Backups-->
+    <div id="vapp_api_sw6_backups" class="col">
+        <div class="card">
+            <div class="card-header">
+                <a class="text-decoration-none text-warning text-opacity-75" href="#">
+                    <h5 class="card-title"><i class="fas fa-cogs"></i> Backup</h5>
+                </a>
+            </div>
+            <div class="card-body">
+                <p class="card-text">Einfache Backups für DB und Shopsystem über SSH</p>
+            </div>
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col">
+                        <button class="btn btn-outline-success btn-sm" @click="backup_sw6_db">
+                            <span role="status">&nbsp; Backup SW6 DB</span>
+                        </button>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-outline-success btn-sm" @click="backup_sw6_files">
+                            <span role="status">&nbsp; Backup SW6 Files</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
 
 {% block body_close %}
 {{ super() }}
-<script src="{{ url_for('static', filename='js/bridge/orders/vapp_dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bridge/backups/vapp_sw6_backup.js') }}"></script>
 <script src="{{ url_for('static', filename='js/plugins/toastPlugin.js')}}"></script>
 <script>
-    app.use(ToastPlugin)
-    const mountedAppOrders = app.mount('#vapp_api_get_sw6_orders');
+    document.addEventListener('DOMContentLoaded', (event) => {
+        app_sw6_backup.use(ToastPlugin);
+        const mountedAppSW6Backups = app_sw6_backup.mount('#vapp_api_sw6_backups');
+    });
 </script>
 {% endblock %}
