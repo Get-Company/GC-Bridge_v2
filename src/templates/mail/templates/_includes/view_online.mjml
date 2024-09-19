@@ -1,4 +1,4 @@
-<mj-section background-color="#ffffff" padding="0">
+<mj-section background-color="#ffffff" padding="0" id="view_online">
     <mj-column padding="0">
         <mj-text font-size="12px" color="#000000" padding="0" align="center">
             <a style="text-decoration: None; color: #000000" href="{readonline|template:notemplate}{/readonline}"

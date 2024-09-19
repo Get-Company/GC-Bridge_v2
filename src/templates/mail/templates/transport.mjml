@@ -1,0 +1,99 @@
+<mjml>
+    <mj-head>
+        {% include "/_includes/head.mjml" %}
+    </mj-head>
+
+    <!-- Body -->
+    <mj-body>
+        <mj-raw>
+            <!-- Company Header -->
+        </mj-raw>
+
+        <!-- View online -->
+        {% include "/_includes/view_online.mjml" %}
+
+        <!-- Navigation -->
+        {% include "/_includes/nav_items_shop.mjml" %}
+
+        <!-- Header-Logo -->
+        {% include "/_includes/header_logo.mjml" %}
+
+        <!-- Title -->
+        {% with
+        h1="Classei Akten transportieren",
+        h1_small="...einfach, praktisch und funktionell"
+        %}
+        {% include "/_includes/title_txt.mjml" %}
+        {% endwith %}
+
+        <!-- Salutation -->
+        {% include "/_includes/salutation.mjml" %}
+
+
+        <!-- Intro -->
+        <mj-section>
+            <mj-column>
+                <mj-text>
+                    <p>
+                        möchten Sie Ihre Akten zu Besprechungen, Kundenbesuchen oder Vorträgen sicher verstaut
+                        mitnehmen? Kein Problem –
+                        auch hier bietet Classei eine Vielfalt von Transportmöglichkeiten. Angefangen von der <span
+                            class="orange">neuen, eleganten
+                        Leder/Nylon-Aktentasche
+                    </span> bis hin zum Konferenz-Koffer, in dem eine komplett gefüllte Orga-Box und Notebook oder
+                        Tablet Platz finden.
+                    </p>
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        <mj-wrapper padding="20px 0 0 0">
+            <!-- Subheader ZPM -->
+            {% with subheader="Aktentaschen" %}
+            {% include "/_includes/subheader.mjml" %}
+            {% endwith %}
+        </mj-wrapper>
+
+        <!-- Products -->
+        {% for product in products[:3] %}
+        {% with product=product %}
+        {% include "/_includes/product.mjml" %}
+        {% endwith %}
+        {% endfor %}
+
+        <mj-wrapper padding="20px 0 0 0">
+            <!-- Subheader ZPM -->
+            {% with subheader="GO-Koffer" %}
+            {% include "/_includes/subheader.mjml" %}
+            {% endwith %}
+        </mj-wrapper>
+
+        {% for product in products[3:] %}
+        {% with product=product %}
+        {% include "/_includes/product.mjml" %}
+        {% endwith %}
+        {% endfor %}
+
+        <!-- Order form Contact -->
+        {% include "/_includes/contact_table.mjml" %}
+
+        <!-- Order form Products -->
+        <mj-section>
+            <mj-column padding="0">
+                <mj-table padding="0">
+                    {% for product in products %}
+                    {% include "/_includes/order_form_product.mjml" %}
+                    {% endfor %}
+                </mj-table>
+            </mj-column>
+        </mj-section>
+
+        <!-- Blog Content -->
+        {% include "/_includes/blog_acymailing.mjml" %}
+
+        <!-- Rechtliches -->
+        {% include "/_includes/disclaimer.mjml" %}
+
+    </mj-body>
+
+</mjml>

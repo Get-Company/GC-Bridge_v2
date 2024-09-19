@@ -1,0 +1,26 @@
+<mjml>
+    <mj-head>
+        {% include "/_includes/head.mjml" %}
+    </mj-head>
+
+    <!-- Body -->
+    <mj-body>
+        <mj-raw>
+            <!-- Company Header -->
+        </mj-raw>
+
+        <!-- View online -->
+        {% include "/_includes/view_online.mjml" %}
+
+        <!-- Navigation -->
+        {% include "/_includes/nav_items_shop.mjml" %}
+
+        <!-- Header-Logo -->
+        {% include "/_includes/header_logo.mjml" %}
+
+        {% for product in products %}
+        {{ product.get_erp_nr() }}
+        {% endfor %}
+    </mj-body>
+
+</mjml>

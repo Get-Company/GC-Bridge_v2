@@ -4,14 +4,15 @@
         <mj-column>
             <mj-text>
                 <a style="text-decoration: None; color:#000000" target="_blank"
-                   href="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}">
+                   href="https://www.classei-shop.com/search?sSearch={{product.get_erp_nr()}}">
                     <h4>
                         <span style="font-size:30px; font-weight:bold; line-height: 45px; display: block">
                             {% if product.name|length > 30 %}
-                            {% set short_name = product.name[:30]|replace(' ', ' ') ~ ' [...]' %}
-                            {{ short_name }}
+                            {% set short_name = product.get_translation().get_name()[:30]|replace(' ', ' ') ~ ' [...]'
+                            %}
+                            {{ product.get_translation().get_description() }}
                             {% else %}
-                            {{ product.name }}
+                            {{ product.get_translation().get_name() }}
                             {% endif %}
                         </span>
                     </h4>
@@ -23,18 +24,18 @@
     <mj-section background-color="#ffffff">
         <mj-column>
             <mj-text line-height="26px">
-                {{product.description_short}}
+                {{product.get_translation().get_description()}}
             </mj-text>
             <mj-button padding="20px 0 0 0"
-                       href="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}">
+                       href="https://www.classei-shop.com/search?sSearch={{product.get_erp_nr()}}">
                 - Mehr Infos zum Artikel -
             </mj-button>
 
-            {% if not product.get_special_price() %}
+            {% if not product.get_price_entity_for_marketplace().is_special_price_active() %}
             <mj-text align="center" padding-top="20px">
                 <h4 style="color: #ff9933; font-size: 24px; line-height: 40px">
                     <strong>Preis</strong>
-                    {{ "%.2f"|format(product.get_current_price())|replace('.', ',') }} €
+                    {{ product.get_price_entity_for_marketplace().get_price() | currency_format(2, ',', '.') }} €
                 </h4>
             </mj-text>
             {% endif %}
@@ -43,17 +44,17 @@
                 <p style="font-size: 14px;">
                     <!-- Verkaufseinheit -->
                     pro
-                    {% if product.factor and product.factor > 0 %}
-                    {{ product.factor }} St.
+                    {% if product.get_factor() and product.get_factor() > 0 %}
+                    {{ product.get_factor() }} St.
                     {% else %}
-                    {{ product.unit|default('St.') }}
+                    {{ product.get_unit() | default('St.') }}
                     {% endif %}
                     <br/>
-                    {% if product.min_purchase > 1 and product.purchase_unit > 1 %}
+                    {% if product.get_min_purchase() > 1 and product.get_purchase_unit() > 1 %}
                     <!-- Mindestbestellwert und Bestellschritte ? -->
                     <span style="font-size: 12px;">
-                        | Mind. Best. Menge: {{ product.min_purchase }} | Best. Schritt: {{
-                            product.purchase_unit }}
+                        | Mind. Best. Menge: {{ product.get_min_purchase() }} | Best. Schritt: {{
+                            product.get_purchase_unit() }}
                     </span>
                     <br/>
                     {% endif %}
@@ -69,30 +70,30 @@
             </mj-text>
         </mj-column>
         <mj-column>
-            {% if product.images|length > 1 %}
-            {% for imgs in product.images %}
+            {% if product.get_images()|length > 1 %}
+            {% for imgs in product.get_images() %}
 
             {% endfor %}
             <mj-carousel>
-                {% for img in product.images %}
+                {% for img in product.get_images() %}
                 {% if offset_img != loop.index0 %}
-                <mj-carousel-image target="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}"
-                                   src="https://assets.classei.de/img/{{img.name}}.{{img.type}}"
-                                   alt="{{product.description|striptags}}"/>
+                <mj-carousel-image target="https://www.classei-shop.com/search?sSearch={{product.get_erp_nr()}}"
+                                   src="https://assets.classei.de/img/{{img.get_file_name()}}.{{img.get_file_type()}}"
+                                   alt="{{product.get_translation().get_description()|striptags}}"/>
                 {% endif %}
                 {% endfor %}
             </mj-carousel>
             {% else %}
-            {% set img = product.images[0] %}
-            <mj-image href="https://www.classei-shop.com/search?sSearch={{product.erp_nr}}"
-                      src="https://assets.classei.de/img/{{img.name}}.{{img.type}}"
-                      alt="{{product.description|striptags}}l"/>
+            {% set img = product.get_images()[0] %}
+            <mj-image href="https://www.classei-shop.com/search?sSearch={{product.get_erp_nr()}}"
+                      src="https://assets.classei.de/img/{{img.get_file_name()}}.{{img.get_file_type()}}"
+                      alt="{{product.get_translation().get_description()|striptags}}l"/>
             {% endif %}
         </mj-column>
     </mj-section>
 
     <!-- Product Footer - only fpr special prices-->
-    {% if product.get_special_price() %}
+    {% if product.get_price_entity_for_marketplace().is_special_price_active() %}
     <mj-section background-color="#ffffff">
         <!-- Listenpreis -->
         <mj-column padding="0" width="25%">
@@ -100,7 +101,7 @@
                 Listenpreis:
                 <br/>
                 <span style="text-decoration: line-through">
-                    {{ "%.2f"|format(product.get_list_price())|replace('.', ',') }} €
+                    {{ product.get_price_entity_for_marketplace().get_price() | currency_format(2, ',', '.') }} €
                 </span>
             </mj-text>
         </mj-column>
@@ -110,7 +111,8 @@
                 Aktionspreis:
                 <br/>
                 <span style="color:#ff9933">
-                    {{ "%.2f"|format(product.get_special_price())|replace('.', ',') }} €
+                    {{ product.get_price_entity_for_marketplace().get_special_price() | currency_format(2, ',', '.') }}
+                    €
                 </span>
             </mj-text>
         </mj-column>
@@ -118,11 +120,12 @@
         <mj-column padding="0" width="35%">
             <mj-text align="right" padding="0" font-size="30px" line-height="40px" font-weight="bold"
                      color="#ff9933">
-                - {{ "%.0f"|format(
-            (
-                    product.get_list_price() - product.get_special_price()) / product.get_list_price() * 100
-                    )
-                    |replace('.', ',')
+                - {{
+                    (
+                            product.get_price_entity_for_marketplace().get_price() -
+                            product.get_price_entity_for_marketplace().get_special_price()
+                    ) /
+                    product.get_price_entity_for_marketplace().get_price() | currency_format(2, ',', '.')
                 }} %
             </mj-text>
         </mj-column>

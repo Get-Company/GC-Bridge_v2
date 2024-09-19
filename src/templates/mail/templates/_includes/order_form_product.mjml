@@ -1,40 +1,43 @@
 <tr style="border-bottom: 1px dotted #ff9933; margin: 10px 0 10px 0">
     <td width="10%">__x</td>
     <td width="35%" style="color: #ff9933; font-weight: bold; font-size: 12px; line-height:1">
-        {{product.name}}
+        {{product.get_translation().get_name()}}
+        {{ product.get_price_entity_for_marketplace().get_special_price() | currency_format(2, ',', '.') }}
     </td>
     <td width="55%" align="right">
         <mj-text align="right" font-size="14px">
 
-            {% if product.get_special_price() %}
+            {% if product.get_price_entity_for_marketplace().is_special_price_active() %}
             Listenpreis:
             <span style="text-decoration: line-through">
-                {{ "%.2f"|format(product.get_list_price())|replace('.', ',') }} €
+                {{ product.get_price_entity_for_marketplace().get_price() | currency_format(2, ',', '.') }}
             </span>
             netto
             <br/>
             <span style="color: #ff9933;">
-                Aktionspreis: {{ "%.2f"|format(product.get_special_price())|replace('.', ',') }} €
+                Aktionspreis:
+                {{ product.get_price_entity_for_marketplace().get_special_price() | currency_format(2, ',', '.') }} €
             </span>
             netto
             {% else %}
-            Listenpreis: {{ "%.2f"|format(product.get_list_price())|replace('.', ',') }} € netto
+            Listenpreis: {{ product.get_price_entity_for_marketplace().get_price() | currency_format(2, ',', '.') }} €
+            netto
             {% endif %}
             <br/>
             <!-- Verkaufseinheit -->
             pro
-            {% if product.factor and product.factor > 0 %}
-            {{ product.factor }} St.
+            {% if product.get_factor() and product.get_factor() > 0 %}
+            {{ product.get_factor() }} St.
             {% else %}
-            {{ product.unit|default('St.') }}
+            {{ product.get_unit() | default('St.') }}
             {% endif %}
 
             <br/>
-            {% if product.min_purchase > 1 and product.purchase_unit > 1 %}
+            {% if product.get_min_purchase() > 1 and product.get_purchase_unit() > 1 %}
             <!-- Mindestbestellwert und Bestellschritte ? -->
             <span style="font-size: 12px;">
-                | Mind. Best. Menge: {{ product.min_purchase }} | Best. Schritt: {{
-                    product.purchase_unit }}
+                | Mind. Best. Menge: {{ product.get_min_purchase() }} | Best. Schritt: {{
+                    product.get_purchase_unit() }}
             </span>
             <br/>
             {% endif %}
