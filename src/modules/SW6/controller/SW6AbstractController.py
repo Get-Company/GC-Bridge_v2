@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 import time
 from abc import abstractmethod
 from pprint import pprint
@@ -17,12 +18,61 @@ class SW6AbstractController(SW6CoreController):
     def sync_all_to_bridge(self, **kwargs):
         pass
 
-    def sync_all_from_bridge(self):
-        bridge_entities = self._bridge_controller.get_entity().query.filter_by(active=True).all()
+    def sync_all_from_bridge(self, set_relations=True, offset=0):
+        """
+        Sync all active bridge entities. Time taken for each entity to sync and
+        an estimated remaining time after each sync are printed.
 
-        for bridge_entity in bridge_entities:
-            time.sleep(1)
-            self.sync_one_from_bridge(bridge_entity=bridge_entity)
+        Args:
+            set_relations (bool): If true, it sets a relation while syncing an entity. Defaults to True.
+            start_from (string): the erp_nr from which to start syncing entities.
+
+        Raises:
+            Any exception raised during the synchronization process will be caught and logged.
+            :param offset: Skipping value
+        """
+        try:
+            # Querying active bridge entities
+            bridge_entities = self._bridge_controller.get_entity().query.filter_by(is_active=True).all()
+        except Exception as e:
+            self.logger.error(f'Failed to query bridge entities. Error: {e}')
+            return
+
+        start = datetime.now()  # Records the start time
+        times = []  # Stores time taken by each entity to sync
+
+        for i, bridge_entity in enumerate(bridge_entities):
+            if i > offset:
+                start_entity = datetime.now()  # Records start time of an entity sync
+                print("Sync:", bridge_entity.get_erp_nr())
+                try:
+                    self.sync_one_from_bridge(bridge_entity=bridge_entity, set_relations=set_relations)
+
+                except Exception as e:
+                    self.logger.error(f'Failed to sync entity: {bridge_entity}. Error: {e}')
+                    continue
+
+                time_entity = datetime.now() - start_entity  # Calculates time taken by an entity to sync
+                times.append(time_entity)
+
+                # Formatting and printing sync time
+                m, s = divmod(round(time_entity.total_seconds()), 60)
+                print(f"{bridge_entity.get_erp_nr()} {i + 1}/{len(bridge_entities)} took {m}:{s} to sync!")
+
+                if i > 0:
+                    # Estimating and printing remaining time based on average sync time
+                    avg_time = sum(times, timedelta()).total_seconds() / len(times)
+                    estimated_time = round((len(bridge_entities) - (i + 1)) * avg_time)
+                    est_m, est_s = divmod(estimated_time, 60)
+                    print(f"Remaining: {est_m}:{est_s}")
+            else:
+                print(f"Skip {i} until Offset: {offset}")
+                continue
+
+        # Calculating, formatting and printing total sync time
+        total_time = round((datetime.now() - start).total_seconds())
+        total_m, total_s = divmod(total_time, 60)
+        print(f"The total time for all entities to sync is {total_m} minutes {total_s} seconds.")
 
     def sync_one_to_bridge(self, sw6_json_data=None, sw6_entity_id=None):
         if sw6_json_data:
@@ -40,9 +90,9 @@ class SW6AbstractController(SW6CoreController):
             self.logger.error("Neither sw6_json_data nor sw6_entity_id are set. Set at least 1 of them")
             return
 
-    def sync_one_from_bridge(self, bridge_entity):
+    def sync_one_from_bridge(self, bridge_entity, set_relations=True):
         print(f"Entity: {bridge_entity.get_translation().get_name()}")
-        result = self.downsert(bridge_entity=bridge_entity)
+        result = self.downsert(bridge_entity=bridge_entity, set_relations=set_relations)
         return result
 
     def sync_changed_to_bridge(self):
@@ -55,65 +105,83 @@ class SW6AbstractController(SW6CoreController):
         return self._sw6_entity
 
     def upsert(self, sw6_json_data):
+        """
+        Tries to either update(push) an existing bridge entity in the database, or insert a new one if it does not exist yet.
+
+        Arguments:
+            sw6_json_data: The JSON data of the bridge entity to be updated or inserted.
+
+        Returns:
+            The ID of the bridge entity in the database, if the operation is successful. None otherwise.
+        """
+
+        # Try to map the input data for a new bridge entity
         try:
-            # Map the data to a new bridge entity
             bridge_entity_new = self._sw6_entity.map_sw6_to_bridge(sw6_json_data=sw6_json_data)
         except Exception as e:
             self.logger.error(f"Failed to map SW6 to new BridgeEntity: {e}")
             return
 
+        # Try to check if an existing entity can be found in the database
         try:
-            # Check for existing entity
             bridge_entity_in_db = self.is_in_db(bridge_entity_new=bridge_entity_new, sw6_json_data=sw6_json_data)
         except Exception as e:
             self.logger.error(f"Failed to check if entity exists in DB: {e}")
             return
 
+        # If an entity is found, prepare to update it
         if bridge_entity_in_db:
             self.logger.info(f"Prepare Update: {bridge_entity_in_db}")
             bridge_entity_for_db = bridge_entity_in_db.update(bridge_entity_new=bridge_entity_new)
             self.db.session.merge(bridge_entity_in_db)
+        # Else, prepare to insert the new entity
         else:
             self.logger.info(f"Prepare Insert: {bridge_entity_in_db} ")
             bridge_entity_for_db = bridge_entity_new
             self.db.session.add(bridge_entity_for_db)
 
+        # Try to flush the session to apply the modifications above
         try:
-            # Flush it first, for we have the relations to set
             self.db.session.flush()
         except Exception as e:
             self.logger.error(f"Failed to flush DB session: {e}")
             return
 
+        # Try to retrieve the entity back from the session to get its ID after the flush operation
         try:
-            # Refresh the entity, to get it back from the flush with its id
             self.db.session.refresh(bridge_entity_for_db)
             id = bridge_entity_for_db.id
         except Exception as e:
             self.logger.error(f"Failed to refresh entity: {e}")
             return
 
+        # Add the entity back after refresh to ensure the session is updated
         self.db.session.add(bridge_entity_for_db)
 
+        # Try to set relations for the entity
         try:
-            # Set relations
             self.logger.info("Set relations for the entity.")
-            bridge_entity_for_db_with_relations = self.set_relations(bridge_entity=bridge_entity_for_db, sw6_json_data=sw6_json_data)
+            bridge_entity_for_db_with_relations = self.set_relations(bridge_entity=bridge_entity_for_db,
+                                                                     sw6_json_data=sw6_json_data)
         except Exception as e:
             self.logger.error(f"Failed to set entity relations: {e}")
             return
+
+        # Try to merge the updated entity into the session
         try:
             self.db.session.merge(bridge_entity_for_db_with_relations)
         except Exception as e:
             self.logger.error(f"Failed to merge entity with its relations into the session: {e}")
             return
+
+        # Try to commit the session to finalize changes
         try:
             self.db.session.commit()
             return id
         except Exception as e:
             self.logger.error(f"Failed to commit changes to DB: {e}")
 
-    def downsert(self, bridge_entity):
+    def downsert(self, bridge_entity, set_relations=True):
         """Performs an upsert operation on the bridge entity. Update entity if it exists, else create a new one.
 
         Args:
@@ -121,10 +189,12 @@ class SW6AbstractController(SW6CoreController):
 
         Returns:
             Result of the patch operation if the entity exists; result of the post operation otherwise.
+            :param bridge_entity:
+            :param set_relations:
         """
 
         try:
-            sw6_payload_json = self.get_entity().map_bridge_to_sw6(bridge_entity)  # Map bridge entity to SW6 format
+            # sw6_payload_json = self.get_entity().map_bridge_to_sw6(bridge_entity)  # Map bridge entity to SW6 format
             is_in_sw6 = self.is_in_sw6(bridge_entity=bridge_entity)  # Check if entity exists in SW6
 
             if is_in_sw6:  # If entity exists in SW6 data
