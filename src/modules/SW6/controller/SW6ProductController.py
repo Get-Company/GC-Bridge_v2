@@ -29,7 +29,7 @@ class SW6ProductController(SW6AbstractController):
     def set_relations(self, bridge_entity, sw6_json_data):
         pass
 
-    def downsert(self, bridge_entity):
+    def downsert(self, bridge_entity, set_relations=True):
         sw6_payload_json = self.get_entity().map_bridge_to_sw6(bridge_entity)
         SW6MediaController().upsert_product_media(bridge_entity=bridge_entity)
 
@@ -40,25 +40,24 @@ class SW6ProductController(SW6AbstractController):
 
         return result
 
-    def remove_all_visibilities(self):
-        visibility_list = self.get_entity().search_api_ids_by_(endpoint_name="product-visibility")
-        success_count = 0
-        error_count = 0
-        if visibility_list['total'] >= 1:
-            for visibility_id in visibility_list['data']:
-                result = self.get_entity().delete(endpoint_name="product-visibility", api_id=visibility_id)
-                if 'success' in result:
-                    success_count += 1
-                else:
-                    error_count += 1
-        return {'success': success_count, 'errors': error_count}
-
     def set_cover_media(self, bridge_entity):
         bridge_media_cover_entity = bridge_entity.get_cover_image()
         result = self.get_entity().search_api_ids_by_(
-            index_field=["productId","mediaId"],
+            index_field=["productId", "mediaId"],
             search_value=[bridge_entity.get_sw6_id(), bridge_media_cover_entity.get_sw6_id()],
             endpoint_name="product-media"
         )
         if result['total'] == 1:
             self.get_entity().set_cover_media(bridge_entity=bridge_entity,product_media_id=result["data"][0])
+
+    def deactivate_in_saleschannel(self, bridge_entity):
+        sw6_entity = SW6ProductController().get_entity()
+
+        assocs = bridge_entity.marketplace_prices_assoc
+        for assoc in assocs:
+            sw6_entity.delete_visibility(visibility_id=assoc.get_sw6_visibility_id())
+
+        SW6ProductController().sync_one_from_bridge(bridge_entity=bridge_entity)
+
+    def sync_sw6_ids(self):
+        pass
