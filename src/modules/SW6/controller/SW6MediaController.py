@@ -45,7 +45,7 @@ class SW6MediaController(SW6AbstractController):
                     try:
                         # If media already exists in SW6, skip it
                         if self.is_in_sw6(bridge_entity=media):
-                            # print("Media already in SW6, continue")
+                            print("Media already in SW6, continue")
                             continue
                         else:
                             sw6_json_data = {
@@ -79,6 +79,15 @@ class SW6MediaController(SW6AbstractController):
         Returns:
         No return items for this function
         """
+        # if filename matches, replace file
+        filename = bridge_media_entity.get_file_name()
+        existing_media = self.get_entity().search_api_by_(index_field="fileName", search_value=filename,
+                                                          endpoint_name="media")
+        if existing_media["total"] > 0:
+            existing_media_id = existing_media["data"][0]["id"]
+            print("ready for deleting", filename)
+            self.get_entity().sw6_client.request_delete(f"/media/{existing_media_id}")
+
         try:
             # Prepare the query string parameters to be passed in the request
             query_string = {
@@ -107,7 +116,10 @@ class SW6MediaController(SW6AbstractController):
                     "position": index,
                     "mediaId": media_assoc.media.get_sw6_id()
                 }
-                self.get_entity().sw6_client.request_post(f"/product-media/", payload=payload, additional_query_params={"_response":"detail"})
+
+                response = self.get_entity().sw6_client.request_post(f"/product-media/", payload=payload,
+                                                                     additional_query_params={"_response": "detail"})
+
         else:
             print(f"No media for {bridge_entity}. Could not set relation")
             self.logger.error(f"No media for {bridge_entity}. Could not set relation")
