@@ -33,7 +33,11 @@
             {% for category in categories %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ category.erp_nr }}</td>
+                    <td>
+                        <a href="{{url_for('bridge_category_views.category', id=category.id) }}">
+                            {{ category.erp_nr }}
+                        </a>
+                    </td>
                     {% for language_code in ['DE_de', 'GB_en'] %} <!-- Add more language codes as needed -->
                         <td>{{ category.get_translation(language_code).name }}</td>
                         <td>{{ category.get_translation(language_code).description | safe }}</td>
