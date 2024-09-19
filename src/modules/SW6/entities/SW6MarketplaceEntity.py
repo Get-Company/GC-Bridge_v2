@@ -29,6 +29,9 @@ class SW6MarketplaceEntity(SW6AbstractEntity):
         except Exception as e:
             self.logger.error(f"SW6 Order could not be mapped to BridgeOrderEntity: {e}")
 
+    def map_bridge_to_sw6(self, bridge_entity):
+        pass
+
     def get_api_saleschannel_details_by_saleschannel_id(self, id):
         payload = Criteria()
         payload.filter.append(EqualsFilter(field='id', value=id))
