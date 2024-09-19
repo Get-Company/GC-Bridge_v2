@@ -3,6 +3,7 @@ from pprint import pprint
 from typing import Union
 
 from sqlalchemy import update
+from config import SW6Config
 
 from src import db
 import datetime
@@ -36,6 +37,7 @@ class BridgeProductEntity(db.Model):
     shipping_bundle_size = db.Column(db.Integer(), nullable=True)
     is_active = db.Column(db.Boolean(), nullable=False, default=True)
     factor = db.Column(db.Integer(), nullable=True)
+    sort = db.Column(db.Integer(), nullable=True)
     sw6_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
     sw6_media_id = db.Column(db.CHAR(36), default=generate_uuid(), nullable=False)
     created_at = db.Column(db.DateTime(), nullable=True, default=datetime.datetime.now())
@@ -212,16 +214,32 @@ class BridgeProductEntity(db.Model):
 
     def set_factor(self, factor):
         """
-        Shoud not be set in the Bridge
 
-        Sets the active status of the product.
+        Sets the price factor of the product.
         """
         try:
             if factor is not None and not isinstance(factor, int):
-                raise ValueError("Active status must be an integer.")
+                raise ValueError("Factor must be an integer.")
             self.factor = factor
         except Exception as e:
             raise ValueError(f"Error setting factor: {e}")
+
+    def get_sort(self):
+        if hasattr(self, 'sort') and self.sort:
+            return self.sort
+        return False
+
+    def set_sort(self, sort):
+        """
+
+        Sets the sort row.
+        """
+        try:
+            if sort is not None and not isinstance(sort, int):
+                raise ValueError("Sort must be an integer.")
+            self.sort = sort
+        except Exception as e:
+            raise ValueError(f"Error setting sort: {e}")
 
     def get_sw6_id(self):
         if self.sw6_id:
@@ -312,10 +330,14 @@ class BridgeProductEntity(db.Model):
         self.set_shipping_cost_per_bundle(bridge_entity_new.get_shipping_cost_per_bundle())
 
         # Update active
-        self.set_active(bridge_entity_new.get_active())
+        # This is done by its own method
+        # self.set_active(bridge_entity_new.get_active())
 
         # Update factor
         self.set_factor(bridge_entity_new.get_factor())
+
+        # Update Sort
+        self.set_sort(bridge_entity_new.get_sort())
 
         # Update shipping bundle size
         self.set_shipping_bundle_size(bridge_entity_new.get_shipping_bundle_size())
@@ -389,7 +411,7 @@ class BridgeProductEntity(db.Model):
         # Return None if no matching assoc or associated price entity is found.
         return None
 
-    def get_shipping_cost(self, shipping: Union[str, float] = '5,95', no_shipping_from: float = 99.0) -> Union[
+    def get_shipping_cost(self, shipping: Union[str, float] = None, no_shipping_from: float = None) -> Union[
         str, float]:
         """
         Returns the shipping cost for this BridgeProductEntity object.
@@ -399,7 +421,7 @@ class BridgeProductEntity(db.Model):
 
         Args:
             shipping (str or float, optional): The shipping cost to return if applicable.
-                If a string, should be in the format "x,yz" with the decimal separator as a comma.
+                If a string, should be in the format "1,23" with the decimal separator as a comma.
                 If a float, should be the shipping cost in EUR.
                 Defaults to '5,95'.
             no_shipping_from (float, optional): The price threshold for free shipping.
@@ -409,6 +431,12 @@ class BridgeProductEntity(db.Model):
             str or float: The shipping cost if applicable, or 0 if the price is above the threshold for free shipping.
                 If the shipping cost is returned as a float, it will be rounded to two decimal places.
         """
+        if not shipping:
+            shipping = SW6Config.SHIPPING_FEE['DE']
+
+        if not no_shipping_from:
+            no_shipping_from = SW6Config.SHIPPING_FREE['DE']
+
         if self.shipping_cost_per_bundle is not None:
             # If the product has a fixed shipping cost per bundle, return that value.
             return self.shipping_cost_per_bundle
