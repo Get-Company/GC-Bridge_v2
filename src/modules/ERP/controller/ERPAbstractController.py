@@ -6,6 +6,7 @@ from src import db
 from ..ERPCoreController import ERPCoreController
 from ..entities.ERPAbstractEntity import ERPAbstractEntity
 from src.modules.Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
+from ..controller.ERPConnectionController import ERPConnectionController
 
 
 class ERPAbstractController(ERPCoreController):
@@ -20,10 +21,11 @@ class ERPAbstractController(ERPCoreController):
         dataset_entity: An instance of ERPAbstractEntity used for accessing datasets.
     """
 
-    def __init__(self, dataset_entity: ERPAbstractEntity, bridge_controller=None, search_value=None):
+    def __init__(self, bridge_controller=None, search_value=None):
         super().__init__()
         """Initialize the ERPAbstractController."""
-        self._dataset_entity = dataset_entity
+        self._erp = ERPConnectionController()
+        self._dataset_entity = None
         # self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, self._dataset_entity.get_dataset_name())
         self.token_counter = 0
         self.db = db
@@ -32,20 +34,6 @@ class ERPAbstractController(ERPCoreController):
         self.search_value = None
         if search_value:
             self.search_value = search_value
-
-    def set_entity(self, dataset_entity) -> None:
-        """
-        Set the dataset entity for the controller.
-        """
-        try:
-            if dataset_entity:
-                self._dataset_entity = dataset_entity
-                self.logger.info(f"Dataset entity {self._dataset_entity.get_dataset_name()} is set.")
-            else:
-                raise ValueError("Provided dataset entity is invalid or None.")
-        except ValueError as e:
-            self.logger.error(f"Error setting dataset entity: {str(e)}")
-            raise
 
     def get_all_dataset_fields(self):
         """
@@ -108,31 +96,87 @@ class ERPAbstractController(ERPCoreController):
             self.logger.warning(message)
             raise ValueError(message)
 
-    def sync_all_to_bridge(self):
-        # For Loop through all the datasets
-        self.logger.info(f'We have a range to loop of {self._dataset_entity.get_range_count()} items.')
+    def sync_all_to_bridge(self, set_relations=True):
+        """
+        Syncs all dataset entities to the bridge. If an entity successfully syncs, its ID is appended to a list.
+
+        :param set_relations: Boolean to indicate whether to enable relations while syncing. Defaults to True.
+        :return: List of IDs of synced entities if any are synced, else True.
+        """
+        erp = self._erp.connect()
+        self.create_dataset_entity(erp=erp)
+
+        total_items = self._dataset_entity.get_range_count()
+        print(f'We have a total of {total_items} items to loop through.')
+
         id_list = []
-        while not self._dataset_entity.range_eof():
-            self.logger.info(f"Next Element in range: {self._dataset_entity}")
-            id = self.upsert()
-            if id:
-                id_list.append(id)
-            self._dataset_entity.range_next()
+        current_item = 1  # Initialize counter for current_item
+
+        while True:
+            try:
+                if not self._dataset_entity.range_eof():  # Verify range end of file
+                    print(f"On item: {current_item} out of {total_items}")
+                    self.logger.info(f"Next Element in range: {self._dataset_entity}")
+                    id_ = self.upsert(set_relations=set_relations)  # Upsert and get ID
+                    if id_:
+                        id_list.append(id_)  # Append ID to list if present
+                    self._dataset_entity.range_next()  # Move to next in range
+                    current_item += 1  # increment the counter
+                else:
+                    break  # Break loop if EOF reached
+            except Exception as error:
+                self.logger.error(f"Error occurred while syncing data to the bridge. Error: {error}")
+                continue  # Continue with next loop iteration if error occurs
+
+        # return the list of IDs if not empty; else return True
         if id_list:
             return id_list
+        self.destroy_dataset_entity()
+        self._erp.close()
         return True
 
     def sync_all_from_bridge(self, bridge_entities):
         for bridge_entity in bridge_entities:
             self.downsert(bridge_entity=bridge_entity)
 
-    def sync_one_to_bridge(self):
-        id = self.upsert()
-        if id:
-            return id
+    def sync_one_to_bridge(self, set_relations=True):
+        """
+        Synchronizes a single dataset between the erp and the bridge.
+
+        This function is an integral part of the two-way synchronization process, and is responsible
+        for maintaining consistency between the erp and the bridge.
+
+        Parameters:
+        set_relations (bool): governs whether relations should be set during upsertion.
+
+        Returns:
+        int: Identifier (id) of the upserted dataset if upsertion is successful. None otherwise.
+        """
+        try:
+            erp = self._erp.connect()
+            self.create_dataset_entity(erp=erp)
+
+            # Perform upsert operation
+            id = self.upsert(set_relations=set_relations)
+
+            self.destroy_dataset_entity()
+            erp = None
+
+            # If the operation is successful, id will be assigned a value and hence True
+            if id:
+                return id
+
+        except Exception as e:
+            # Custom error handling and logging with self.logger
+            self.logger.error("Error performing sync operation in sync_one_to_bridge: %s", str(e))
+            raise e
+
+        finally:
+            self._erp.close()
 
     def sync_one_from_bridge(self, bridge_entity):
-        self.downsert(bridge_entity=bridge_entity)
+        result = self.downsert(bridge_entity=bridge_entity)
+        return result
 
     def sync_changed_to_bridge(self):
         pass
@@ -140,29 +184,30 @@ class ERPAbstractController(ERPCoreController):
     def sync_changed_from_bridge(self, bridge_entities):
         pass
 
-    def upsert(self):
+    def upsert(self, set_relations=True):
         """
         Inserts or updates the BridgeEntity in the database based on whether it already exists or not.
         This method maps the ERPDataset to the BridgeObject, then checks if this entity is already
         present in the database. If the entity exists, it updates the entity, otherwise, it inserts a new one.
+        :param set_relations: Whether the relations should be set
         :param args: Positional arguments passed to map_erp_to_bridge method.
         :param kwargs: Keyword arguments passed to map_erp_to_bridge method.
         """
+
         self.logger.info("Starting the upsert process.")
         try:
             # Map the data to a new bridge entity
+
             bridge_entity_new = self._dataset_entity.map_erp_to_bridge()
         except Exception as e:
             self.logger.error(f"Failed to map ERP dataset to new BridgeEntity: {e}")
             return
-
         try:
             # Check for existing entity
             bridge_entity_in_db = self.is_in_db(bridge_entity_new=bridge_entity_new)
         except Exception as e:
             self.logger.error(f"Failed to check if entity exists in DB: {e}")
             return
-
         if bridge_entity_in_db:
             self.logger.info(f"Entity found in DB, preparing to update: {bridge_entity_in_db}")
             bridge_entity_for_db = bridge_entity_in_db.update(bridge_entity_new=bridge_entity_new)
@@ -171,7 +216,6 @@ class ERPAbstractController(ERPCoreController):
             self.logger.info("No existing entity found in DB, preparing to insert new entity.")
             bridge_entity_for_db = bridge_entity_new
             self.db.session.add(bridge_entity_for_db)
-
         try:
             # Flush it first, for we have the relations to set
             self.db.session.flush()
@@ -184,24 +228,21 @@ class ERPAbstractController(ERPCoreController):
         except Exception as e:
             self.logger.error(f"Failed to refresh entity: {e}")
             return
-
         self.db.session.add(bridge_entity_for_db)
+        if set_relations:
+            try:
+                # Set relations
+                bridge_entity_for_db_with_relations = self.set_relations(bridge_entity_for_db)
+                self.logger.info("Set relations for the entity.")
+                self.db.session.merge(bridge_entity_for_db_with_relations)
 
-        try:
-            # Set relations
-            bridge_entity_for_db_with_relations = self.set_relations(bridge_entity_for_db)
-            self.logger.info("Set relations for the entity.")
-        except Exception as e:
-            self.logger.error(f"Failed to set entity relations: {e}")
-            return
-        try:
-            self.db.session.merge(bridge_entity_for_db_with_relations)
-        except Exception as e:
-            self.logger.error(f"Failed to merge entity with its relations into the session: {e}")
-            return
+            except Exception as e:
+                self.logger.error(f"Failed to set entity relations: {e}")
+                return
+        else:
+            bridge_entity_for_db_with_relations = bridge_entity_for_db
         try:
             entity_id = bridge_entity_for_db_with_relations.get_id()
-            print("Upserting", bridge_entity_for_db_with_relations)
             self.db.session.commit()
             self.logger.info(f"Entity successfully upserted with ID: {entity_id}")
             return entity_id
@@ -210,7 +251,7 @@ class ERPAbstractController(ERPCoreController):
 
     # Direction to ERP
     def downsert(self, bridge_entity):
-        erp_entity = self.get_entity().map_bridge_to_erp(bridge_entity=bridge_entity)
+        erp_entity = self._dataset_entity.map_bridge_to_erp(bridge_entity=bridge_entity)
 
     @abstractmethod
     def is_in_db(self, bridge_entity_new):
@@ -243,3 +284,10 @@ class ERPAbstractController(ERPCoreController):
 
         return bridge_entity
 
+    def create_dataset_entity(self, erp):
+        print("Abstract create dataset entity")
+        pass
+
+    def destroy_dataset_entity(self):
+        print("Abstract destroy dataset entity")
+        pass
