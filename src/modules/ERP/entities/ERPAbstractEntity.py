@@ -17,15 +17,16 @@ Examples:
 
 """
 from datetime import datetime
+from pprint import pprint
 from typing import List, Union, Tuple, Any, Dict
 # Is used to get the basename of the image
 import os
 from abc import abstractmethod
 import requests
 import yaml
+from typing_extensions import deprecated
 
 from ..ERPCoreController import ERPCoreController
-from ..controller.ERPConnectionController import ERPConnectionController
 from config import GCBridgeConfig
 from ...Bridge.entities.BridgeMediaEntity import BridgeMediaEntity
 
@@ -45,6 +46,7 @@ class ERPAbstractEntity(ERPCoreController):
     def __init__(self,
                  dataset_name,
                  dataset_index,
+                 erp,
                  search_value=None,
                  range_end=None,
                  filter_expression=None):
@@ -60,10 +62,7 @@ class ERPAbstractEntity(ERPCoreController):
         super().__init__()
 
         try:
-            #1 Get the singleton instance of ERPConnectionController
-            erp_co_ctrl = ERPConnectionController()
-
-            self._erp = erp_co_ctrl.get_erp()
+            # Initialize special_objects, app_var and edit_objects_dict
             self._erp_special_objects = {
                 "soLager": 0,
                 "soVorgang": 1,
@@ -87,6 +86,11 @@ class ERPAbstractEntity(ERPCoreController):
                 "soModificationMonitor": 19,
                 "soProjekte": 20
             }
+        except Exception as e:
+            self.logger.error(f"Failed to initialize ERP special objects: {str(e)}")
+            raise e
+
+        try:
             self._erp_app_var = {
                 "ArtikelVerkaufspreise": 0,
                 "ArtikelVarianten": 1,
@@ -97,6 +101,10 @@ class ERPAbstractEntity(ERPCoreController):
                 "FreieArtikelKategorien": 6,
                 "ArtikelGewicht": 7
             }
+        except Exception as e:
+            self.logger.error(f"Failed to initialize ERP app variables: {str(e)}")
+            raise e
+        try:
             self._edit_objects_dict = {
                 "etTreeChecker": 0,
                 "etStrings": 1,
@@ -104,34 +112,65 @@ class ERPAbstractEntity(ERPCoreController):
                 "etRichText": 3,
                 "etImage": 4
             }
+        except Exception as e:
+            self.logger.error(f"Failed to initialize edit objects dictionary: {str(e)}")
+            raise e
 
+        # Get the connection
+        self._erp = erp
+
+        try:
             #2 Fetch information about all datasets
             self._dataset_infos = None
             self.set_dataset_infos()
+        except Exception as e:
+            self.logger.error(f"Failed to fetch dataset information: {str(e)}")
+            raise e
 
+        try:
             #3 Set DatasetName
             self._dataset_name = None
             self.set_dataset_name(dataset_name=dataset_name)
+        except Exception as e:
+            self.logger.error(f"Failed to set dataset name: {str(e)}")
+            raise e
 
+        try:
             #4 Initialize created dataset
             self._created_dataset = None
             self.set_created_dataset()
+        except Exception as e:
+            self.logger.error(f"Failed to initialize created dataset: {str(e)}")
+            raise e
 
+        try:
             #5 Set the Index of the Dataset
             self._dataset_index = None
             self.set_dataset_index(dataset_index=dataset_index)
+        except Exception as e:
+            self.logger.error(f"Failed to set dataset index: {str(e)}")
+            raise e
 
+        try:
             # Set the filter
             if filter_expression:
                 self.set_filter(filter_expression=filter_expression)
+        except Exception as e:
+            self.logger.error(f"Failed to set filter: {str(e)}")
+            raise e
 
+        try:
             # initialize Search Value as Empty:
             self._search_value = None
             # When the cursor is set, this attributes changes to True
             self._found = None
             if search_value:
                 self.set_search_value(search_value=search_value)
+        except Exception as e:
+            self.logger.error(f"Failed to set search value: {str(e)}")
+            raise e
 
+        try:
             # Set range if range_end
             self._range_end = None
             self._is_ranged = False
@@ -146,9 +185,18 @@ class ERPAbstractEntity(ERPCoreController):
             else:
                 self.set_cursor()
 
+        except Exception as e:
+            self.logger.error(f"Failed to set range or cursor: {str(e)}")
+            raise e
+
+        try:
             # Initialize nested dataset as none until it is set
             self._nested_dataset = None
+        except Exception as e:
+            self.logger.error(f"Failed to initialize nested dataset: {str(e)}")
+            raise e
 
+        try:
             # Field Types and how to read them:
             self.field_types_to_read = {
                 'WideString': 'AsString',
@@ -178,11 +226,19 @@ class ERPAbstractEntity(ERPCoreController):
                 'String': 'AsString',
                 'Double': 'AsString'
             }
+        except Exception as e:
+            self.logger.error(f"Failed to initialize field types to read or write: {str(e)}")
+            raise e
 
+        try:
             # Holds the current state of the dataset:
             self._dataset_state = None
             self.set_dataset_state()
+        except Exception as e:
+            self.logger.error(f"Failed to set dataset state: {str(e)}")
+            raise e
 
+        try:
             # Holds the fields of the dataset. Is called in different functions
             # by the self.get_dataset_fields
             self._dataset_fields = None
@@ -190,15 +246,19 @@ class ERPAbstractEntity(ERPCoreController):
             # self.logger.info("%s initialized successfully for dataset: %s", self.__class__.__name__, dataset_name)
 
         except Exception as e:
-            self.logger.error("Error initializing %s for dataset: %s. Error: %s", self.__class__.__name__, dataset_name, str(e))
+            self.logger.error(f"Failed to initialize dataset fields: {str(e)}")
             raise e
+
+    @deprecated
+    def erp_close(self):
+        print("ERPAbstractController.erp_close() is marked as deprecated")
 
     def set_dataset_infos(self) -> None:
         """
         Set the dataset information for the entity.
         """
         try:
-            dataset_infos = self._erp.DatasetInfos
+            dataset_infos = self._erp.DataSetInfos
             if dataset_infos:
                 self._dataset_infos = dataset_infos
             else:
@@ -296,7 +356,8 @@ class ERPAbstractEntity(ERPCoreController):
         """
         try:
             if self.get_dataset_name():
-                self._created_dataset = self._dataset_infos.Item(self.get_dataset_name()).CreateDataSet()
+                erp = self.get_dataset_infos()
+                self._created_dataset = erp.Item(self.get_dataset_name()).CreateDataSet()
             else:
                 raise ValueError("Dataset name is not set. Cannot create dataset.")
         except Exception as e:
