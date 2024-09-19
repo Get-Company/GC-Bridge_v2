@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Kategorienbaum {% endblock %}
+{% block h1 %} Kategorien {% endblock %}
+
+{% block css %}
+{{ super() }}
+<link href="{{ url_for('static', filename='css/sortable-tree.css') }}" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col">
+        {% include '_includes/_toast.html' %}
+        <h1>Kategorienbaum</h1>
+    </div>
+</div>
+
+<div id="vapp_bridge_category_tree" class="row">
+    <div class="col">
+        <div id="tree">
+            <!-- Initial content will be replaced by Vue component -->
+
+            <!-- Werbeanzeige / Info -->
+            <div id="info" class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Kategoriebaum wird erstellt</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col">
+                            <img class="img-thumbnail"
+                                 src="/static/img/a_visual_representation_of_a_category_tree_structure.webp">
+                        </div>
+                        <div class="col">
+                            <p class="card-text">In einer dunklen Stadt kämpfte Detektiv Max gegen ein mysteriöses
+                                Datenchaos im Webshop. Die Kategorie-Struktur war zerschlagen, und Max musste sie
+                                wiederherstellen.</p>
+                            <p class="card-text">Er folgte den Spuren zu den Hauptverdächtigen: „id: 1, cat_nr: 1“
+                                führte zu „id: 2, cat_nr: 2“ und „id: 3, cat_nr: 3“. Diese wiederum verbanden sich mit
+                                „id: 4, cat_nr: 4“, „id: 5, cat_nr: 5“ und „id: 6, cat_nr: 6“.</p>
+                            <p class="card-text">Mit Hilfe von <code>@contextmanager</code> und <code>yield</code>
+                                sicherte er die Integrität seiner Ermittlungen. Max erstellte ein neues JSON-Dokument,
+                                das die Hierarchie der Kategorien rekonstruierte:</p>
+                            <pre>
+[
+    {"id": 1, "cat_nr": 1, "cat_parent_nr": null, "cat_tree_path": [1]},
+    {"id": 2, "cat_nr": 2, "cat_parent_nr": 1, "cat_tree_path": [1, 2]},
+    {"id": 3, "cat_nr": 3, "cat_parent_nr": 1, "cat_tree_path": [1, 3]},
+    {"id": 4, "cat_nr": 4, "cat_parent_nr": 2, "cat_tree_path": [1, 2, 4]},
+    {"id": 5, "cat_nr": 5, "cat_parent_nr": 2, "cat_tree_path": [1, 2, 5]},
+    {"id": 6, "cat_nr": 6, "cat_parent_nr": 3, "cat_tree_path": [1, 3, 6]}
+]
+        </pre>
+                            <p class="card-text">Er führte die Datenbankaktualisierung durch und stellte die Ordnung
+                                wieder her. Der Fall war gelöst, die Kategorien blühten wieder.</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="d-flex justify-content-center">
+                            <span class="spinner-grow"></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block body_close %}
+{{ super() }}
+<script src="https://unpkg.com/vue@next"></script>
+<script src="{{ url_for('static', filename='js/bridge/categories/vapp_category_tree_v2.js') }}"></script>
+<script src="{{ url_for('static', filename='js/plugins/toastPlugin.js')}}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        app_bridge_category_tree.use(ToastPlugin);
+        app_bridge_category_tree.mount('#vapp_bridge_category_tree');
+    });
+</script>
+{% endblock %}
