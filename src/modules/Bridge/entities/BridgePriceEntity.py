@@ -194,9 +194,10 @@ class BridgePriceEntity(db.Model):
             self.set_price(bridge_entity_new.get_price())
             self.set_rebate_quantity(bridge_entity_new.get_rebate_quantity())
             self.set_rebate_price(bridge_entity_new.get_rebate_price())
-            self.set_special_price(bridge_entity_new.get_special_price())
-            self.set_special_start_date(bridge_entity_new.get_special_start_date())
-            self.set_special_end_date(bridge_entity_new.get_special_end_date())
+            if bridge_entity_new.is_special_price_active():
+                self.set_special_price(bridge_entity_new.get_special_price())
+                self.set_special_start_date(bridge_entity_new.get_special_start_date())
+                self.set_special_end_date(bridge_entity_new.get_special_end_date())
             self.set_edited_at(bridge_entity_new.get_edited_at())
 
             # Log the update
