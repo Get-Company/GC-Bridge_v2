@@ -11,14 +11,14 @@
         {% if assoc.marketplace.id != 1 %}
         <div class="form-check form-switch float-end">
             <input
+                    %}
+                    %}
                     id="active_switch_{{assoc.marketplace.id}}"
-                    %}
-                    %}
                     1
                     assoc.is_active==
+                    class="form-check-input"
+                    data-is-active="{{assoc.is_active}}" data-marketplace-id="{{assoc.marketplace.id}}" data-product-id="{{product.id}}" endif if
                     checked
-                    class="form-check-input" data-is-active="{{assoc.is_active}}" data-marketplace-id="{{assoc.marketplace.id}}" data-product-id="{{product.id}}" endif
-                    if
                     type="checkbox" {% {%
                     @change="syncProductMarketplaceStatus"
             >
@@ -33,14 +33,22 @@
                     <thead>
                     <tr>
                         <th>Einheit pro {{ assoc.product.unit }}</th>
-                        <th>Preis</th>
+                        <th>
+                            Preis
+                            {% if product.get_factor() %}
+                            pro {{ product.get_factor() }} Stück
+                            {% endif %}
+                        </th>
                     </tr>
                     </thead>
                     <tbody>
                     {% if assoc.price.rebate_quantity %}
                     <tr>
                         <td>Bis {{ assoc.price.rebate_quantity }}</td>
-                        <td>{{ assoc.price.price | currency_format(2, ',', '.') }} €</td>
+                        <td>
+                            {{ assoc.price.price | currency_format(2, ',', '.') }}
+
+                        </td>
                     </tr>
                     <tr>
                         <td>Ab {{ assoc.price.rebate_quantity }}</td>
