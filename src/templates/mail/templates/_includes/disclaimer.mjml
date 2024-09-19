@@ -10,7 +10,14 @@
                    target="_blank">Nähere Infos zu
                     Versandkosten&nbsp;hier
                 </a>
-                {% if special_end_date %}
+                {% set special_offer_exists = false %}
+                {% for product in products %}
+                {% if product.get_price_entity_for_marketplace().is_special_price_active() %}
+                {% set special_offer_exists = true %}
+                {% set special_end_date = product.get_price_for_marketplace().get_sepcial_end_date() %}
+                {% endif %}
+                {% endfor %}
+                {% if special_offer_exists and special_end_date %}
                 Angebot gültig bis {{ special_end_date.strftime('%d.%m.%Y') }}
                 {% endif %}
 
