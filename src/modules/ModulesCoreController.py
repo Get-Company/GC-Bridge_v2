@@ -1,5 +1,6 @@
 import logging, logging.handlers
 import re
+import uuid
 from datetime import datetime
 
 import requests
@@ -10,6 +11,28 @@ import sqlalchemy
 from abc import ABC, abstractmethod
 import openai
 from config import OpenAIConfig
+
+
+def generate_uuid():
+    """
+    This function serves the purpose of creating UUIDs which are unique for each instance of the SQLAlchemy model.
+
+    The need for a dedicated method comes from the way Python handles default parameter values. If we set UUID directly
+    as the default value in the field definition of the model, Python would compute it once when the class is defined,
+    and then every instance of that class would share the same UUID, because the instance is created once and then
+    effectively copied for each object. This is because, in Python, default parameter values are evaluated when the
+    function (or method, in this case) definition is executed — which is when the class is defined in this case, not
+    each time the function is called.
+
+    So to have a unique UUID for each object, we instead use this dedicated method as the default parameter value in
+    our model's field definitions. We call this method every time an instance is created, which ensures that every object
+    gets a uniquely generated UUID.
+
+    Simply use this method to avoid copies of the UUID.
+
+    :return: A uniquely generated UUID as a 32-character hexadecimal string
+    """
+    return uuid.uuid4().hex
 
 
 class ModulesCoreController(ABC):
@@ -64,7 +87,6 @@ class ModulesCoreController(ABC):
 
         # The method returns a special constant that SQLAlchemy uses to represent NULL
         return sqlalchemy.null()
-
 
     """ APIs """
 
@@ -127,7 +149,7 @@ class ModulesCoreController(ABC):
         tokens = re.findall(pattern, text)
         return len(tokens)
 
-    def ai_translate_to(self,text:str, language="es-ES"):
+    def ai_translate_to(self, text: str, language="en-GB"):
         """
         Sends a prompt to GPT-3.5 and returns the generated response.
 
@@ -148,7 +170,7 @@ class ModulesCoreController(ABC):
                 messages=[
                     {
                         "role": "system",
-                        "content": f"Translate to {language}. Keep the html markup. No elaboration, just translate."
+                        "content": f"Translate to {language}. Keep the html markup. No elaboration, no explaning just translate."
                     },
                     {
                         "role": "user",
@@ -159,9 +181,9 @@ class ModulesCoreController(ABC):
             )
             # Extract and return the generated text from the response
             generated_text = response['choices'][0]['message']['content']
-            pprint(response)
             return generated_text
         except Exception as e:
+            self.logger.error("Exception occurred: %s", e, 'AI translation failed. Response:', response)
             print(f"An error occurred: {str(e)}")
             return None
 
