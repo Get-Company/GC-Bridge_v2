@@ -5,11 +5,14 @@
     <div class="card-body">
         <div class="row">
             <div class="card-body">
-            Lagermenge: {{ product.stock }}<br/>
+                <p>
+                    Lagermenge: {{ product.stock }}<br/>
                 Aktiv: {{ product.active }}<br/>
                 {% if product.storage_location %}
-                Position: {{ product.storage_location }}
+                    Position: {{ product.storage_location }}<br/>
                 {% endif %}
+                    Sortierung: {{ product.sort }}
+                </p>
             </div>
         </div>
     </div>
