@@ -17,7 +17,7 @@
 
     <div class="row">
         <div class="col">
-            <table class="table table-responsive table-striped table-bordered">
+            <table class="table table-responsive table-striped">
                 <thead>
                 <tr>
                     <th>Index</th>
@@ -26,7 +26,6 @@
                         <th scope="col">Description ({{ language_code }})</th>
                     {% endfor %}
                     <th scope="col">Images</th>
-                    <th scope="col">Preise</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -42,9 +41,12 @@
                         {% endfor %}
 
                         <td>
-                            {% for img in product.media %}
-                                {{ loop.index }} {{ img.file_name }}.{{ img.file_type }}<br>
-                            {% endfor %}
+                            {% if product.get_images()[0] %}
+                            <img
+                                    class="img-fluid img-thumbnail"
+                                    src="{{config.ASSETS_PATH}}{{config.IMG_PATH}}/{{product.get_images()[0].get_file_name()}}.{{product.get_images()[0].get_file_type()}}"
+                                    width="200px">
+                            {% endif %}
                         </td>
                         <td>
 

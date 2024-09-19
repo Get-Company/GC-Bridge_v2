@@ -8,34 +8,27 @@
 
 
 {% block body %}
-
-
-
 <div id="vue_app_product">
     {% include '_includes/_toast.html' %}
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarButtons" aria-controls="navbarButtons" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarButtons">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <button @click="syncProductToSw6" :data-bridge-product-id="{{ product.id }}" class="btn btn-outline-success btn-sm">Sync -> SW6</button>
-                        </a>
-                    </li>
-
-                    <!-- Add more buttons here -->
-                </ul>
-            </div>
-        </div>
-    </nav>
+    {% include 'bridge/product/_includes/nav.html' %}
 
     <div class="row">
         <div class="col">
-            <h1>{{ product.get_translation('DE_de').name }}</h1>
+            <h1>{{ product.get_translation('DE_de').name }} - {{ product.id }}</h1>
+            <div class="form-check form-switch">
+                <input
+                        %}
+                        1%}
+                        checked
+                        class="form-check-input"
+                        data-is-active="{{ product.is_active }}"
+                        data-product-id="{{ product.id }}" endif if product.is_active==
+                        type="checkbox"
+                        {% {% @change="syncStatusProduct"
+                />
+            </div>
+
         </div>
 
     </div>
@@ -49,21 +42,24 @@
     </div>
 
     <div class="row">
+
         {% for assoc in product.marketplace_prices_assoc %}
-        <div class="col">
-            {% include 'bridge/product/_includes/card_prices.html' with context %}
+        <div class="col-6">
+            {% include 'bridge/product/_includes/card_marketplace.html' with context %}
         </div>
         {% endfor %}
     </div>
-
-
-    {% include 'bridge/product/_includes/card_stock.html' %}
 
     <div class="row">
         <div class="col">
             {% include 'bridge/product/_includes/card_categories.html' with context %}
         </div>
+        <div class="col">
+            {% include 'bridge/product/_includes/card_stock.html' %}
+        </div>
     </div>
+
+
 </div> <!-- Vue App -->
 {% endblock %}
 

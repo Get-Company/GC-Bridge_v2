@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Neue E-Mail{% endblock %}
+{% block h1 %} Neue E-Mail{% endblock %}
+
+
+{% block body %}
+{% include '_includes/_toast.html' %}
+<div id="vapp_mail">
+
+    <!-- Search Row -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h5>Produkte auswählen</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Search input -->
+                <div class="col-4">
+                    <div class="form-floating mb-3">
+                        <input id="searchInput" v-model="search" class="form-control form-control-sm" placeholder="Search"
+                               type="text"
+                               @input="fetchResults(search)">
+                        <label for="searchInput">Artikelsuche:</label>
+                    </div>
+                </div>
+                <!-- Results Select -->
+                <div class="col-4">
+                    <select v-model="selectedItems" class="form-control" multiple size="6" @change="addToProducts">
+                        <option disabled value="">Bitte wählen</option>
+                        <option v-for="(item, index) in results" :key="index" :value="item">
+                            ${ item.name } (${ item.erp_nr })
+                        </option>
+                    </select>
+                </div>
+                <!-- Product Listing -->
+                <div class="col-4 text-center">
+                    <div id="products">
+
+                        <ul v-for="(item, index) in selectedProducts" :key="index" class="list-group mb-3">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ${ item.erp_nr }
+                                <button aria-label="Close" class="btn-close" type="button"
+                                        @click="removeFromProducts(index)"></button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="card-text">
+                Die Reihenfolge der Produkte ergibts sich durch die Auswahl. Ist die Reihenfolge falsch, bitte entferne
+                die Produkte und wähle sie in der richtigen Reihenfolge aus.
+            </div>
+        </div>
+    </div>
+
+    <!-- Select Template and create e-mail Row -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h5>Template - E-Mail auswählen</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6">
+                    <select id="selectedTemplate" v-model="selectedTemplate" class="form-select form-select-sm">
+                        <option disabled value="">Bitte wählen</option>
+                        {% for template in mjml_templates %}
+                        <option value="{{template}}">{{ template }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 text-center my-auto">
+                    <button class="btn btn-sm btn-success expanded" type="button" @click="renderTemplate">E-Mail
+                        erstellen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- E-mail display Row -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h5>E-Mail Vorschau</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div id="email" class="col">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HTML code Row -->
+    <div class="card mb-5">
+        <div class="card-header">
+            <h5>HTML</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <div class="form-floating">
+                        <textarea id="html" id="floatingTextarea2" v-model="responseDataHtml"
+                                  class="form-control" placeholder="Leave a comment here"
+                                  style="height: 100px"></textarea>
+                        <label for="floatingTextarea2">HTML</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- EOF VUE -->
+
+{% endblock %}
+
+
+{% block body_close %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/mail/vapp_mail.js') }}"></script>
+<script src="{{ url_for('static', filename='js/plugins/toastPlugin.js')}}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        vapp_mail.use(ToastPlugin);
+        const mountedAppMail = vapp_mail.mount('#vapp_mail');
+    });
+</script>
+{% endblock %}

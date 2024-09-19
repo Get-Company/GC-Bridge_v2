@@ -1,0 +1,45 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <div id="navbarNav" class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/products">
+                        Zurück zur Übersicht
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a id="sw6Dropdown" aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                       href="#" role="button">
+                        SW6
+                    </a>
+                    <ul aria-labelledby="sw6Dropdown" class="dropdown-menu">
+                        <li><a :data-bridge-product-id="{{ product.id }}" class="dropdown-item" href="#"
+                               @click="syncProductToSw6">Sync -> SW6</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a id="bridgeDropdown" aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                       href="#" role="button">
+                        Bridge
+                    </a>
+                    <ul aria-labelledby="bridgeDropdown" class="dropdown-menu">
+                        <li><a :data-bridge-product-id="{{ product.id }}" class="dropdown-item" href="#"
+                               @click="updateProductInBridge">Update Product</a></li>
+                        <li><a :data-bridge-product-id="{{ product.id }}" class="dropdown-item" href="#"
+                               @click="deleteProductInBridge">Delete Product</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a id="erpDropdown" aria-expanded="false" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                       href="#" role="button">
+                        ERP
+                    </a>
+                    <ul aria-labelledby="erpDropdown" class="dropdown-menu">
+                        <li><a :data-bridge-product-id="{{ product.id }}" class="dropdown-item" href="#"
+                               @click="syncProductToERP">Sync -> ERP</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

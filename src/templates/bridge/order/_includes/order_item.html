@@ -101,6 +101,14 @@
                             class="btn btn-sm btn-outline-success"
                             @click="create_order_in_erp_by_bridge_order_id('{{order.id}}')">Anlegen</button>
                 </div>
+                <div class="col">
+                    <strong>Bestellung löschen</strong>
+                    <br/>
+                    <button class="btn btn-sm btn-outline-warning"
+                            type="button"
+                            @click="delete_order_in_bridge_by_bridge_order_id('{{order.id}}')">Löschen
+                    </button>
+                </div>
             </div>
 
             {% include 'bridge/order/_includes/_states_dropdown.html' %}

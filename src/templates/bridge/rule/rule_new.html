@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block html_title %} GC-Bridge - Regeln {% endblock %}
+{% block h1 %} Regeln {% endblock %}
+
+{% block body %}
+<h2>Mia han in Neue Rule</h2>
+
+
+<form class="form-horizontal">
+    <div class="form-group">
+        <label class="col-sm-2 control-label" for="source">SW6 NTT</label>
+        <div class="col-sm-4">
+            <select id="sw6Entity" class="form-control">
+                {% for endpoint in sw6_endpoints %}
+                <option value="{{endpoint}}">{{ endpoint }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <label class="col-sm-2 control-label" for="source">Source</label>
+        <div class="col-sm-4">
+            <input id="source" class="form-control" placeholder="Source" type="text">
+        </div>
+
+        <label class="col-sm-2 control-label" for="formula">Formula</label>
+        <div class="col-sm-4">
+            <input id="formula" class="form-control" placeholder="Formula" type="text">
+        </div>
+
+        <label class="col-sm-2 control-label" for="target">Target</label>
+        <div class="col-sm-4">
+            <input id="target" class="form-control" placeholder="Target" type="text">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+            <button class="btn btn-default" type="submit">Submit</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block body_close %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/bridge/rules/vapp_rules.js') }}"></script>
+<script src="{{ url_for('static', filename='js/plugins/toastPlugin.js')}}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        app_rule.use(ToastPlugin);
+        const mountedAppRule = app_rule.mount('#vue_app_rule');
+    });
+</script>
+{% endblock %}

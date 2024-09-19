@@ -1,0 +1,78 @@
+<form action="{{ url_for('bridge_product_views.special_price_submit') }}" method="POST">
+
+    <h6>
+        Sonder Preis
+        {% if assoc.price.is_special_price_active() %}
+        <span class="badge text-bg-success">Aktiv</span>
+        {% else %}
+        <span class="badge text-bg-secondary">Nicht Aktiv</span>
+        {% endif %}
+    </h6>
+
+
+    <div class="row mb-3">
+
+        <div class="col-6"></div>
+        <div class="col-3">
+            <div class="input-group">
+                <input %}
+                       %}
+                       %}
+                       assoc.price.special_price class="form-control form-control-sm" else endif
+                       if
+                       name="percentage" placeholder="{{ (((assoc.price.special_price / assoc.price.price) * 100) - 100) | currency_format(0) }} %" placeholder="Prozentsatz"
+                       step="1"
+                       type="number" {% {%
+                       {%>
+                <div class="input-group-append">
+                    <span class="input-group-text">%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-3">
+            <div class="input-group">
+                <input %} %} assoc.price.special_price
+                       class="form-control form-control-sm" disabled endif if
+                       name="special_price"
+                       placeholder="Angebot" type="text" value="{{assoc.price.special_price | currency_format}}"
+                       {%
+                       {%>
+                <div class="input-group-append">
+                    <span class="input-group-text">€</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Von:</span>
+                </div>
+                <input class="form-control form-control-sm" name="special_start_date" required
+                       type="date"
+                       value="{{ assoc.price.special_start_date | date_field_format }}">
+            </div>
+        </div>
+        <div class="col">
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text">Bis:</span>
+                </div>
+                <input class="form-control form-control-sm" name="special_end_date" required
+                       type="date"
+                       value="{{ assoc.price.special_end_date | date_field_format }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <input name="marketplace_id" type="hidden" value="{{ assoc.marketplace.id }}">
+        <input name="price_id" type="hidden" value="{{ assoc.price.id }}">
+        <input name="product_id" type="hidden" value="{{ product.id }}">
+        <button class="btn btn-primary-outline btn-sm" type="submit">Sonderpreis sichern</button>
+    </div>
+</form>
