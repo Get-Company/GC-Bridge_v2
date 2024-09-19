@@ -28,6 +28,12 @@ class SW6OrderDetailsEntity(SW6AbstractEntity):
         except Exception as e:
             self.logger.error(f"SW6 OrderDetail could not be mapped to BridgeOrderDetailsEntity: {e}")
 
+    def map_bridge_to_sw6(self, bridge_entity):
+        pass
+
+    def map_sw5_to_sw6(self, sw5_json_data):
+        pass
+
     def get_erp_nr(self, sw6_json_data):
         try:
             return sw6_json_data["payload"]['productNumber']
@@ -47,7 +53,7 @@ class SW6OrderDetailsEntity(SW6AbstractEntity):
         Calculate the net unit price of a product.
 
         This function calculates the net unit price based on the calculated taxes
-        and tax rules if both are present in the product object.
+        and tax rule if both are present in the product object.
 
         If the 'calculatedTaxes' field is not present in the product object,
         it will return the unit price directly.
@@ -133,7 +139,7 @@ class SW6OrderDetailsEntity(SW6AbstractEntity):
         Calculate the net total price of a product.
 
         This function calculates the net total price based on the calculated taxes,
-        tax rules, unit price and quantity if all are present in the product object.
+        tax rule, unit price and quantity if all are present in the product object.
 
         If the 'calculatedTaxes' field is not present in the product object,
         it will return the total price directly.
