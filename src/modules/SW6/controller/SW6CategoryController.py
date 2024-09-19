@@ -31,7 +31,7 @@ class SW6CategoryController(SW6AbstractController):
         pass
 
     def sync_all_from_bridge(self):
-        # Overwrite, since we ned a special order (cat_nr)
+        # Overwrite, since we need a special order (cat_nr)
         categories = BridgeCategoryEntity.query.order_by(BridgeCategoryEntity.cat_nr.asc()).all()
         # pprint(categories)
         for category in categories:
