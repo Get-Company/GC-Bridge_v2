@@ -7,11 +7,13 @@ from lib_shopware6_api_base import Criteria, EqualsFilter
 
 from config import SW6Config
 
+
 class SW6OrderEntity(SW6AbstractEntity):
 
     def __init__(self):
         self.endpoint_name = "order"
         super().__init__(endpoint_name=self.endpoint_name)
+
 
     def map_sw6_to_bridge(self, sw6_json_data):
         try:
@@ -38,6 +40,21 @@ class SW6OrderEntity(SW6AbstractEntity):
 
     def map_bridge_to_sw6(self, bridge_entity):
         pass
+
+    def map_sw5_to_sw6(self, sw5_json_data, sw6_customer_json):
+        pprint(sw6_customer_json)
+        payload = {
+            "billingAddressId": sw6_customer_json['defaultBillingAddressId'],
+            "currencyId": SW6Config().CURRENCY['EUR'],  # Hier ggf. eine Mapping-Funktion für die Währung verwenden,
+            'languageId': SW6Config().LANGUAGE['DE'],
+            'salesChannelId': SW6Config().SALES_CHANNELS['DE']['id'],
+            "orderDateTime": sw5_json_data["orderTime"],
+            "currencyFactor": 1,
+            'stateId': "62ddf493792c4ae3b963e9b40796d3e1"
+        }
+
+        return payload
+
 
     """
     API
@@ -158,6 +175,13 @@ class SW6OrderEntity(SW6AbstractEntity):
         order_delivery_id = result_states['data'][0]['deliveries'][0]['id']
         results = self.sw6_client.request_post(f"_action/order_delivery/{order_delivery_id}/state/{action_name}")
         return results
+
+    def set_order(self, sw6_order_json):
+        try:
+            result = self.sw6_client.request_post("order", payload=sw6_order_json)
+            pprint(result)
+        except Exception as e:
+            pprint(e)
 
 
     """ 
