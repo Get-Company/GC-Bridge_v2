@@ -1,3 +1,4 @@
+import time
 import uuid
 from pprint import pprint
 
@@ -10,6 +11,8 @@ from sqlalchemy import asc
 
 import config
 from config import DBConfig
+from src.modules.ERP.controller.ERPConnectionController import ERPConnectionController
+from src.modules.SW5.SW5_2CustomerObjectEntity import SW5_2CustomerObjectEntity
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -121,6 +124,10 @@ def create_app():
     from .modules.SW6.entities.SW6CategoryEntity import SW6CategoryEntity
     from .modules.SW6.entities.SW6ProductEntity import SW6ProductEntity
     from .modules.SW6.entities.SW6MediaEntity import SW6MediaEntity
+    from .modules.SW6.entities.SW6CustomerEntity import SW6CustomerEntity
+    from .modules.SW6.entities.SW6OrderEntity import SW6OrderEntity
+    from .modules.SW6.entities.SW6OrderDetailsEntity import SW6OrderDetailsEntity
+    from .modules.SW6.entities.SW6MarketplaceEntity import SW6MarketplaceEntity
 
     # Controller
     from .modules.SW6.controller.SW6OrderController import SW6OrderController
@@ -167,9 +174,12 @@ def create_app():
         # SW6CategoryController().sync_all_from_bridge()
 
         # 2. Products
-        # ERPArtikelController(search_value='291000', range_end='999999').sync_all_to_bridge()
-        # ERPArtikelController(search_value='104025').sync_one_to_bridge()
-        # SW6ProductController().sync_all_from_bridge()
+        # ERPArtikelController(search_value='091300', range_end='999999').sync_all_to_bridge()
+        # erp_artikel = ERPArtikelController(search_value='091310')
+        # erp_artikel.sync_one_to_bridge()
+        # SW6ProductController().sync_all_from_bridge(set_relations=False)
+        # bridge_product = BridgeProductEntity().query.filter_by(erp_nr='104014').one_or_none()
+        # pprint(SW6ProductEntity().get_details(id=bridge_product.sw6_id))
 
         # try:
         #     bridge_product_entity = BridgeProductController().get_entity()
@@ -219,6 +229,8 @@ def create_app():
 
         # 10. Rules
 
+        # Test
+
         # 11. Backups
         # SW6BackupController().backup_directory()
 
@@ -231,9 +243,26 @@ def create_app():
 
         # scraper = WebScraperController(file_name='Mappei.xlsx').get_prices_mappei()
 
+        # Sync SW5 Customers to SW6
         # sw6_customer_entity = SW6CustomerController().get_entity()
         # sw6_customer_entity.sw5_get_customers_list()
         # print('\033[31mError \033[0m')
+
+        # Test with Alfons Colditz 57448
+        # sw5_customer_entity = SW5_2CustomerObjectEntity()
+        # sw6_customer_entity = SW6CustomerEntity()
+        #
+        # sw5_customer_json = sw5_customer_entity.get_customer(customer_id=57448, is_number_not_id=True)
+        # sw6_customer_json = sw6_customer_entity.get_api_customer_by_customer_number(customer_nr=57448)
+        # sw5_customer_orders_json = sw5_customer_entity.get_all_customers_orders_by_customer_id(sw5_customer_json['data']['id'])
+        # for sw5_customer_order_json in sw5_customer_orders_json:
+        #     # pprint(sw5_customer_order_json)
+        #     sw6_order_entity = SW6OrderEntity()
+        #     sw6_order_payload = sw6_order_entity.map_sw5_to_sw6(
+        #         sw5_json_data=sw5_customer_order_json,
+        #         sw6_customer_json=sw6_customer_json['data'][0]
+        #     )
+        #     sw6_order_entity.set_order(sw6_order_payload)
 
         # Delete all orders
         # sw6_order_entity = SW6OrderController().get_entity()
