@@ -16,9 +16,9 @@ def bridge_show_categories():
                            categories=categories)
 
 
-@BridgeCategoryViews.route("/category/<int:id>", endpoint='category')
-def bridge_show_category(id):
-    category = BridgeCategoryEntity().query.get(id)
+@BridgeCategoryViews.route("/category/<int:category_id>", endpoint='category')
+def bridge_show_category(category_id):
+    category = BridgeCategoryEntity().query.get(category_id)
     if category:
         return render_template('bridge/category/category.html', category=category)
     else:
@@ -35,7 +35,6 @@ def bridge_show_categories_tree():
 """
 API
 """
-
 
 @BridgeCategoryViews.route("/api/categories/get_category_tree", methods=['GET', 'POST'])
 def api_get_category_tree():
@@ -69,3 +68,4 @@ def api_set_assoc_sort():
     else:
         print(f"Move {moved['type_of']} not possible. Something weired caused a ajax call")
         return jsonify({'result': 'error'}, 500)
+
