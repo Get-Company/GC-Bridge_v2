@@ -50,22 +50,22 @@ class BridgeCategoryController(BridgeAbstractController):
             }
 
             # Add related products as nodes under the category
-            if category.products:
-                for product in category.products:
-                    prod_cat_assoc = category.get_prod_cat_assoc(product)
-
-                    product_node = {
-                        'data': {
-                            'id': product.get_id(),
-                            'type_of': 'product',
-                            'title': product.get_translation().get_name(),
-                            # Replace with your method to get product name
-                            'category_id': category.get_id(),  # Assuming we use the same ERP number
-                            'sort': prod_cat_assoc.get_sort(),
-                        },
-                        'nodes': []  # Products don't have child nodes
-                    }
-                    node['nodes'].append(product_node)  # Add product nodes under the category node
+            # if category.products:
+            #     for product in category.products:
+            #         prod_cat_assoc = category.get_prod_cat_assoc(product)
+            #
+            #         product_node = {
+            #             'data': {
+            #                 'id': product.get_id(),
+            #                 'type_of': 'product',
+            #                 'title': product.get_translation().get_name(),
+            #                 # Replace with your method to get product name
+            #                 'category_id': category.get_id(),  # Assuming we use the same ERP number
+            #                 'sort': prod_cat_assoc.get_sort(),
+            #             },
+            #             'nodes': []  # Products don't have child nodes
+            #         }
+            #         node['nodes'].append(product_node)  # Add product nodes under the category node
 
             # Recursive call for child categories and add them under the category node
             node['nodes'].extend(self.build_tree(category.id))
