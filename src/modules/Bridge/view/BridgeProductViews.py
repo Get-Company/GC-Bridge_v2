@@ -4,6 +4,7 @@ from pprint import pprint
 from flask import Blueprint, render_template, request, abort, jsonify, redirect, url_for
 from sqlalchemy import or_
 
+from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntity
 from src.modules.Bridge.entities.BridgeProductEntity import BridgeProductEntity, BridgeProductTranslation
 from src.modules.Bridge.entities.BridgeMarketplaceEntity import BridgeProductMarketplacePriceAssoc
 from src.modules.Bridge.controller.BridgePriceController import BridgePriceController
@@ -36,6 +37,15 @@ def bridge_products():
     return render_template('bridge/product/products.html', products=products, per_page=per_page, config=config)
 
 
+@BridgeProductViews.route('/products_sort', endpoint='products_sort')
+def products_sort():
+    categories = BridgeCategoryEntity().query.filter_by(parent_category_id=None).all()
+
+    return render_template(
+        'bridge/product/products_sort.html',
+        categories=categories
+    )
+
 @BridgeProductViews.route('/product/<id>', endpoint='product')
 def bridge_product(id):
     product = BridgeProductEntity.query.get(id)
@@ -49,7 +59,6 @@ def bridge_product(id):
     else:
         abort(404)
 
-
 @BridgeProductViews.route('/product/erp_nr/<erp_nr>', endpoint='product_by_erp_nr')
 def bridge_product_by_erp_nr(erp_nr):
     product = BridgeProductEntity.query.filter_by(erp_nr=erp_nr).one_or_none()
@@ -62,7 +71,6 @@ def bridge_product_by_erp_nr(erp_nr):
                                )
     else:
         abort(404)
-
 
 @BridgeProductViews.route('/product/special_price_submit', methods=['POST'], endpoint='special_price_submit')
 def special_price_submit():
@@ -94,6 +102,7 @@ def special_price_submit():
         price_controller.apply_marketplace_price_change(product_id, special_price, special_start_date, special_end_date)
 
     return redirect(url_for('bridge_product_views.product', id=product_id))
+
 
 """
 API
@@ -134,7 +143,6 @@ def api_product_sync_to_sw6(bridge_product_id):
     else:
         return jsonify({'message': f'Das Produkt {bridge_product_id} wurde nicht in der Db gefunden',
                         'status': 'error'})
-
 
 @BridgeProductViews.route('/api/product/sync_to_erp/<bridge_product_id>')
 def api_product_sync_to_erp(bridge_product_id):
@@ -177,7 +185,6 @@ def api_product_sync_to_erp(bridge_product_id):
             {'message': f'Das Produkt <b>{product.get_translation().get_name()}<b/> wurde nicht in der DB gefunden',
              'status': 'error'})
 
-
 @BridgeProductViews.route("/api/product/sync_product_marketplace_status/<product_id>/<marketplace_id>/<state>",
                           methods=['GET'])
 def api_product_sync_state(product_id, marketplace_id, state):
@@ -208,7 +215,6 @@ def api_product_sync_state(product_id, marketplace_id, state):
                        f'Neuer SW6 Status: <b>{association.get_is_active()}</b>',
             'status': 'success'})
 
-
 @BridgeProductViews.route("/api/product/sync_status/<bridge_product_id>/<new_state>", methods=['GET'])
 def api_product_sync_status(bridge_product_id, new_state):
     # 1. In der Bridge deaktivieren
@@ -225,7 +231,6 @@ def api_product_sync_status(bridge_product_id, new_state):
     # 2. In SW6 deaktivieren
     sw_bridge_controller = SW6ProductController()
     sw6_result = sw_bridge_controller.get_entity().set_status(bridge_entity=bridge_product_entity)
-
     sw6_status = sw6_result["data"]["active"]
 
     if sw6_status == bridge_status:
@@ -237,9 +242,71 @@ def api_product_sync_status(bridge_product_id, new_state):
         {
             'message': f'Anfrage bearbeitet. '
                        f'Neuer Bridge Status: <b>{bridge_status}</b><br/>'
-                       f'Neuer SW6 Status: <b>{sw6_status["data"]["active"]}</b>',
+                       f'Neuer SW6 Status: <b>{sw6_status}</b>',
             'status': 'success'})
 
+
+@BridgeProductViews.route('/api/product/delete_in_bridge/<bridge_product_id>', methods=['DELETE'])
+def api_delete_product_in_bridge(bridge_product_id):
+    """
+    This function is responsible for deleting a single product from the bridge based on the given product ID.
+
+    :param bridge_product_id: The ID of the product which needs to be deleted from the bridge
+    :return: A JSON response object that contains a message and status indicating the deletion status of the product
+    """
+
+    try:
+        # Fetch the product from the bridge based on the provided ID.
+        product = BridgeProductEntity.query.get(bridge_product_id)
+    except Exception as ex:
+        return jsonify({'message': 'An error occured during product retrieval from the database', 'status': 'error'})
+
+    if product:
+        try:
+            # Delete the product from the database
+            db.session.delete(product)
+            db.session.commit()
+            return jsonify(
+                {'message': f'Das Produkt {bridge_product_id} wurde erfolgreich gelöscht', 'status': 'success'})
+        except Exception as ex:
+            db.session.rollback()
+            return jsonify(
+                {'message': f'Das Produkt {bridge_product_id} konnte nicht gelöscht werden', 'status': 'error'})
+    else:
+        return jsonify(
+            {'message': f'Das Produkt {bridge_product_id} wurde nicht in der Db gefunden', 'status': 'error'})
+
+
+@BridgeProductViews.route('/api/product/update_in_bridge/<bridge_product_id>', methods=['PUT'])
+def api_update_product_in_bridge(bridge_product_id):
+    """
+    This function is responsible for updating a single product in the bridge based on the given product ID and provided data.
+
+    :param bridge_product_id: The ID of the product which needs to be updated in the bridge
+    :return: A JSON response object that contains a message and status indicating the update status of the product
+    """
+    try:
+        # Fetch the product from the bridge based on the provided ID.
+        product = BridgeProductEntity.query.filter_by(id=bridge_product_id).one_or_none()
+
+    except Exception as ex:
+        return jsonify(
+            {'message': f'An error occurred during product retrieval from the database: {ex}', 'status': 'error'})
+
+    if not product:
+        return jsonify(
+            {'message': f'Das Produkt {bridge_product_id} wurde nicht in der Db gefunden', 'status': 'error'})
+
+    try:
+        erp_product_controller = ERPArtikelController(search_value=product.get_erp_nr())
+        bridge_product_entity_id = erp_product_controller.sync_one_to_bridge()
+        if bridge_product_entity_id:
+            return jsonify(
+                {'message': f'Das Produkt {bridge_product_id} wurde erfolgreich aktualisiert', 'status': 'success'})
+    except Exception as ex:
+        return jsonify(
+            {'message': f'Das Produkt {bridge_product_id} konnte nicht aktualisiert werden Error{str(ex)}',
+             'status': 'error'})
 
 @BridgeProductViews.route('/api/product/search', methods=['GET'])
 def search():
@@ -294,3 +361,79 @@ def search():
         # Log the error and return a message
         print(f"An error occurred while attempting the search: {str(e)}")
         return jsonify({"message": "An error occurred. Please try again later."})
+
+
+@BridgeProductViews.route('/api/products/get_by_category/<category_id>', methods=['GET'])
+def api_products_get_by_category(category_id):
+    """
+    This function retrieves all products associated with a given category ID.
+
+    :param category_id: The ID of the category whose products need to be fetched.
+    :return: A JSON response object that contains a list of products or an error message.
+    """
+
+    try:
+        # Fetch the category from the database based on the provided ID
+        category = BridgeCategoryEntity.query.get(category_id)
+
+        if not category:
+            return jsonify({'message': f'Category with ID {category_id} not found', 'status': 'error'})
+
+        # Fetch all products associated with the category
+        products = category.products
+
+        # Produkte filtern (nur aktive Produkte) und nach 'sort' aufsteigend sortieren
+        active_products = [product for product in products if product.get_is_active()]
+        sorted_products = sorted(
+            active_products,
+            key=lambda product: (product.sort is None, product.sort if product.sort is not None else 0)
+        )
+
+        # Build the list of product dictionaries with relevant fields
+        products_list = []
+        for product in sorted_products:
+            if product.get_is_active():
+                translation = product.get_translation()
+                product_data = {
+                    'id': product.id,
+                    'erp_nr': product.erp_nr,
+                    'name': translation.name,
+                    'sort': product.sort,
+                }
+                products_list.append(product_data)
+
+        return jsonify({'products': products_list, 'status': 'success'})
+
+    except Exception as ex:
+        return jsonify({'message': 'An error occurred while fetching products from the database', 'status': 'error'})
+
+
+@BridgeProductViews.route('/api/product/update_sort', methods=['POST'])
+def api_product_update_sort():
+    """
+    API-Endpunkt zum Aktualisieren des 'sort'-Felds eines Produkts.
+    Erwartet JSON-Daten mit 'product_id' und 'sort'.
+    """
+    data = request.get_json()
+    product_id = data.get('product_id')
+    sort_value = data.get('sort')
+
+    if product_id is None or sort_value is None:
+        return jsonify({'message': 'Produkt-ID und Sortierwert sind erforderlich', 'status': 'error'}), 400
+
+    try:
+        sort_value = int(sort_value)
+    except ValueError:
+        return jsonify({'message': 'Sortierwert muss eine Ganzzahl sein', 'status': 'error'}), 400
+
+    product = BridgeProductEntity.query.get(product_id)
+    if not product:
+        return jsonify({'message': f'Produkt mit ID {product_id} nicht gefunden', 'status': 'error'}), 404
+
+    try:
+        product.set_sort(sort_value)
+        db.session.commit()
+        return jsonify({'message': f'Sortierwert für Produkt {product_id} aktualisiert', 'status': 'success'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Fehler beim Aktualisieren des Sortierwerts: {str(e)}', 'status': 'error'}), 500
