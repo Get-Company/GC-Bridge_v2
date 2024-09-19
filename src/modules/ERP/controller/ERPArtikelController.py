@@ -41,15 +41,13 @@ class ERPArtikelController(ERPAbstractController):
 
     """
     def __init__(self, search_value=None, index=None, range_end=None):
-        self._dataset_entity = ERPArtikelEntity(
-            search_value=search_value,
-            index=index,
-            range_end=range_end
-        )
+        self._search_value = search_value
+        self._index = index
+        self._range_end = range_end
+        self._dataset_entity = None  # Is created later on
         self._bridge_controller = BridgeProductController()
 
         super().__init__(
-            dataset_entity=self._dataset_entity,
             bridge_controller=self._bridge_controller,
             search_value=search_value
         )
@@ -80,11 +78,13 @@ class ERPArtikelController(ERPAbstractController):
         # First merge the object to the db
 
         bridge_entity = self._set_translation_relation(bridge_entity)
-        bridge_entity = self._set_price_relation(bridge_entity)
-        # bridge_entity = self._set_tax_relation(bridge_entity)
 
-        # Categories are no longer available since V 24 microtech Büro+
-        # bridge_entity = self._set_category_relation(bridge_entity)
+        # Price per  Marketplace
+        bridge_entity = self._set_price_relation(bridge_entity)
+        bridge_entity = self._set_tax_relation(bridge_entity)
+
+        # Categories are no longer available since V 24 microtech Büro+ but are still in the db
+        bridge_entity = self._set_category_relation(bridge_entity)
 
         bridge_entity = self._set_media_relation(bridge_entity)
         return bridge_entity
@@ -121,10 +121,13 @@ class ERPArtikelController(ERPAbstractController):
         try:
             # 1 Upsert price for all marketplaces
             bridge_price_new = self._dataset_entity.map_erp_price_to_bridge()
-            BridgePriceController().upsert_price_for_all_marketplaces(
-                bridge_price_entity=bridge_price_new,
-                bridge_product_entity=bridge_entity
-            )
+            if bridge_price_new:
+                BridgePriceController().upsert_price_for_all_marketplaces(
+                    bridge_price_entity=bridge_price_new,
+                    bridge_product_entity=bridge_entity
+                )
+            else:
+                print("No prices were mapped from erp -> sw6 for", bridge_entity.get_translation().get_name())
 
         except Exception as e:
             self.logger.error(f"An error occurred while setting price relation: {str(e)}")
@@ -236,6 +239,7 @@ class ERPArtikelController(ERPAbstractController):
             ValueError: If dataset entity is not set.
         """
         if self._dataset_entity:
+
             return self._dataset_entity
         else:
             message = "Dataset entity is not set"
@@ -263,3 +267,10 @@ class ERPArtikelController(ERPAbstractController):
             "Steuerverteilung Brutto": self._dataset_entity.get_("StVertBt"),
         }
         return infos
+
+    def downsert(self, bridge_entity):
+        # This is the update method
+        erp_product_entity = self.get_entity()
+        result = erp_product_entity.map_bridge_to_erp(bridge_entity=bridge_entity)
+
+        return result

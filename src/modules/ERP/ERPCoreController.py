@@ -1,5 +1,5 @@
 from ..ModulesCoreController import ModulesCoreController
-
+from ..ERP.controller.ERPConnectionController import ERPConnectionController
 
 class ERPCoreController(ModulesCoreController):
     def __init__(self):

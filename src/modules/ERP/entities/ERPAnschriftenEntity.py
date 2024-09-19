@@ -5,10 +5,11 @@ from ..entities.ERPAnsprechpartnerEntity import ERPAnsprechpartnerEntity
 
 
 class ERPAnschriftenEntity(ERPAbstractEntity):
-    def __init__(self, search_value=None, index=None, range_end=None):
+    def __init__(self, erp, search_value=None, index=None, range_end=None):
         super().__init__(
             dataset_name="Anschriften",
             dataset_index=index or "AdrNrAnsNr",
+            erp=erp,
             search_value=search_value,
             range_end=range_end
         )

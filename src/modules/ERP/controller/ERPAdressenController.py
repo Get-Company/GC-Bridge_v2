@@ -58,10 +58,9 @@ class ERPAdressenController(ERPAbstractController):
     """
 
     def __init__(self, search_value=None, index=None, range_end=None):
-        self._dataset_entity = ERPAdressenEntity(
-            search_value=search_value,
-            index=index,
-            range_end=range_end)
+        self._search_value = search_value
+        self._index = index
+        self._range_end = range_end
 
         self._bridge_controller = BridgeCustomerController()
 
@@ -70,9 +69,23 @@ class ERPAdressenController(ERPAbstractController):
         self.erp_ansprechpartner_entity_current = None
 
         super().__init__(
-            dataset_entity=self._dataset_entity,
-            bridge_controller=self._bridge_controller
+            bridge_controller=self._bridge_controller,
+            search_value=self._search_value
         )
+
+    def create_dataset_entity(self, erp):
+        try:
+            self._dataset_entity = self._dataset_entity = ERPAdressenEntity(
+                search_value=self._search_value,
+                index=self._index,
+                erp=erp,
+                range_end=self._range_end)
+        except Exception as e:
+            print(f"Error creating Adressen Dataset: {str(e)}")
+
+    def destroy_dataset_entity(self):
+        print("Adressen destroy dataset")
+        self._dataset_entity = None
 
     def get_entity(self):
         """

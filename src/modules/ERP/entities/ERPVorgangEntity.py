@@ -5,7 +5,7 @@ from .ERPArtikelEntity import ERPArtikelEntity
 
 
 class ERPVorgangEntity(ERPAbstractEntity):
-    def __init__(self, search_value=None, index=None, range_end=None):
+    def __init__(self, erp, search_value=None, index=None, range_end=None):
         """
         Initializer for ERPArtikelEntity.
 
@@ -17,6 +17,7 @@ class ERPVorgangEntity(ERPAbstractEntity):
         super().__init__(
             dataset_name="Vorgang",
             dataset_index=index or "BelegNr",
+            erp=erp,
             search_value=search_value,
             range_end=range_end,
             filter_expression=None

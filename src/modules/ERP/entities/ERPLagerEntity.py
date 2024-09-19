@@ -11,7 +11,7 @@ class ERPLagerEntity(ERPAbstractEntity):
     Representation of an ERP lager entity inherited from ERPAbstractEntity.
     """
 
-    def __init__(self, search_value=None, index=None, range_end=None):
+    def __init__(self, erp, search_value=None, index=None, range_end=None):
         """
         Initializer for ERPLagerEntity.
 
@@ -22,6 +22,7 @@ class ERPLagerEntity(ERPAbstractEntity):
         super().__init__(
             dataset_name="Lager",
             dataset_index=index or "ArtNrLagNr",
+            erp=erp,
             search_value=search_value,
             range_end=range_end
         )

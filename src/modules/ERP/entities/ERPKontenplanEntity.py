@@ -8,7 +8,7 @@ class ERPKontenplanEntity(ERPAbstractEntity):
     Representation of an ERP article entity inherited from ERPAbstractEntity.
     """
 
-    def __init__(self, search_value=None, index=None, range_end=None):
+    def __init__(self, erp, search_value=None, index=None, range_end=None):
         """
         Initializer for ERPKontenplanEntity.
 
@@ -19,6 +19,7 @@ class ERPKontenplanEntity(ERPAbstractEntity):
         super().__init__(
             dataset_name="Kontenplan",
             dataset_index=index or "Nr",
+            erp=erp,
             search_value=search_value,
             range_end=range_end,
             filter_expression=None

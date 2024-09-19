@@ -10,18 +10,31 @@ from src.modules.Bridge.entities.BridgeCategoryEntity import BridgeCategoryEntit
 
 class ERPArtikelKategorienController(ERPAbstractController):
     def __init__(self, search_value=None, index=None, range_end=None):
-        self._dataset_entity = ERPArtikelKategorienEntity(
-            search_value=search_value,
-            index=index,
-            range_end=range_end
-        )
+        self._search_value = search_value
+        self._index = index
+        self._range_end = range_end
 
         self._bridge_controller = BridgeCategoryController()
 
         super().__init__(
-            dataset_entity=self._dataset_entity,
-            bridge_controller=self._bridge_controller
+            bridge_controller=self._bridge_controller,
+            search_value=search_value
         )
+
+    def create_dataset_entity(self, erp):
+        try:
+            self._dataset_entity = ERPArtikelKategorienEntity(
+                search_value=self._search_value,
+                index=self._index,
+                range_end=self._range_end
+            )
+
+        except Exception as e:
+            print(f"Error creating ArtikelKategorien Dataset: {str(e)}")
+
+    def destroy_dataset_entity(self):
+        print("ArtikelKategorien destroy dataset")
+        self._dataset_entity = None
 
     def set_relations(self, bridge_entity):
         # bridge_entity = self._set_translation_relation(bridge_entity)
