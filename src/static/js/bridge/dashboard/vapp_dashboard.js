@@ -1,4 +1,4 @@
-const app = Vue.createApp({
+const app_dashboard = Vue.createApp({
     delimiters: ['${', '}'],
     data() {
         return {

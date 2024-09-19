@@ -91,7 +91,7 @@ const app_orders_actions = Vue.createApp({
                 }
             } catch (error) {
                 // Show error message in case of exception
-                this.$showToast('error', '<p>The following error occurred: </p><pre>'+error+'</pre>')
+                this.$showToast('error', '<p>The following error occurred: </p><pre>' + error + '</pre>')
             }
         },
 
@@ -108,7 +108,7 @@ const app_orders_actions = Vue.createApp({
          * @throws {Error} Throws an error when the API response status is not OK.
          * @return {Boolean} Returns true if the status of responseData is 'success', otherwise returns false.
          */
-        async api_customer_change_customer_nr_in_sw6(){
+        async api_customer_change_customer_nr_in_sw6() {
             // Prepare the request data
             const requestData = {
                 customer_id: this.customer_id,
@@ -139,14 +139,13 @@ const app_orders_actions = Vue.createApp({
                 // Return true or false based on response status
                 if (responseData['status'] === 'success') {
                     return true;
-                }
-                else {
+                } else {
                     return false;
                 }
 
             } catch (error) { // Catch block to handle any potential errors
                 console.error('Fehler beim Senden der Anfrage:', error);
-                this.$showToast('error', '<p>Ein Fehler ist aufgetreten:</p><pre>'+error+'</pre>');
+                this.$showToast('error', '<p>Ein Fehler ist aufgetreten:</p><pre>' + error + '</pre>');
                 return false;
             }
         },
@@ -165,7 +164,7 @@ const app_orders_actions = Vue.createApp({
             const requestData = {
                 customer_id: this.customer_id,
                 new_customer_nr: this.new_customer_nr,
-                bridge_customer_id:this.bridge_customer_id,
+                bridge_customer_id: this.bridge_customer_id,
             }
 
             try {
@@ -195,8 +194,7 @@ const app_orders_actions = Vue.createApp({
                 // If the status is "success", return true, otherwise return false
                 if (responseData['status'] === 'success') {
                     return true;
-                }
-                else {
+                } else {
                     return false;
                 }
 
@@ -205,7 +203,7 @@ const app_orders_actions = Vue.createApp({
                 console.error('Fehler beim Senden der Anfrage:', error);
 
                 // Show a toast notification with the error message
-                this.$showToast('error', '<p>Ein Fehler ist aufgetreten:</p><pre>'+error+'</pre>');
+                this.$showToast('error', '<p>Ein Fehler ist aufgetreten:</p><pre>' + error + '</pre>');
 
                 // Return false since there was an error
                 return false;
@@ -362,7 +360,7 @@ const app_orders_actions = Vue.createApp({
         async changeOrderState(sw6OrderId, bridgeOrderId, actionName, category) {
             console.log(`Changing state of ${category} for order ${sw6OrderId} to ${actionName}`);
             let endpoint;
-            switch(category) {
+            switch (category) {
                 case 'order':
                     endpoint = `/api/orders/sw6/order/${sw6OrderId}/state/${actionName}`;
                     break;
@@ -378,8 +376,8 @@ const app_orders_actions = Vue.createApp({
             }
 
             try {
-                const response = await fetch(endpoint, { method: 'PATCH' });
-                if(response.ok) {
+                const response = await fetch(endpoint, {method: 'PATCH'});
+                if (response.ok) {
                     const data = await response.json();
                     console.log(data.message);
                     this.$showToast('success', `Status <strong>"${category}"</strong> for order ${sw6OrderId} changed to <strong>"${actionName}"</strong>`);
@@ -389,7 +387,7 @@ const app_orders_actions = Vue.createApp({
                     console.log(`Error with HTTP request: ${response.statusText}`);
                     this.$showToast('error', `Failed to change status of <strong>"${category}"</strong> for order ${sw6OrderId}`);
                 }
-            } catch(error) {
+            } catch (error) {
                 console.error(`Fetch error: ${error}`);
                 this.$showToast('error', `Fetch error: ${error}`);
             }
@@ -405,8 +403,8 @@ const app_orders_actions = Vue.createApp({
             let endpoint = `/api/orders/sw6/sync_one_to_bridge/${sw6OrderId}`;
 
             try {
-                const response = await fetch(endpoint, { method: 'PATCH' });
-                if(response.ok) {
+                const response = await fetch(endpoint, {method: 'PATCH'});
+                if (response.ok) {
                     const data = await response.json();
                     console.log(data.message);
                     this.$showToast('success', data.message);
@@ -415,7 +413,7 @@ const app_orders_actions = Vue.createApp({
                     console.log(`Error with HTTP request: ${response.statusText}`);
                     this.$showToast('error', data.message);
                 }
-            } catch(error) {
+            } catch (error) {
                 console.error(`Fetch error: ${error}`);
                 this.$showToast('error', `Fetch error: ${error}`);
             }
@@ -426,7 +424,7 @@ const app_orders_actions = Vue.createApp({
             try {
                 const response = await fetch(
                     `/api/orders/erp/create_order/${order_id}`,
-                    { method: "POST" }
+                    {method: "POST"}
                 );
 
                 // Get the result from the response to acquire the message
@@ -447,12 +445,35 @@ const app_orders_actions = Vue.createApp({
                     this.$showToast('error', `Fehler: ${error.message}`);
                 }
             }
-        }
+        },
 
+        async delete_order_in_bridge_by_bridge_order_id(bridge_order_id) {
+            if (confirm("Bestellung wirklich löschen?")) {
+                try {
+                    // Replaces <bridge_order_id> with the actual order ID
+                    const response = await fetch(`/api/orders/bridge/order_delete/${bridge_order_id}`, {method: 'DELETE'});
+                    if (!response.ok) {
+                        throw new Error('Fehler beim Löschen der Bestellung');
+                    }
+                    const result = await response.json();
+                    // Use 'result' here to display a success message or perform other actions
+                    this.$showToast('success', result.message);
+                    // Wait 2 sec and reload the page
+                    setTimeout(function () {
+                        location.reload()
+                    }, 2000);
+                } catch (error) {
+                    // Logs any error encountered during the process
+                    console.error(error);
+                    // Shows an error toast with the order ID that encountered the error during deletion
+                    this.$showToast('error', `Fehler beim Löschen der Bestellung ${bridge_order_id}.`);
+                }
+            }
+        }
 
 
     },
     mounted() {
-        this.fetchOrderStateName()  // This is need to get all the states
+        this.fetchOrderStateName()  // This is needed to get all the states
     }
 })

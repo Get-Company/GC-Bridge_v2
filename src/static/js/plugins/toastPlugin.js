@@ -32,10 +32,18 @@ const ToastPlugin = {
                 case 'error':
                     clonedToastEl.classList.add('bg-danger');
                     break;
-                case 404:
+                case '404':
                     clonedToastEl.classList.add('bg-danger');
-                case 500:
+                    break;
+                case '500':
                     clonedToastEl.classList.add('bg-danger');
+                    break;
+                case '401':
+                    clonedToastEl.classList.add('bg-warning');
+                    break;
+                case '403':
+                    clonedToastEl.classList.add('bg-warning');
+                    break;
                 // Additional cases can be added as needed.
             }
 
